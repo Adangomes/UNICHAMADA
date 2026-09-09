@@ -1,0 +1,94 @@
+/* ==========================================================================
+   LOGIN.CSS — Tela de acesso estilo "carteirinha"
+   ========================================================================== */
+
+#tela-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.carteirinha-login {
+  width: 100%;
+  max-width: 420px;
+  background: var(--papel-cartao);
+  border-radius: 16px;
+  border: 1px solid var(--linha);
+  box-shadow: var(--sombra-forte);
+  overflow: hidden;
+}
+
+.carteirinha-topo {
+  background: var(--tinta);
+  color: #fff;
+  padding: 1.6em 1.6em 1.2em;
+  position: relative;
+}
+
+.carteirinha-topo .selo {
+  font-family: var(--fonte-mono);
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+
+.carteirinha-topo h1 {
+  color: #fff;
+  font-size: 1.5rem;
+  margin: .25em 0 0;
+}
+
+.carteirinha-topo::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--coral), var(--coral) 8px,
+    transparent 8px, transparent 16px
+  );
+  opacity: .85;
+}
+
+.carteirinha-corpo {
+  padding: 1.8em 1.6em 1.6em;
+}
+
+.carteirinha-corpo .instrucao {
+  color: var(--grafite-suave);
+  font-size: .88rem;
+  margin: -0.2em 0 1.3em;
+}
+
+#form-login .btn-primario {
+  width: 100%;
+  margin-top: .4em;
+  font-size: 1rem;
+}
+
+.aviso-login {
+  margin-top: 1em;
+  padding: .75em .9em;
+  border-radius: var(--raio-pequeno);
+  font-size: .86rem;
+  border-left: 3px solid var(--coral);
+  background: rgba(214, 91, 74, .08);
+  color: #8a3527;
+}
+.aviso-login.oculto { display: none !important; }
+
+.credenciais-demo {
+  margin-top: 1.4em;
+  padding-top: 1.1em;
+  border-top: 1px dashed var(--linha);
+  font-size: .78rem;
+  color: var(--grafite-suave);
+  line-height: 1.6;
+}
+.credenciais-demo strong { color: var(--grafite); }

@@ -1,0 +1,335 @@
+/* ==========================================================================
+   PAINEL.CSS — Layout comum às telas internas (coordenador e professor)
+   ========================================================================== */
+
+.painel {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.painel-header {
+  background: var(--tinta);
+  color: #fff;
+  padding: .9em 1.4em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  box-shadow: var(--sombra);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.painel-header .identidade {
+  display: flex;
+  align-items: center;
+  gap: .7em;
+}
+
+.painel-header .identidade .foto-mini {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,.5);
+  background: var(--tinta-clara);
+}
+
+.painel-header .identidade .avatar-inicial {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--coral);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fonte-display);
+  font-weight: 700;
+}
+
+.painel-header .textos strong {
+  display: block;
+  font-size: .95rem;
+}
+.painel-header .textos span {
+  display: block;
+  font-size: .74rem;
+  opacity: .75;
+  font-family: var(--fonte-mono);
+}
+
+.painel-header .btn-sair {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  padding: .5em 1em;
+  font-size: .84rem;
+  font-weight: 500;
+}
+.painel-header .btn-sair:hover { background: rgba(255,255,255,.22); }
+
+.painel-corpo {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Navegação lateral (abas do coordenador) */
+.painel-nav {
+  width: 210px;
+  flex-shrink: 0;
+  padding: 1.4em 1em;
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
+}
+
+.painel-nav button {
+  text-align: left;
+  background: transparent;
+  color: var(--grafite-suave);
+  padding: .65em .9em;
+  font-size: .9rem;
+  font-weight: 500;
+  border-radius: var(--raio-pequeno);
+}
+.painel-nav button:hover { background: rgba(31,45,80,.06); color: var(--tinta); }
+.painel-nav button.ativo {
+  background: var(--tinta);
+  color: #fff;
+  font-weight: 600;
+}
+
+.painel-conteudo {
+  flex: 1;
+  padding: 1.6em 1.6em 3em;
+  min-width: 0;
+}
+
+.painel-conteudo .secao-cabecalho {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.1em;
+  flex-wrap: wrap;
+  gap: .5em;
+}
+
+.painel-conteudo .secao-cabecalho p {
+  color: var(--grafite-suave);
+  font-size: .88rem;
+  margin: .1em 0 0;
+}
+
+/* Grid formulário + lista */
+.grade-secao {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.4em;
+  align-items: start;
+}
+
+.grade-secao form h3 {
+  font-size: 1rem;
+  margin-bottom: .9em;
+}
+
+.linha-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .8em;
+}
+
+/* Tabela de listagem */
+.tabela-wrap {
+  overflow-x: auto;
+  border-radius: var(--raio);
+  border: 1px solid var(--linha);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--papel-cartao);
+  font-size: .88rem;
+}
+
+thead th {
+  text-align: left;
+  font-family: var(--fonte-display);
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--grafite-suave);
+  background: rgba(31,45,80,.04);
+  padding: .8em .9em;
+  border-bottom: 1px solid var(--linha);
+}
+
+tbody td {
+  padding: .7em .9em;
+  border-bottom: 1px solid var(--linha);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(31,45,80,.025); }
+
+.celula-foto {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--linha);
+  display: block;
+}
+
+.celula-acoes {
+  display: flex;
+  gap: .4em;
+  white-space: nowrap;
+}
+
+.estado-vazio {
+  padding: 2.2em 1em;
+  text-align: center;
+  color: var(--grafite-suave);
+  font-size: .9rem;
+}
+
+/* Captura de foto (câmera / galeria) */
+.captura-foto {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1.1em;
+}
+
+.captura-foto .pre-visualizacao {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: var(--papel);
+  border: 1.5px dashed var(--linha);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.captura-foto .acoes-foto {
+  display: flex;
+  flex-direction: column;
+  gap: .4em;
+}
+.captura-foto .acoes-foto .grupo-btn {
+  display: flex;
+  gap: .5em;
+}
+
+.camera-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(31,45,80,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.camera-modal .cartao {
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+.camera-modal video {
+  width: 100%;
+  border-radius: var(--raio-pequeno);
+  background: #000;
+  margin-bottom: 1em;
+}
+.camera-modal .botoes-camera {
+  display: flex;
+  gap: .6em;
+  justify-content: center;
+}
+
+/* Cartões-resumo (dashboard do professor) */
+.grade-resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1em;
+  margin-bottom: 1.6em;
+}
+.cartao-resumo .numero {
+  font-family: var(--fonte-display);
+  font-size: 2rem;
+  color: var(--tinta);
+  font-weight: 700;
+}
+.cartao-resumo .rotulo {
+  font-size: .78rem;
+  color: var(--grafite-suave);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.lista-turmas-professor {
+  display: flex;
+  flex-direction: column;
+  gap: .9em;
+}
+.item-turma {
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 1em 1.2em;
+  background: var(--papel-cartao);
+}
+.item-turma .cabecalho-turma {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: .8em;
+  margin-bottom: .6em;
+}
+.item-turma .cabecalho-turma > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  flex-wrap: wrap;
+}
+.item-turma h4 { margin: 0; font-size: 1rem; }
+.item-turma .alunos-matriculados {
+  font-size: .84rem;
+  color: var(--grafite-suave);
+}
+
+.turma-acoes {
+  display: flex;
+  gap: .5em;
+  flex-wrap: wrap;
+}
+
+.btn-link-discreto {
+  background: transparent;
+  border: none;
+  color: var(--tinta);
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .5em 0;
+}
+.btn-link-discreto:hover { text-decoration: underline; }
+
+@media (max-width: 880px) {
+  .painel-corpo { flex-direction: column; }
+  .painel-nav {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 1em;
+  }
+  .grade-secao { grid-template-columns: 1fr; }
+  .linha-campos { grid-template-columns: 1fr; }
+}

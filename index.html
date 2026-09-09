@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Acadêmico</title>
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/login.css" />
+  <link rel="stylesheet" href="css/painel.css" />
+  <link rel="stylesheet" href="css/chamada.css" />
+  <link rel="stylesheet" href="css/confirmar-presenca.css" />
+  <link rel="stylesheet" href="css/telao.css" />
+
+  <!-- Biblioteca de QR Code (davidshimjs/qrcodejs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- ================= TELA DE LOGIN (única porta de entrada) ================= -->
+  <section id="tela-login">
+    <div class="carteirinha-login">
+      <div class="carteirinha-topo">
+        <span class="selo">Sistema Acadêmico</span>
+        <h1>Acesso</h1>
+      </div>
+      <div class="carteirinha-corpo">
+        <p class="instrucao">
+          Entre com seu RA e e-mail cadastrados pela coordenação.
+          O sistema identifica automaticamente se você é coordenador(a) ou professor(a).
+        </p>
+        <form id="form-login" novalidate>
+          <div class="campo">
+            <label for="input-ra">RA</label>
+            <input id="input-ra" name="ra" type="text" data-mono="true" autocomplete="off" required />
+          </div>
+          <div class="campo">
+            <label for="input-email">E-mail</label>
+            <input id="input-email" name="email" type="email" autocomplete="off" required />
+          </div>
+          <button type="submit" class="btn-primario">Entrar</button>
+        </form>
+        <p id="aviso-login" class="aviso-login oculto"></p>
+
+        <div class="credenciais-demo">
+          <strong>Demonstração (projeto acadêmico):</strong><br />
+          Coordenador(a) padrão — RA <strong>COORD001</strong> ·
+          e-mail <strong>coordenador@instituicao.edu.br</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA DO COORDENADOR ================= -->
+  <section id="tela-coordenador" class="painel oculto"></section>
+
+  <!-- ================= TELA DO PROFESSOR ================= -->
+  <section id="tela-professor" class="painel oculto"></section>
+
+  <!-- ================= TELA DE CONFIRMAÇÃO DE PRESENÇA (aluno via QR Code) ================= -->
+  <section id="tela-confirmar-presenca" class="oculto"></section>
+
+  <!-- ================= TELÃO (janela separada, para projetar) ================= -->
+  <section id="tela-telao" class="oculto"></section>
+
+  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth > telas > main) ================= -->
+  <script src="js/data/db.js"></script>
+
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/camera.js"></script>
+  <script src="js/utils/cabecalho.js"></script>
+  <script src="js/utils/geolocalizacao.js"></script>
+  <script src="js/utils/reconhecimento-facial.js"></script>
+  <script src="js/utils/codigo-rotativo.js"></script>
+
+  <script src="js/auth/auth.js"></script>
+
+  <script src="js/coordenador/cursos.js"></script>
+  <script src="js/coordenador/professores.js"></script>
+  <script src="js/coordenador/alunos.js"></script>
+  <script src="js/coordenador/disciplinas.js"></script>
+  <script src="js/coordenador/turmas.js"></script>
+  <script src="js/coordenador/matriculas.js"></script>
+  <script src="js/coordenador/coordenador.js"></script>
+
+  <script src="js/professor/chamada.js"></script>
+  <script src="js/professor/historico.js"></script>
+  <script src="js/professor/telao.js"></script>
+  <script src="js/professor/professor.js"></script>
+
+  <script src="js/aluno/confirmar-presenca.js"></script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

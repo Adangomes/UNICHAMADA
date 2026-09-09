@@ -1,0 +1,80 @@
+/* ==========================================================================
+   TELAO.CSS — Janela destacável com QR Code + código, para projetar
+   ========================================================================== */
+
+#tela-telao {
+  min-height: 100vh;
+  background: var(--tinta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.telao-btn-flutuante {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border-color: rgba(255,255,255,.3);
+}
+.telao-btn-flutuante:hover { background: rgba(255,255,255,.22); }
+
+.telao-cartao {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2.2em 2.4em 2.6em;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+
+.telao-turma {
+  font-family: var(--fonte-display);
+  font-size: 1.3rem;
+  color: var(--tinta);
+  margin: 0;
+}
+.telao-disciplina {
+  color: var(--grafite-suave);
+  font-size: .92rem;
+  margin: .2em 0 1.1em;
+}
+
+.telao-qr {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.1em;
+}
+
+.telao-codigo {
+  font-family: var(--fonte-mono);
+  font-size: 3rem;
+  font-weight: 500;
+  letter-spacing: .2em;
+  color: var(--tinta);
+  background: rgba(31,45,80,.06);
+  border-radius: var(--raio);
+  padding: .25em .1em;
+  margin-bottom: 1em;
+}
+
+.telao-instrucao {
+  font-size: .84rem;
+  color: var(--grafite-suave);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.telao-aviso {
+  padding: .8em 1em;
+  border-radius: var(--raio-pequeno);
+  background: rgba(214, 91, 74, .08);
+  border-left: 3px solid var(--coral);
+  color: #8a3527;
+  font-size: .88rem;
+  margin-bottom: 1em;
+}

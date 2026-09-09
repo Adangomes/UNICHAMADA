@@ -1,0 +1,165 @@
+/* ==========================================================================
+   CONFIRMAR-PRESENCA.CSS — Tela que o aluno abre ao ler o QR Code
+   ========================================================================== */
+
+#tela-confirmar-presenca {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.confirmacao-cartao {
+  width: 100%;
+  max-width: 440px;
+  background: var(--papel-cartao);
+  border-radius: 16px;
+  border: 1px solid var(--linha);
+  box-shadow: var(--sombra-forte);
+  overflow: hidden;
+}
+
+.confirmacao-topo {
+  background: var(--tinta);
+  color: #fff;
+  padding: 1.4em 1.6em 1.1em;
+}
+.confirmacao-topo .selo {
+  font-family: var(--fonte-mono);
+  font-size: .7rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.confirmacao-topo h1 {
+  color: #fff;
+  font-size: 1.3rem;
+  margin: .2em 0 0;
+}
+.confirmacao-topo .contexto-turma {
+  color: rgba(255,255,255,.8);
+  font-size: .84rem;
+  margin: .3em 0 0;
+}
+
+/* Indicador de etapas */
+.confirmacao-passos {
+  display: flex;
+  gap: .35em;
+  padding: 1em 1.6em 0;
+}
+.confirmacao-passo-bolinha {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--linha);
+}
+.confirmacao-passo-bolinha.concluido { background: var(--verde-aprovado); }
+.confirmacao-passo-bolinha.atual { background: var(--tinta); }
+
+.confirmacao-corpo {
+  padding: 1.5em 1.6em 1.8em;
+}
+
+.confirmacao-corpo h2 {
+  font-size: 1.05rem;
+  margin-bottom: .3em;
+}
+.confirmacao-corpo .subtitulo {
+  color: var(--grafite-suave);
+  font-size: .86rem;
+  margin: 0 0 1.2em;
+}
+
+.confirmacao-corpo .btn-primario,
+.confirmacao-corpo .btn-secundario {
+  width: 100%;
+}
+
+/* Etapa de rosto */
+.confirmacao-video-wrap {
+  position: relative;
+  border-radius: var(--raio);
+  overflow: hidden;
+  background: #000;
+  margin-bottom: 1em;
+}
+.confirmacao-video-wrap video,
+.confirmacao-video-wrap img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.confirmacao-status-ia {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  padding: .8em 1em;
+  border-radius: var(--raio-pequeno);
+  background: rgba(31, 45, 80, .06);
+  font-size: .88rem;
+  margin-bottom: 1em;
+}
+.confirmacao-status-ia.sucesso { background: rgba(62, 124, 90, .12); color: var(--verde-aprovado); }
+.confirmacao-status-ia.erro { background: rgba(214, 91, 74, .1); color: #8a3527; }
+
+.girador {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2.5px solid var(--linha);
+  border-top-color: var(--tinta);
+  animation: girar 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* Etapa de localização */
+.confirmacao-icone-central {
+  font-size: 2.4rem;
+  text-align: center;
+  margin-bottom: .4em;
+}
+
+.confirmacao-distancia {
+  text-align: center;
+  font-family: var(--fonte-mono);
+  font-size: .84rem;
+  color: var(--grafite-suave);
+  margin: .6em 0 1.2em;
+}
+
+/* Etapa de código */
+#input-codigo-confirmacao {
+  text-align: center;
+  font-family: var(--fonte-mono);
+  font-size: 1.6rem;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  padding: .7em .4em;
+}
+
+/* Sucesso / erro finais */
+.confirmacao-resultado {
+  text-align: center;
+  padding: 1.2em 0;
+}
+.confirmacao-resultado .icone {
+  font-size: 3rem;
+  margin-bottom: .3em;
+}
+.confirmacao-resultado h2 { margin-bottom: .3em; }
+.confirmacao-resultado p { color: var(--grafite-suave); font-size: .9rem; }
+
+.confirmacao-erro-caixa {
+  padding: .8em 1em;
+  border-radius: var(--raio-pequeno);
+  background: rgba(214, 91, 74, .08);
+  border-left: 3px solid var(--coral);
+  color: #8a3527;
+  font-size: .86rem;
+  margin-bottom: 1em;
+}

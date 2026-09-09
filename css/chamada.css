@@ -1,0 +1,257 @@
+/* ==========================================================================
+   CHAMADA.CSS — Modal de geração de chamada (professor)
+   ========================================================================== */
+
+.chamada-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 45, 80, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.chamada-cartao {
+  background: var(--papel-cartao);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-forte);
+  width: 100%;
+  max-width: 920px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.chamada-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1.2em 1.4em;
+  border-bottom: 1px solid var(--linha);
+  position: sticky;
+  top: 0;
+  background: var(--papel-cartao);
+  z-index: 2;
+}
+.chamada-topo h3 { margin-bottom: .1em; }
+.chamada-topo p { color: var(--grafite-suave); font-size: .86rem; margin: 0; }
+
+.chamada-corpo {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.4em;
+  padding: 1.4em;
+}
+
+.chamada-lado-qr {
+  text-align: center;
+}
+.chamada-qr {
+  display: flex;
+  justify-content: center;
+  padding: 1em;
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  margin-bottom: .9em;
+}
+
+.chamada-codigo {
+  font-family: var(--fonte-mono);
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: .18em;
+  color: var(--tinta);
+  background: rgba(31, 45, 80, .06);
+  border-radius: var(--raio-pequeno);
+  padding: .3em .2em;
+  margin-bottom: .6em;
+}
+
+.chamada-barra-tempo {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--linha);
+  overflow: hidden;
+  margin-bottom: .9em;
+}
+.chamada-barra-preenchimento {
+  height: 100%;
+  width: 100%;
+  background: var(--coral);
+}
+
+.chamada-instrucao {
+  font-size: .8rem;
+  color: var(--grafite-suave);
+  line-height: 1.5;
+}
+
+.chamada-lado-lista h4 {
+  font-size: .95rem;
+  margin-bottom: .7em;
+}
+
+.chamada-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .55em;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: .3em;
+}
+
+.chamada-linha-aluno {
+  display: flex;
+  align-items: center;
+  gap: .7em;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-pequeno);
+  padding: .55em .7em;
+  flex-wrap: wrap;
+}
+
+.bolinha-status {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #B9B4A4; /* aguardando = cinza */
+}
+.bolinha-status.status-presente { background: var(--verde-aprovado); }
+.bolinha-status.status-falta { background: var(--coral); }
+.bolinha-status.status-falta_justificada { background: var(--amarelo-alerta); }
+
+.chamada-aluno-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 120px;
+}
+.chamada-aluno-info strong { font-size: .88rem; }
+.chamada-aluno-info span { font-size: .74rem; color: var(--grafite-suave); }
+
+.tag-status-presente { background: rgba(62, 124, 90, .12); color: var(--verde-aprovado); }
+.tag-status-falta { background: rgba(214, 91, 74, .1); color: var(--coral); }
+.tag-status-falta_justificada { background: rgba(201, 138, 30, .12); color: var(--amarelo-alerta); }
+
+.chamada-acoes-manuais {
+  display: flex;
+  gap: .35em;
+  flex-wrap: wrap;
+}
+
+.btn-mini {
+  font-size: .74rem;
+  padding: .38em .6em;
+  border-radius: 6px;
+  border: 1.5px solid var(--linha);
+  background: transparent;
+  color: var(--grafite-suave);
+  font-weight: 600;
+}
+.btn-mini-presente:hover { border-color: var(--verde-aprovado); color: var(--verde-aprovado); }
+.btn-mini-falta:hover { border-color: var(--coral); color: var(--coral); }
+.btn-mini-justificada:hover { border-color: var(--amarelo-alerta); color: var(--amarelo-alerta); }
+
+@media (max-width: 720px) {
+  .chamada-corpo { grid-template-columns: 1fr; }
+  .chamada-lista { max-height: 320px; }
+}
+
+/* ---------------------------- Histórico de chamadas ---------------------------- */
+
+.historico-cartao { max-width: 760px; }
+
+.historico-corpo {
+  padding: 1.2em 1.4em 1.6em;
+}
+
+.historico-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .7em;
+}
+
+.historico-item {
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+.historico-item-cabecalho {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  flex-wrap: wrap;
+  background: var(--papel-cartao);
+  padding: .85em 1em;
+  text-align: left;
+}
+.historico-item-cabecalho:hover { background: rgba(31,45,80,.03); }
+.historico-item-cabecalho-aberto { background: rgba(31,45,80,.045); }
+
+.historico-item-data {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  font-size: .88rem;
+}
+
+.historico-item-resumo {
+  display: flex;
+  gap: .4em;
+  flex-wrap: wrap;
+}
+
+.historico-seta {
+  color: var(--grafite-suave);
+  transition: transform .15s ease;
+}
+.historico-item-cabecalho-aberto .historico-seta { transform: rotate(180deg); }
+
+.historico-item-alunos {
+  padding: .8em 1em 1em;
+  display: flex;
+  flex-direction: column;
+  gap: .5em;
+  border-top: 1px solid var(--linha);
+  background: var(--papel);
+}
+
+/* ---------------------------- Aba "Chamadas" do professor ---------------------------- */
+
+.chamadas-acoes-rapidas {
+  display: flex;
+  flex-direction: column;
+  gap: .6em;
+  margin-bottom: .4em;
+}
+
+.chamada-acao-rapida {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  flex-wrap: wrap;
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: .8em 1.1em;
+}
+.chamada-acao-rapida strong { display: block; font-size: .95rem; }
+.chamada-acao-rapida span { font-size: .8rem; color: var(--grafite-suave); }
+
+.chamada-card-turma-label {
+  font-family: var(--fonte-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--tinta);
+  margin: 0 0 .3em .1em;
+}

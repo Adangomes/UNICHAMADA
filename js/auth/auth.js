@@ -11,7 +11,7 @@
 
 const CHAVE_SESSAO = 'sistema-academico-sessao';
 
- * @returns {{tipo:'coordenador'|'professor', dados:object} | null}
+ 
  
  
 function autenticar(ra, email) {

@@ -54,21 +54,3 @@ window.salvarSessao = salvarSessao;
 window.obterSessao = obterSessao;
 window.encerrarSessao = encerrarSessao;
 
-*/
-
-
-/**
- * auth.js
- * ------------------------------------------------------------------
- * Login único por RA + e-mail (sem senha, conforme especificado).
- * A MESMA tela de login serve para coordenador e professor:
- *  - Se RA + e-mail baterem com um registro em "coordenadores" -> painel do coordenador.
- *  - Se baterem com um registro em "professores" -> painel do professor.
- *  - Se não baterem com nada -> nada abre, e um aviso é exibido.
- * ------------------------------------------------------------------
- */
-
-
-/**
-CODIGO 01 CORRIGIDO DAQUI PARA BAIXO
- */

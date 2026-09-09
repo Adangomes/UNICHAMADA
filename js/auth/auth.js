@@ -7,8 +7,8 @@
  *  - Se baterem com um registro em "professores" -> painel do professor.
  *  - Se não baterem com nada -> nada abre, e um aviso é exibido.
  * ------------------------------------------------------------------
- */
-/**
+ 
+
 const CHAVE_SESSAO = 'sistema-academico-sessao';
 
  * @returns {{tipo:'coordenador'|'professor', dados:object} | null}

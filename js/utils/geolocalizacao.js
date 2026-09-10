@@ -21,7 +21,7 @@ function distanciaEmMetros(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Pega as coordenadas atuais do dispositivo (use esta função quando o professor GERAR a chamada).
+ * Pega as coordenadas atuais do dispositivo.
  * @returns {Promise<{latitude: number, longitude: number}>}
  */
 function obterLocalizacaoAtual() {
@@ -41,21 +41,19 @@ function obterLocalizacaoAtual() {
       (erro) => {
         const mensagens = {
           1: 'Permissão de localização negada.',
-          2: 'Não foi possível obter sua localização atual.',
+          2: 'Não foi possível obter sua localização atual (verifique se o GPS está ligado).',
           3: 'Tempo esgotado ao buscar localização.'
         };
         reject(mensagens[erro.code] || 'Erro de geolocalização.');
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      // Aumentado o timeout para 15s e aceita cache recente de 5s para evitar travamento em celular
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );
   });
 }
 
 /**
  * Valida a distância do ALUNO em relação às coordenadas salvas na chamada do professor.
- * @param {number} latProfessor - Latitude capturada ao abrir a chamada
- * @param {number} lonProfessor - Longitude capturada ao abrir a chamada
- * @returns {Promise<{permitido:boolean, distancia:number|null, erro:string|null}>}
  */
 function verificarLocalizacaoAluno(latProfessor, lonProfessor) {
   return new Promise((resolve) => {

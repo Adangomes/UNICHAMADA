@@ -3,7 +3,7 @@
  * Disciplina: { nome, cursoId (curso vinculado), turno, cargaHoraria, professorId }
  */
 
-function renderSecaoDisciplinas(container) {
+async function renderSecaoDisciplinas(container) {
   container.innerHTML = '';
 
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -21,11 +21,11 @@ function renderSecaoDisciplinas(container) {
 
   let idEmEdicao = null;
 
-  function montarFormulario() {
+  async function montarFormulario() {
     areaFormulario.innerHTML = '';
-    const disciplina = idEmEdicao ? dbBuscarPorId('disciplinas', idEmEdicao) : null;
-    const cursos = dbListar('cursos');
-    const professores = dbListar('professores');
+    const disciplina = idEmEdicao ? await dbBuscarPorId('disciplinas', idEmEdicao) : null;
+    const cursos = await dbListar('cursos');
+    const professores = await dbListar('professores');
 
     const form = criarElemento('form', {});
     form.appendChild(criarElemento('h3', {}, [idEmEdicao ? 'Editar disciplina' : 'Nova disciplina']));
@@ -71,7 +71,7 @@ function renderSecaoDisciplinas(container) {
     if (idEmEdicao) {
       botoes.appendChild(criarElemento('button', {
         type: 'button', class: 'btn-secundario',
-        onClick: () => { idEmEdicao = null; montarFormulario(); }
+        onClick: async () => { idEmEdicao = null; await montarFormulario(); }
       }, ['Cancelar']));
     }
 
@@ -81,7 +81,7 @@ function renderSecaoDisciplinas(container) {
       form.appendChild(criarElemento('p', { style: 'font-size:.78rem;color:var(--coral);margin-top:.6em;' }, ['Cadastre ao menos um curso antes de criar disciplinas.']));
     }
 
-    form.addEventListener('submit', (evento) => {
+    form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       const nome = form.nome.value.trim();
       const cursoId = form.cursoId.value;
@@ -97,23 +97,23 @@ function renderSecaoDisciplinas(container) {
       const dados = { nome, cursoId, turno, cargaHoraria, professorId };
 
       if (idEmEdicao) {
-        dbAtualizar('disciplinas', idEmEdicao, dados);
+        await dbAtualizar('disciplinas', idEmEdicao, dados);
         mostrarToast('Disciplina atualizada.', 'sucesso');
         idEmEdicao = null;
       } else {
-        dbInserir('disciplinas', dados);
+        await dbInserir('disciplinas', dados);
         mostrarToast('Disciplina cadastrada.', 'sucesso');
       }
-      montarFormulario();
-      montarLista();
+      await montarFormulario();
+      await montarLista();
     });
 
     areaFormulario.appendChild(form);
   }
 
-  function montarLista() {
+  async function montarLista() {
     areaLista.innerHTML = '';
-    const disciplinas = dbListar('disciplinas');
+    const disciplinas = await dbListar('disciplinas');
 
     if (disciplinas.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [
@@ -134,9 +134,10 @@ function renderSecaoDisciplinas(container) {
     ]));
 
     const corpo = criarElemento('tbody', {});
-    disciplinas.forEach((disciplina) => {
-      const curso = dbBuscarPorId('cursos', disciplina.cursoId);
-      const professor = dbBuscarPorId('professores', disciplina.professorId);
+    for (const disciplina of disciplinas) {
+      const curso = await dbBuscarPorId('cursos', disciplina.cursoId);
+      const professor = disciplina.professorId ? await dbBuscarPorId('professores', disciplina.professorId) : null;
+      
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [disciplina.nome]),
         criarElemento('td', {}, [curso ? curso.nome : '—']),
@@ -145,27 +146,31 @@ function renderSecaoDisciplinas(container) {
         criarElemento('td', { class: 'celula-acoes' }, [
           criarElemento('button', {
             class: 'btn-icone',
-            onClick: () => { idEmEdicao = disciplina.id; montarFormulario(); areaFormulario.scrollIntoView({ behavior: 'smooth' }); }
+            onClick: async () => { 
+              idEmEdicao = disciplina.id; 
+              await montarFormulario(); 
+              areaFormulario.scrollIntoView({ behavior: 'smooth' }); 
+            }
           }, ['Editar']),
           criarElemento('button', {
             class: 'btn-perigo',
-            onClick: () => {
+            onClick: async () => {
               if (!confirmarAcao(`Excluir a disciplina "${disciplina.nome}"?`)) return;
-              dbRemover('disciplinas', disciplina.id);
+              await dbRemover('disciplinas', disciplina.id);
               mostrarToast('Disciplina excluída.', 'sucesso');
-              montarLista();
+              await montarLista();
             }
           }, ['Excluir'])
         ])
       ]));
-    });
+    }
     tabela.appendChild(corpo);
 
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  montarFormulario();
-  montarLista();
+  await montarFormulario();
+  await montarLista();
 }
 
 window.renderSecaoDisciplinas = renderSecaoDisciplinas;

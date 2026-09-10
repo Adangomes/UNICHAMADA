@@ -4,9 +4,11 @@
  * Conecta o front-end ao banco de dados PostgreSQL hospedado no Supabase.
  */
 
-// 1. Configuração do Supabase
-const SUPABASE_URL = 'https://xultvypwxwyxhfzwqdw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Hz-73f700H3ROCfGhe1htg_p7f2Pl99'; // Cole a sua chave COMPLETA aqui
+// 1. Configuração do Supabase (URL ajustada com o 'x')
+const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
+
+// Cole aqui a chave 'anon' 'public' (aquela longa que começa com eyJ...)
+const SUPABASE_KEY = 'SUA_CHAVE_ANON_PUBLIC_AQUI';
 
 // Inicializa o cliente Supabase
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;

@@ -12,11 +12,11 @@
 
 let streamAtivoConfirmacao = null;
 
-function montarTelaConfirmarPresenca(chamadaId) {
+async function montarTelaConfirmarPresenca(chamadaId) {
   const raiz = $('#tela-confirmar-presenca');
   raiz.innerHTML = '';
 
-  const chamada = dbBuscarPorId('chamadas', chamadaId);
+  const chamada = await dbBuscarPorId('chamadas', chamadaId);
 
   if (!chamada || !chamada.ativa) {
     raiz.appendChild(montarCartaoConfirmacao([
@@ -29,14 +29,13 @@ function montarTelaConfirmarPresenca(chamadaId) {
     return;
   }
 
-  const turma = dbBuscarPorId('turmas', chamada.turmaId);
-  const disciplina = turma ? dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const turma = chamada.turmaId ? await dbBuscarPorId('turmas', chamada.turmaId) : null;
+  const disciplina = (turma && turma.disciplinaId) ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
 
   const estado = { chamada, turma, disciplina, aluno: null, fotoCapturada: null };
 
-  renderPassoIdentificacao(raiz, estado);
+  await renderPassoIdentificacao(raiz, estado);
 }
-
 
 function montarCartaoConfirmacao(filhosCorpo, estado = null, passoAtual = 0) {
   const totalPassos = 4;
@@ -67,8 +66,7 @@ function disciplinaContexto(estado) {
   return `${estado.disciplina.nome} · ${estado.turma.turno}`;
 }
 
-
-function renderPassoIdentificacao(raiz, estado) {
+async function renderPassoIdentificacao(raiz, estado) {
   raiz.innerHTML = '';
 
   const erro = criarElemento('p', { class: 'confirmacao-erro-caixa oculto' });
@@ -85,7 +83,7 @@ function renderPassoIdentificacao(raiz, estado) {
     criarElemento('button', { type: 'submit', class: 'btn-primario' }, ['Continuar'])
   ]);
 
-  form.addEventListener('submit', (evento) => {
+  form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const ra = form.ra.value.trim();
     const email = form.email.value.trim();
@@ -95,7 +93,7 @@ function renderPassoIdentificacao(raiz, estado) {
       return;
     }
 
-    const alunosDaTurma = alunosMatriculadosNaTurma(estado.turma.id);
+    const alunosDaTurma = await alunosMatriculadosNaTurma(estado.turma.id);
     const aluno = alunosDaTurma.find(
       (a) => a.ra.toUpperCase() === ra.toUpperCase() && a.email.toLowerCase() === email.toLowerCase()
     );
@@ -123,7 +121,6 @@ function exibirErroPasso(elementoErro, mensagem) {
   elementoErro.textContent = mensagem;
   elementoErro.classList.remove('oculto');
 }
-
 
 function renderPassoRosto(estado) {
   const raiz = $('#tela-confirmar-presenca');
@@ -159,7 +156,7 @@ function renderPassoRosto(estado) {
       btnCapturar.disabled = true;
     });
 
-  btnCapturar.addEventListener('click', () => {
+  btnCapturar.addEventListener('click', async () => {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth || 320;
     canvas.height = video.videoHeight || 320;
@@ -174,19 +171,19 @@ function renderPassoRosto(estado) {
     status.appendChild(criarElemento('span', { class: 'girador' }));
     status.appendChild(criarElemento('span', {}, ['Verificando se é você...']));
 
-    compararRosto(estado.fotoCapturada, estado.aluno.fotoRosto).then((resultado) => {
-      if (resultado.aprovado) {
-        status.className = 'confirmacao-status-ia sucesso';
-        status.innerHTML = '';
-        status.appendChild(criarElemento('span', {}, ['✅ Rosto reconhecido.']));
-        setTimeout(() => renderPassoLocalizacao(estado), 500);
-      } else {
-        status.className = 'confirmacao-status-ia erro';
-        status.innerHTML = '';
-        status.appendChild(criarElemento('span', {}, [`❌ ${resultado.motivo}`]));
-        setTimeout(() => renderPassoRosto(estado), 1800);
-      }
-    });
+    const resultado = await compararRosto(estado.fotoCapturada, estado.aluno.fotoRosto);
+
+    if (resultado.aprovado) {
+      status.className = 'confirmacao-status-ia sucesso';
+      status.innerHTML = '';
+      status.appendChild(criarElemento('span', {}, ['✅ Rosto reconhecido.']));
+      setTimeout(() => renderPassoLocalizacao(estado), 500);
+    } else {
+      status.className = 'confirmacao-status-ia erro';
+      status.innerHTML = '';
+      status.appendChild(criarElemento('span', {}, [`❌ ${resultado.motivo}`]));
+      setTimeout(() => renderPassoRosto(estado), 1800);
+    }
   });
 }
 
@@ -196,7 +193,6 @@ function pararCameraConfirmacao() {
     streamAtivoConfirmacao = null;
   }
 }
-
 
 function renderPassoLocalizacao(estado) {
   const raiz = $('#tela-confirmar-presenca');
@@ -215,31 +211,30 @@ function renderPassoLocalizacao(estado) {
 
   raiz.appendChild(montarCartaoConfirmacao(conteudo, estado, 3));
 
-  btnVerificar.addEventListener('click', () => {
+  btnVerificar.addEventListener('click', async () => {
     btnVerificar.disabled = true;
     btnVerificar.textContent = 'Verificando localização...';
     status.classList.remove('oculto');
     status.textContent = 'Obtendo sua localização atual...';
 
-    verificarLocalizacao().then((resultado) => {
-      if (resultado.erro) {
-        status.textContent = resultado.erro;
-        btnVerificar.disabled = false;
-        btnVerificar.textContent = 'Tentar novamente';
-        return;
-      }
-      if (!resultado.permitido) {
-        status.textContent = `Você está a ${resultado.distancia}m da faculdade — fora do raio permitido de ${RAIO_PERMITIDO_METROS}m.`;
-        btnVerificar.disabled = false;
-        btnVerificar.textContent = 'Tentar novamente';
-        return;
-      }
-      status.textContent = `Localização confirmada (a ${resultado.distancia}m da faculdade).`;
-      setTimeout(() => renderPassoCodigo(estado), 500);
-    });
+    const resultado = await verificarLocalizacao();
+
+    if (resultado.erro) {
+      status.textContent = resultado.erro;
+      btnVerificar.disabled = false;
+      btnVerificar.textContent = 'Tentar novamente';
+      return;
+    }
+    if (!resultado.permitido) {
+      status.textContent = `Você está a ${resultado.distancia}m da faculdade — fora do raio permitido de ${RAIO_PERMITIDO_METROS}m.`;
+      btnVerificar.disabled = false;
+      btnVerificar.textContent = 'Tentar novamente';
+      return;
+    }
+    status.textContent = `Localização confirmada (a ${resultado.distancia}m da faculdade).`;
+    setTimeout(() => renderPassoCodigo(estado), 500);
   });
 }
-
 
 function renderPassoCodigo(estado) {
   const raiz = $('#tela-confirmar-presenca');
@@ -255,10 +250,10 @@ function renderPassoCodigo(estado) {
     criarElemento('button', { type: 'submit', class: 'btn-primario' }, ['Confirmar presença'])
   ]);
 
-  form.addEventListener('submit', (evento) => {
+  form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const digitado = form.codigo.value.trim().toUpperCase();
-    const chamadaAtual = dbBuscarPorId('chamadas', estado.chamada.id);
+    const chamadaAtual = await dbBuscarPorId('chamadas', estado.chamada.id);
 
     if (!chamadaAtual || !chamadaAtual.ativa) {
       exibirErroPasso(erro, 'Esta chamada foi encerrada pelo professor.');
@@ -271,13 +266,19 @@ function renderPassoCodigo(estado) {
       return;
     }
 
-    const existente = dbListar('presencas').find((p) => p.chamadaId === estado.chamada.id && p.alunoId === estado.aluno.id);
+    const presencas = await dbListar('presencas');
+    const existente = presencas.find((p) => p.chamadaId === estado.chamada.id && p.alunoId === estado.aluno.id);
+
     if (existente) {
-      dbAtualizar('presencas', existente.id, { status: 'presente', origem: 'qrcode', confirmadoEm: new Date().toISOString() });
+      await dbAtualizar('presencas', existente.id, { status: 'presente', origem: 'qrcode', confirmadoEm: new Date().toISOString() });
     } else {
-      dbInserir('presencas', {
-        chamadaId: estado.chamada.id, turmaId: estado.turma.id, alunoId: estado.aluno.id,
-        status: 'presente', origem: 'qrcode', confirmadoEm: new Date().toISOString()
+      await dbInserir('presencas', {
+        chamadaId: estado.chamada.id,
+        turmaId: estado.turma.id,
+        alunoId: estado.aluno.id,
+        status: 'presente',
+        origem: 'qrcode',
+        confirmadoEm: new Date().toISOString()
       });
     }
 
@@ -295,7 +296,6 @@ function renderPassoCodigo(estado) {
   setTimeout(() => $('#input-codigo-confirmacao')?.focus(), 50);
 }
 
-
 function renderSucessoConfirmacao(estado) {
   const raiz = $('#tela-confirmar-presenca');
   raiz.innerHTML = '';
@@ -312,10 +312,3 @@ function renderSucessoConfirmacao(estado) {
 }
 
 window.montarTelaConfirmarPresenca = montarTelaConfirmarPresenca;
-
-
-
-
-
-
-

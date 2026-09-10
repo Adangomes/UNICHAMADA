@@ -1,6 +1,6 @@
 /**
  * alunos.js — Cadastro de Alunos (Coordenador)
- * Aluno: { nome, ra, email, fotoRosto, cursoId }
+ * Mapeia os dados do front para o padrão do banco (curso_id, foto_rosto)
  */
 
 async function renderSecaoAlunos(container) {
@@ -25,7 +25,7 @@ async function renderSecaoAlunos(container) {
   async function montarFormulario() {
     areaFormulario.innerHTML = '';
     const aluno = idEmEdicao ? await dbBuscarPorId('alunos', idEmEdicao) : null;
-    fotoAtual = aluno?.fotoRosto || '';
+    fotoAtual = aluno?.foto_rosto || aluno?.fotoRosto || '';
 
     const cursos = await dbListar('cursos');
 
@@ -51,11 +51,12 @@ async function renderSecaoAlunos(container) {
       ])
     ]);
 
+    const cursoAtualId = aluno?.curso_id || aluno?.cursoId || '';
     const campoCurso = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Curso']),
       criarElemento('select', { name: 'cursoId', required: 'true' }, [
         criarElemento('option', { value: '' }, ['Selecione um curso']),
-        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(aluno?.cursoId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
+        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(cursoAtualId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
       ])
     ]);
 
@@ -102,7 +103,13 @@ async function renderSecaoAlunos(container) {
         return;
       }
 
-      const dados = { nome, ra, email, cursoId, fotoRosto: fotoAtual };
+      const dados = { 
+        nome, 
+        ra, 
+        email, 
+        curso_id: cursoId, 
+        foto_rosto: fotoAtual 
+      };
 
       if (idEmEdicao) {
         await dbAtualizar('alunos', idEmEdicao, dados);
@@ -145,9 +152,12 @@ async function renderSecaoAlunos(container) {
     const corpo = criarElemento('tbody', {});
     
     for (const aluno of alunos) {
-      const curso = await dbBuscarPorId('cursos', aluno.cursoId);
+      const idCurso = aluno.curso_id || aluno.cursoId;
+      const curso = idCurso ? await dbBuscarPorId('cursos', idCurso) : null;
+      const fotoSrc = aluno.foto_rosto || aluno.fotoRosto || iconePadraoFoto();
+
       corpo.appendChild(criarElemento('tr', {}, [
-        criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` })]),
+        criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: fotoSrc, alt: `Foto de ${aluno.nome}` })]),
         criarElemento('td', {}, [aluno.nome]),
         criarElemento('td', { class: 'mono' }, [aluno.ra]),
         criarElemento('td', {}, [aluno.email]),
@@ -168,7 +178,7 @@ async function renderSecaoAlunos(container) {
               await dbRemover('alunos', aluno.id);
               
               const matriculas = await dbListar('matriculas');
-              const matriculasDoAluno = matriculas.filter((m) => m.alunoId === aluno.id);
+              const matriculasDoAluno = matriculas.filter((m) => (m.aluno_id || m.alunoId) === aluno.id);
               for (const m of matriculasDoAluno) {
                 await dbRemover('matriculas', m.id);
               }

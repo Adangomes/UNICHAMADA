@@ -39,7 +39,8 @@ function configurarFormularioLogin() {
   const form = $('#form-login');
   const aviso = $('#aviso-login');
 
-  form.addEventListener('submit', (evento) => {
+  // Adicionado 'async' aqui no evento de submit
+  form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const ra = form.ra.value.trim();
     const email = form.email.value.trim();
@@ -49,7 +50,8 @@ function configurarFormularioLogin() {
       return;
     }
 
-    const resultado = autenticar(ra, email);
+    // Adicionado 'await' aqui para o JavaScript esperar o Supabase responder de verdade
+    const resultado = await autenticar(ra, email);
 
     if (!resultado) {
       exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Nada foi aberto — confira os dados com a coordenação.');

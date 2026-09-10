@@ -1,10 +1,5 @@
 /**
- * professor.js — Painel do professor, com duas abas:
- *  - "Chamadas": central de chamadas — gerar chamada rápido por turma e
- *    ver TODAS as chamadas já feitas (de todas as turmas), com opção
- *    de ajustar presença/falta manualmente. É o coração do sistema,
- *    por isso é a aba que abre primeiro.
- *  - "Minhas turmas": turmas/disciplinas atribuídas pela coordenação.
+ * professor.js — Painel do professor
  */
 
 let elementoConteudoProfessor = null;
@@ -18,11 +13,14 @@ const ABAS_PROFESSOR = [
 ];
 
 async function montarPainelProfessor(sessao) {
-  professorLogado = sessao.dados;
+  // Trata caso a sessão venha em sessao.dados ou direto em sessao
+  professorLogado = sessao?.dados || sessao || {};
+  
   const tela = $('#tela-professor');
   tela.innerHTML = '';
 
-  tela.appendChild(montarCabecalhoPainel(sessao, 'professor'));
+  // Passa o objeto completo e garante o fallback
+  tela.appendChild(montarCabecalhoPainel({ dados: professorLogado }, 'professor'));
 
   const corpo = criarElemento('div', { class: 'painel-corpo' });
   const nav = criarElemento('nav', { class: 'painel-nav' });

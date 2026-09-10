@@ -154,7 +154,7 @@ function renderSecaoAlunos(container) {
           criarElemento('button', {
             class: 'btn-icone',
             onClick: () => { idEmEdicao = aluno.id; montarFormulario(); areaFormulario.scrollIntoView({ behavior: 'smooth' }); }
-          }, ['✏️ Editar']),
+          }, ['Editar']),
           criarElemento('button', {
             class: 'btn-perigo',
             onClick: () => {

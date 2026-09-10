@@ -9,8 +9,6 @@
  * que está mudando no telão do professor.
  * ------------------------------------------------------------------
  */
-* @returns {{tipo:'coordenador'|'professor', dados:object} | null}
-
 
 let streamAtivoConfirmacao = null;
 

@@ -1,24 +1,11 @@
 /**
  * geolocalizacao.js
  * ------------------------------------------------------------------
- * Verifica se o aluno está fisicamente perto da faculdade (raio em metros)
- * usando a Geolocation API do navegador + fórmula de Haversine.
- *
- * IMPORTANTE: as coordenadas abaixo são aproximadas para o endereço
- * "Av. Getúlio Vargas, 268 - Centro, Jaraguá do Sul - SC" (Unisociesc,
- * dentro do Partage Shopping). Ajuste para o valor exato antes de usar
- * em produção: abra o local no Google Maps, clique com o botão direito
- * bem em cima do prédio e copie as coordenadas que aparecem no menu.
+ * Valida se o aluno está a menos de 100 metros do local onde a chamada foi gerada.
  * ------------------------------------------------------------------
  */
 
-const CAMPUS = {
-  nome: 'Unisociesc — Jaraguá do Sul (Av. Getúlio Vargas, 268 - Centro)',
-  latitude: -26.4869,
-  longitude: -49.0656
-};
-
-const RAIO_PERMITIDO_METROS = 500;
+const RAIO_PERMITIDO_METROS = 100;
 
 /** Distância em metros entre duas coordenadas (fórmula de Haversine). */
 function distanciaEmMetros(lat1, lon1, lat2, lon2) {
@@ -34,42 +21,70 @@ function distanciaEmMetros(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * @returns {Promise<{permitido:boolean, distancia:number|null, erro:string|null}>}
+ * Pega as coordenadas atuais do dispositivo (use esta função quando o professor GERAR a chamada).
+ * @returns {Promise<{latitude: number, longitude: number}>}
  */
-function verificarLocalizacao() {
-  return new Promise((resolve) => {
+function obterLocalizacaoAtual() {
+  return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
-      resolve({ permitido: false, distancia: null, erro: 'Este navegador não suporta geolocalização.' });
+      reject('Seu navegador não suporta geolocalização.');
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (posicao) => {
-        const distancia = distanciaEmMetros(
-          posicao.coords.latitude,
-          posicao.coords.longitude,
-          CAMPUS.latitude,
-          CAMPUS.longitude
-        );
         resolve({
-          permitido: distancia <= RAIO_PERMITIDO_METROS,
-          distancia: Math.round(distancia),
-          erro: null
+          latitude: posicao.coords.latitude,
+          longitude: posicao.coords.longitude
         });
       },
       (erro) => {
         const mensagens = {
-          1: 'Permissão de localização negada. Ative para confirmar presença.',
-          2: 'Não foi possível obter sua localização.',
-          3: 'Tempo esgotado ao obter localização. Tente novamente.'
+          1: 'Permissão de localização negada.',
+          2: 'Não foi possível obter sua localização atual.',
+          3: 'Tempo esgotado ao buscar localização.'
         };
-        resolve({ permitido: false, distancia: null, erro: mensagens[erro.code] || 'Erro ao obter localização.' });
+        reject(mensagens[erro.code] || 'Erro de geolocalização.');
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   });
 }
 
-window.CAMPUS = CAMPUS;
+/**
+ * Valida a distância do ALUNO em relação às coordenadas salvas na chamada do professor.
+ * @param {number} latProfessor - Latitude capturada ao abrir a chamada
+ * @param {number} lonProfessor - Longitude capturada ao abrir a chamada
+ * @returns {Promise<{permitido:boolean, distancia:number|null, erro:string|null}>}
+ */
+function verificarLocalizacaoAluno(latProfessor, lonProfessor) {
+  return new Promise((resolve) => {
+    if (!latProfessor || !lonProfessor) {
+      resolve({ permitido: false, distancia: null, erro: 'Coordenadas da chamada inválidas ou ausentes.' });
+      return;
+    }
+
+    obterLocalizacaoAtual()
+      .then((coordsAluno) => {
+        const distancia = distanciaEmMetros(
+          coordsAluno.latitude,
+          coordsAluno.longitude,
+          latProfessor,
+          lonProfessor
+        );
+
+        resolve({
+          permitido: distancia <= RAIO_PERMITIDO_METROS,
+          distancia: Math.round(distancia),
+          erro: null
+        });
+      })
+      .catch((erroMsg) => {
+        resolve({ permitido: false, distancia: null, erro: erroMsg });
+      });
+  });
+}
+
 window.RAIO_PERMITIDO_METROS = RAIO_PERMITIDO_METROS;
-window.verificarLocalizacao = verificarLocalizacao;
+window.obterLocalizacaoAtual = obterLocalizacaoAtual;
+window.verificarLocalizacaoAluno = verificarLocalizacaoAluno;

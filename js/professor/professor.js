@@ -1,9 +1,9 @@
 /**
  * professor.js — Painel do professor, com duas abas:
  *  - "Chamadas": central de chamadas — gerar chamada rápido por turma e
- *     ver TODAS as chamadas já feitas (de todas as turmas), com opção
- *     de ajustar presença/falta manualmente. É o coração do sistema,
- *     por isso é a aba que abre primeiro.
+ *    ver TODAS as chamadas já feitas (de todas as turmas), com opção
+ *    de ajustar presença/falta manualmente. É o coração do sistema,
+ *    por isso é a aba que abre primeiro.
  *  - "Minhas turmas": turmas/disciplinas atribuídas pela coordenação.
  */
 
@@ -13,11 +13,11 @@ let pararAssinaturaAbaProfessor = null;
 let professorLogado = null;
 
 const ABAS_PROFESSOR = [
-  { chave: 'chamadas', rotulo: 'Chamadas', render: () => renderAbaChamadas(elementoConteudoProfessor, professorLogado) },
-  { chave: 'turmas', rotulo: 'Minhas turmas', render: () => renderAbaTurmas(elementoConteudoProfessor, professorLogado) }
+  { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
+  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) }
 ];
 
-function montarPainelProfessor(sessao) {
+async function montarPainelProfessor(sessao) {
   professorLogado = sessao.dados;
   const tela = $('#tela-professor');
   tela.innerHTML = '';
@@ -40,27 +40,31 @@ function montarPainelProfessor(sessao) {
   corpo.append(nav, elementoConteudoProfessor);
   tela.appendChild(corpo);
 
-  renderizarAbaAtivaProfessor();
+  await renderizarAbaAtivaProfessor();
 }
 
-function selecionarAbaProfessor(chave, nav) {
+async function selecionarAbaProfessor(chave, nav) {
   abaAtivaProfessor = chave;
   $all('button', nav).forEach((btn) => btn.classList.toggle('ativo', btn.dataset.chave === chave));
-  renderizarAbaAtivaProfessor();
+  await renderizarAbaAtivaProfessor();
 }
 
-function renderizarAbaAtivaProfessor() {
-  if (pararAssinaturaAbaProfessor) { pararAssinaturaAbaProfessor(); pararAssinaturaAbaProfessor = null; }
+async function renderizarAbaAtivaProfessor() {
+  if (pararAssinaturaAbaProfessor) { 
+    pararAssinaturaAbaProfessor(); 
+    pararAssinaturaAbaProfessor = null; 
+  }
   const aba = ABAS_PROFESSOR.find((a) => a.chave === abaAtivaProfessor);
-  aba.render();
+  await aba.render(elementoConteudoProfessor, professorLogado);
 }
 
 /* ============================== ABA: CHAMADAS ============================== */
 
-function renderAbaChamadas(container, professor) {
+async function renderAbaChamadas(container, professor) {
   container.innerHTML = '';
 
-  const turmas = dbListar('turmas').filter((t) => t.professorId === professor.id);
+  const todasturmas = await dbListar('turmas');
+  const turmas = todasturmas.filter((t) => t.professorId === professor.id);
 
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
@@ -78,9 +82,11 @@ function renderAbaChamadas(container, professor) {
 
   // ---- Ações rápidas: uma linha por turma pra gerar chamada na hora ----
   const acoesRapidas = criarElemento('div', { class: 'chamadas-acoes-rapidas' });
-  turmas.forEach((turma) => {
-    const disciplina = dbBuscarPorId('disciplinas', turma.disciplinaId);
-    const chamadaAtiva = dbListar('chamadas').find((c) => c.turmaId === turma.id && c.ativa);
+  const todasChamadas = await dbListar('chamadas');
+
+  for (const turma of turmas) {
+    const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+    const chamadaAtiva = todasChamadas.find((c) => c.turmaId === turma.id && c.ativa);
 
     acoesRapidas.appendChild(criarElemento('div', { class: 'chamada-acao-rapida' }, [
       criarElemento('div', {}, [
@@ -92,7 +98,7 @@ function renderAbaChamadas(container, professor) {
         onClick: () => abrirModalChamada(turma, professor)
       }, [chamadaAtiva ? 'Chamada em andamento — continuar' : 'GERAR CHAMADA'])
     ]));
-  });
+  }
   container.appendChild(acoesRapidas);
 
   // ---- Todas as chamadas já feitas, de todas as turmas ----
@@ -101,45 +107,55 @@ function renderAbaChamadas(container, professor) {
   const areaLista = criarElemento('div', { class: 'historico-lista' });
   container.appendChild(areaLista);
 
-  function renderizarTodasChamadas() {
+  async function renderizarTodasChamadas() {
     areaLista.innerHTML = '';
     const idsTurmas = turmas.map((t) => t.id);
-    const chamadas = dbListar('chamadas')
+    const chamadasAtuais = await dbListar('chamadas');
+    const chamadasFiltradas = chamadasAtuais
       .filter((c) => idsTurmas.includes(c.turmaId))
       .sort((a, b) => new Date(b.geradaEm) - new Date(a.geradaEm));
 
-    if (chamadas.length === 0) {
+    if (chamadasFiltradas.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhuma chamada foi gerada ainda. Use os botões acima para começar.']));
       return;
     }
 
-    chamadas.forEach((chamada) => {
+    for (const chamada of chamadasFiltradas) {
       const turma = turmas.find((t) => t.id === chamada.turmaId);
-      if (!turma) return;
-      areaLista.appendChild(montarCartaoChamadaComTurma(chamada, turma, renderizarTodasChamadas));
-    });
+      if (!turma) continue;
+      const cardComTurma = await montarCartaoChamadaComTurma(chamada, turma, renderizarTodasChamadas);
+      areaLista.appendChild(cardComTurma);
+    }
   }
 
-  renderizarTodasChamadas();
-  pararAssinaturaAbaProfessor = dbAoAtualizar(renderizarTodasChamadas);
+  await renderizarTodasChamadas();
+
+  if (typeof dbAoAtualizar === 'function') {
+    pararAssinaturaAbaProfessor = dbAoAtualizar(async () => await renderizarTodasChamadas());
+  }
 }
 
 /** Igual ao card do histórico, mas com uma etiqueta da turma em cima (lista é de várias turmas juntas). */
-function montarCartaoChamadaComTurma(chamada, turma, aoAtualizar) {
+async function montarCartaoChamadaComTurma(chamada, turma, aoAtualizar) {
   const rotuloTurma = criarElemento('div', { class: 'chamada-card-turma-label' }, [turma.nome]);
-  const card = montarCartaoChamadaHistorico(chamada, turma, aoAtualizar);
+  const card = await montarCartaoChamadaHistorico(chamada, turma, aoAtualizar);
   return criarElemento('div', {}, [rotuloTurma, card]);
 }
 
 /* ============================== ABA: MINHAS TURMAS ============================== */
 
-function renderAbaTurmas(container, professor) {
+async function renderAbaTurmas(container, professor) {
   container.innerHTML = '';
 
-  const turmas = dbListar('turmas').filter((t) => t.professorId === professor.id);
-  const disciplinas = dbListar('disciplinas').filter((d) => d.professorId === professor.id);
+  const todasturmas = await dbListar('turmas');
+  const turmas = todasturmas.filter((t) => t.professorId === professor.id);
+
+  const todasDisciplinas = await dbListar('disciplinas');
+  const disciplinas = todasDisciplinas.filter((d) => d.professorId === professor.id);
+
+  const todasMatriculas = await dbListar('matriculas');
   const totalAlunos = new Set(
-    dbListar('matriculas')
+    todasMatriculas
       .filter((m) => turmas.some((t) => t.id === m.turmaId))
       .map((m) => m.alunoId)
   ).size;
@@ -163,7 +179,10 @@ function renderAbaTurmas(container, professor) {
     ]));
   } else {
     const lista = criarElemento('div', { class: 'lista-turmas-professor' });
-    turmas.forEach((turma) => lista.appendChild(montarItemTurma(turma, professor)));
+    for (const turma of turmas) {
+      const itemTurma = await montarItemTurma(turma, professor);
+      lista.appendChild(itemTurma);
+    }
     container.appendChild(lista);
   }
 }
@@ -175,10 +194,12 @@ function cartaoResumo(numero, rotulo) {
   ]);
 }
 
-function montarItemTurma(turma, professor) {
-  const disciplina = dbBuscarPorId('disciplinas', turma.disciplinaId);
-  const curso = dbBuscarPorId('cursos', turma.cursoId);
-  const matriculas = dbListar('matriculas').filter((m) => m.turmaId === turma.id);
+async function montarItemTurma(turma, professor) {
+  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const curso = turma.cursoId ? await dbBuscarPorId('cursos', turma.cursoId) : null;
+  
+  const todasMatriculas = await dbListar('matriculas');
+  const matriculas = todasMatriculas.filter((m) => m.turmaId === turma.id);
 
   const btnGerarChamada = criarElemento('button', {
     class: 'btn-primario',
@@ -210,17 +231,19 @@ function montarItemTurma(turma, professor) {
         criarElemento('th', {}, ['E-mail'])
       ])
     ]));
+    
     const corpoTabela = criarElemento('tbody', {});
-    matriculas.forEach((matricula) => {
-      const aluno = dbBuscarPorId('alunos', matricula.alunoId);
-      if (!aluno) return;
+    for (const matricula of matriculas) {
+      const aluno = await dbBuscarPorId('alunos', matricula.alunoId);
+      if (!aluno) continue;
       corpoTabela.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` })]),
         criarElemento('td', {}, [aluno.nome]),
         criarElemento('td', { class: 'mono' }, [aluno.ra]),
         criarElemento('td', {}, [aluno.email])
       ]));
-    });
+    }
+    
     tabela.appendChild(corpoTabela);
     tabelaWrap.appendChild(tabela);
 

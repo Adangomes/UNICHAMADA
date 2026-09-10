@@ -14,13 +14,16 @@
 
 let paradaAssinaturaTelao = null;
 
-function montarTelaTelao(chamadaId) {
+async function montarTelaTelao(chamadaId) {
   const raiz = $('#tela-telao');
   raiz.innerHTML = '';
 
-  if (paradaAssinaturaTelao) { paradaAssinaturaTelao(); paradaAssinaturaTelao = null; }
+  if (paradaAssinaturaTelao) { 
+    paradaAssinaturaTelao(); 
+    paradaAssinaturaTelao = null; 
+  }
 
-  const chamada = dbBuscarPorId('chamadas', chamadaId);
+  const chamada = await dbBuscarPorId('chamadas', chamadaId);
 
   if (!chamada) {
     raiz.appendChild(criarElemento('div', { class: 'telao-cartao' }, [
@@ -29,8 +32,8 @@ function montarTelaTelao(chamadaId) {
     return;
   }
 
-  const turma = dbBuscarPorId('turmas', chamada.turmaId);
-  const disciplina = turma ? dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const turma = chamada.turmaId ? await dbBuscarPorId('turmas', chamada.turmaId) : null;
+  const disciplina = (turma && turma.disciplinaId) ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
 
   const areaQr = criarElemento('div', { class: 'telao-qr' });
   const areaCodigo = criarElemento('div', { class: 'telao-codigo' });
@@ -57,8 +60,8 @@ function montarTelaTelao(chamadaId) {
   // eslint-disable-next-line no-undef
   new QRCode(areaQr, { text: link, width: 220, height: 220, colorDark: '#1F2D50', colorLight: '#ffffff' });
 
-  function renderizar() {
-    const atual = dbBuscarPorId('chamadas', chamadaId);
+  async function renderizar() {
+    const atual = await dbBuscarPorId('chamadas', chamadaId);
     if (!atual || !atual.ativa) {
       areaAviso.textContent = 'Esta chamada foi encerrada pelo professor.';
       areaAviso.classList.remove('oculto');
@@ -69,8 +72,11 @@ function montarTelaTelao(chamadaId) {
     areaCodigo.textContent = atual.codigoAtual;
   }
 
-  renderizar();
-  paradaAssinaturaTelao = dbAoAtualizar(renderizar);
+  await renderizar();
+
+  if (typeof dbAoAtualizar === 'function') {
+    paradaAssinaturaTelao = dbAoAtualizar(async () => await renderizar());
+  }
 }
 
 function alternarTelaCheia() {

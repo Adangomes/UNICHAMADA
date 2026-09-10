@@ -90,7 +90,7 @@ function renderAbaChamadas(container, professor) {
       criarElemento('button', {
         class: chamadaAtiva ? 'btn-secundario' : 'btn-primario',
         onClick: () => abrirModalChamada(turma, professor)
-      }, [chamadaAtiva ? '🟢 Chamada em andamento — continuar' : '📋 Gerar chamada'])
+      }, [chamadaAtiva ? 'Chamada em andamento — continuar' : 'GERAR CHAMADA'])
     ]));
   });
   container.appendChild(acoesRapidas);

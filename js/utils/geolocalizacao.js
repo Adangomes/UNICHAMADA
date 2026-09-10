@@ -54,6 +54,9 @@ function obterLocalizacaoAtual() {
 
 /**
  * Valida a distância do ALUNO em relação às coordenadas salvas na chamada do professor.
+ * @param {number} latProfessor - Latitude capturada ao abrir a chamada
+ * @param {number} lonProfessor - Longitude capturada ao abrir a chamada
+ * @returns {Promise<{permitido:boolean, distancia:number|null, erro:string|null}>}
  */
 function verificarLocalizacaoAluno(latProfessor, lonProfessor) {
   return new Promise((resolve) => {

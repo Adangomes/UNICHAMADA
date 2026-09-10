@@ -8,7 +8,7 @@
 const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
 
 // Cole aqui a chave 'anon' 'public' (aquela longa que começa com eyJ...)
-const SUPABASE_KEY = 'SUA_CHAVE_ANON_PUBLIC_AQUI';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
 // Inicializa o cliente Supabase
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;

@@ -4,7 +4,7 @@
  * OBS: o e-mail é necessário porque o login do professor é feito por RA + e-mail.
  */
 
-function renderSecaoProfessores(container) {
+async function renderSecaoProfessores(container) {
   container.innerHTML = '';
 
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -22,9 +22,9 @@ function renderSecaoProfessores(container) {
 
   let idEmEdicao = null;
 
-  function montarFormulario() {
+  async function montarFormulario() {
     areaFormulario.innerHTML = '';
-    const professor = idEmEdicao ? dbBuscarPorId('professores', idEmEdicao) : null;
+    const professor = idEmEdicao ? await dbBuscarPorId('professores', idEmEdicao) : null;
 
     const form = criarElemento('form', {});
     form.appendChild(criarElemento('h3', {}, [idEmEdicao ? 'Editar professor' : 'Novo professor']));
@@ -51,13 +51,13 @@ function renderSecaoProfessores(container) {
     if (idEmEdicao) {
       botoes.appendChild(criarElemento('button', {
         type: 'button', class: 'btn-secundario',
-        onClick: () => { idEmEdicao = null; montarFormulario(); }
+        onClick: async () => { idEmEdicao = null; await montarFormulario(); }
       }, ['Cancelar']));
     }
 
     form.append(campoNome, linha, botoes);
 
-    form.addEventListener('submit', (evento) => {
+    form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       const nome = form.nome.value.trim();
       const ra = form.ra.value.trim();
@@ -72,7 +72,8 @@ function renderSecaoProfessores(container) {
         return;
       }
 
-      const duplicado = dbListar('professores').find(
+      const listaProfessores = await dbListar('professores');
+      const duplicado = listaProfessores.find(
         (p) => p.ra.toUpperCase() === ra.toUpperCase() && p.id !== idEmEdicao
       );
       if (duplicado) {
@@ -81,23 +82,24 @@ function renderSecaoProfessores(container) {
       }
 
       if (idEmEdicao) {
-        dbAtualizar('professores', idEmEdicao, { nome, ra, email });
+        await dbAtualizar('professores', idEmEdicao, { nome, ra, email });
         mostrarToast('Professor atualizado.', 'sucesso');
         idEmEdicao = null;
       } else {
-        dbInserir('professores', { nome, ra, email });
+        await dbInserir('professores', { nome, ra, email });
         mostrarToast('Professor cadastrado.', 'sucesso');
       }
-      montarFormulario();
-      montarLista();
+      await montarFormulario();
+      await montarLista();
     });
 
     areaFormulario.appendChild(form);
   }
 
-  function montarLista() {
+  async function montarLista() {
     areaLista.innerHTML = '';
-    const professores = dbListar('professores');
+    const professores = await dbListar('professores');
+    const disciplinas = await dbListar('disciplinas');
 
     if (professores.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [
@@ -118,8 +120,8 @@ function renderSecaoProfessores(container) {
     ]));
 
     const corpo = criarElemento('tbody', {});
-    professores.forEach((professor) => {
-      const qtd = dbListar('disciplinas').filter((d) => d.professorId === professor.id).length;
+    for (const professor of professores) {
+      const qtd = disciplinas.filter((d) => d.professorId === professor.id).length;
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [professor.nome]),
         criarElemento('td', { class: 'mono' }, [professor.ra]),
@@ -128,27 +130,31 @@ function renderSecaoProfessores(container) {
         criarElemento('td', { class: 'celula-acoes' }, [
           criarElemento('button', {
             class: 'btn-icone',
-            onClick: () => { idEmEdicao = professor.id; montarFormulario(); areaFormulario.scrollIntoView({ behavior: 'smooth' }); }
+            onClick: async () => { 
+              idEmEdicao = professor.id; 
+              await montarFormulario(); 
+              areaFormulario.scrollIntoView({ behavior: 'smooth' }); 
+            }
           }, ['Editar']),
           criarElemento('button', {
             class: 'btn-perigo',
-            onClick: () => {
+            onClick: async () => {
               if (!confirmarAcao(`Excluir o professor "${professor.nome}"?`)) return;
-              dbRemover('professores', professor.id);
+              await dbRemover('professores', professor.id);
               mostrarToast('Professor excluído.', 'sucesso');
-              montarLista();
+              await montarLista();
             }
           }, ['Excluir'])
         ])
       ]));
-    });
+    }
     tabela.appendChild(corpo);
 
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  montarFormulario();
-  montarLista();
+  await montarFormulario();
+  await montarLista();
 }
 
 window.renderSecaoProfessores = renderSecaoProfessores;

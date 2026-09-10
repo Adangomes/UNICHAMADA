@@ -3,7 +3,7 @@
  * Aluno: { nome, ra, email, fotoRosto, cursoId }
  */
 
-function renderSecaoAlunos(container) {
+async function renderSecaoAlunos(container) {
   container.innerHTML = '';
 
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -22,12 +22,12 @@ function renderSecaoAlunos(container) {
   let idEmEdicao = null;
   let fotoAtual = '';
 
-  function montarFormulario() {
+  async function montarFormulario() {
     areaFormulario.innerHTML = '';
-    const aluno = idEmEdicao ? dbBuscarPorId('alunos', idEmEdicao) : null;
+    const aluno = idEmEdicao ? await dbBuscarPorId('alunos', idEmEdicao) : null;
     fotoAtual = aluno?.fotoRosto || '';
 
-    const cursos = dbListar('cursos');
+    const cursos = await dbListar('cursos');
 
     const form = criarElemento('form', {});
     form.appendChild(criarElemento('h3', {}, [idEmEdicao ? 'Editar aluno' : 'Novo aluno']));
@@ -69,7 +69,7 @@ function renderSecaoAlunos(container) {
     if (idEmEdicao) {
       botoes.appendChild(criarElemento('button', {
         type: 'button', class: 'btn-secundario',
-        onClick: () => { idEmEdicao = null; montarFormulario(); }
+        onClick: async () => { idEmEdicao = null; await montarFormulario(); }
       }, ['Cancelar']));
     }
 
@@ -77,7 +77,7 @@ function renderSecaoAlunos(container) {
 
     montarCapturaFoto(containerFoto, fotoAtual, (dataUrl) => { fotoAtual = dataUrl; });
 
-    form.addEventListener('submit', (evento) => {
+    form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       const nome = form.nome.value.trim();
       const ra = form.ra.value.trim();
@@ -93,7 +93,8 @@ function renderSecaoAlunos(container) {
         return;
       }
 
-      const duplicado = dbListar('alunos').find(
+      const listaAlunos = await dbListar('alunos');
+      const duplicado = listaAlunos.find(
         (a) => a.ra.toUpperCase() === ra.toUpperCase() && a.id !== idEmEdicao
       );
       if (duplicado) {
@@ -104,23 +105,23 @@ function renderSecaoAlunos(container) {
       const dados = { nome, ra, email, cursoId, fotoRosto: fotoAtual };
 
       if (idEmEdicao) {
-        dbAtualizar('alunos', idEmEdicao, dados);
+        await dbAtualizar('alunos', idEmEdicao, dados);
         mostrarToast('Aluno atualizado.', 'sucesso');
         idEmEdicao = null;
       } else {
-        dbInserir('alunos', dados);
+        await dbInserir('alunos', dados);
         mostrarToast('Aluno cadastrado.', 'sucesso');
       }
-      montarFormulario();
-      montarLista();
+      await montarFormulario();
+      await montarLista();
     });
 
     areaFormulario.appendChild(form);
   }
 
-  function montarLista() {
+  async function montarLista() {
     areaLista.innerHTML = '';
-    const alunos = dbListar('alunos');
+    const alunos = await dbListar('alunos');
 
     if (alunos.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [
@@ -142,8 +143,9 @@ function renderSecaoAlunos(container) {
     ]));
 
     const corpo = criarElemento('tbody', {});
-    alunos.forEach((aluno) => {
-      const curso = dbBuscarPorId('cursos', aluno.cursoId);
+    
+    for (const aluno of alunos) {
+      const curso = await dbBuscarPorId('cursos', aluno.cursoId);
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` })]),
         criarElemento('td', {}, [aluno.nome]),
@@ -153,29 +155,38 @@ function renderSecaoAlunos(container) {
         criarElemento('td', { class: 'celula-acoes' }, [
           criarElemento('button', {
             class: 'btn-icone',
-            onClick: () => { idEmEdicao = aluno.id; montarFormulario(); areaFormulario.scrollIntoView({ behavior: 'smooth' }); }
+            onClick: async () => { 
+              idEmEdicao = aluno.id; 
+              await montarFormulario(); 
+              areaFormulario.scrollIntoView({ behavior: 'smooth' }); 
+            }
           }, ['Editar']),
           criarElemento('button', {
             class: 'btn-perigo',
-            onClick: () => {
+            onClick: async () => {
               if (!confirmarAcao(`Excluir o aluno "${aluno.nome}"?`)) return;
-              dbRemover('alunos', aluno.id);
-              // remove também matrículas associadas para manter integridade referencial
-              dbListar('matriculas').filter((m) => m.alunoId === aluno.id).forEach((m) => dbRemover('matriculas', m.id));
+              await dbRemover('alunos', aluno.id);
+              
+              const matriculas = await dbListar('matriculas');
+              const matriculasDoAluno = matriculas.filter((m) => m.alunoId === aluno.id);
+              for (const m of matriculasDoAluno) {
+                await dbRemover('matriculas', m.id);
+              }
+
               mostrarToast('Aluno excluído.', 'sucesso');
-              montarLista();
+              await montarLista();
             }
           }, ['Excluir'])
         ])
       ]));
-    });
+    }
     tabela.appendChild(corpo);
 
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  montarFormulario();
-  montarLista();
+  await montarFormulario();
+  await montarLista();
 }
 
 window.renderSecaoAlunos = renderSecaoAlunos;

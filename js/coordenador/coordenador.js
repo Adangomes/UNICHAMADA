@@ -1,22 +1,22 @@
 /**
- * coordenador.js — Monta o painel do coordenador dentro de #tela-coordenador,
+ * coordenadores.js — Monta o painel do coordenador dentro de #tela-coordenador,
  * com navegação por abas entre Professores, Cursos, Alunos, Disciplinas,
  * Turmas e Matrículas.
  */
 
 const ABAS_COORDENADOR = [
-  { chave: 'professores', rotulo: 'Professores', render: () => renderSecaoProfessores(elementoConteudoCoordenador) },
-  { chave: 'cursos', rotulo: 'Cursos', render: () => renderSecaoCursos(elementoConteudoCoordenador) },
-  { chave: 'alunos', rotulo: 'Alunos', render: () => renderSecaoAlunos(elementoConteudoCoordenador) },
-  { chave: 'disciplinas', rotulo: 'Disciplinas', render: () => renderSecaoDisciplinas(elementoConteudoCoordenador) },
-  { chave: 'turmas', rotulo: 'Turmas', render: () => renderSecaoTurmas(elementoConteudoCoordenador) },
-  { chave: 'matriculas', rotulo: 'Matrículas', render: () => renderSecaoMatriculas(elementoConteudoCoordenador) }
+  { chave: 'professores', rotulo: 'Professores', render: async () => await renderSecaoProfessores(elementoConteudoCoordenador) },
+  { chave: 'cursos', rotulo: 'Cursos', render: async () => await renderSecaoCursos(elementoConteudoCoordenador) },
+  { chave: 'alunos', rotulo: 'Alunos', render: async () => await renderSecaoAlunos(elementoConteudoCoordenador) },
+  { chave: 'disciplinas', rotulo: 'Disciplinas', render: async () => await renderSecaoDisciplinas(elementoConteudoCoordenador) },
+  { chave: 'turmas', rotulo: 'Turmas', render: async () => await renderSecaoTurmas(elementoConteudoCoordenador) },
+  { chave: 'matriculas', rotulo: 'Matrículas', render: async () => await renderSecaoMatriculas(elementoConteudoCoordenador) }
 ];
 
 let elementoConteudoCoordenador = null;
 let abaAtivaCoordenador = 'professores';
 
-function montarPainelCoordenador(sessao) {
+async function montarPainelCoordenador(sessao) {
   const tela = $('#tela-coordenador');
   tela.innerHTML = '';
 
@@ -38,18 +38,20 @@ function montarPainelCoordenador(sessao) {
   corpo.append(nav, elementoConteudoCoordenador);
   tela.appendChild(corpo);
 
-  renderizarAbaAtivaCoordenador();
+  await renderizarAbaAtivaCoordenador();
 }
 
-function selecionarAbaCoordenador(chave, nav) {
+async function selecionarAbaCoordenador(chave, nav) {
   abaAtivaCoordenador = chave;
   $all('button', nav).forEach((btn) => btn.classList.toggle('ativo', btn.dataset.chave === chave));
-  renderizarAbaAtivaCoordenador();
+  await renderizarAbaAtivaCoordenador();
 }
 
-function renderizarAbaAtivaCoordenador() {
+async function renderizarAbaAtivaCoordenador() {
   const aba = ABAS_COORDENADOR.find((a) => a.chave === abaAtivaCoordenador);
-  aba.render();
+  if (aba) {
+    await aba.render();
+  }
 }
 
 window.montarPainelCoordenador = montarPainelCoordenador;

@@ -23,11 +23,12 @@ const ROTULOS_STATUS_PRESENCA = {
   falta_justificada: 'Falta justificada'
 };
 
-function obterOuCriarChamadaAtiva(turmaId, professorId) {
-  const existente = dbListar('chamadas').find((c) => c.turmaId === turmaId && c.ativa);
+async function obterOuCriarChamadaAtiva(turmaId, professorId) {
+  const chamadas = await dbListar('chamadas');
+  const existente = chamadas.find((c) => c.turmaId === turmaId && c.ativa);
   if (existente) return existente;
 
-  return dbInserir('chamadas', {
+  return await dbInserir('chamadas', {
     turmaId,
     professorId,
     codigoAtual: gerarCodigoChamada(),
@@ -38,9 +39,9 @@ function obterOuCriarChamadaAtiva(turmaId, professorId) {
   });
 }
 
-function abrirModalChamada(turma, professor) {
-  const chamada = obterOuCriarChamadaAtiva(turma.id, professor.id);
-  const disciplina = dbBuscarPorId('disciplinas', turma.disciplinaId);
+async function abrirModalChamada(turma, professor) {
+  const chamada = await obterOuCriarChamadaAtiva(turma.id, professor.id);
+  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
 
   const linkConfirmacao = `${window.location.origin}${window.location.pathname}#presenca/${chamada.id}`;
 
@@ -84,12 +85,12 @@ function abrirModalChamada(turma, professor) {
   const modal = criarElemento('div', { class: 'chamada-modal' }, [cartao]);
   document.body.appendChild(modal);
 
-  // gera o QR code (biblioteca davidshimjs/qrcodejs carregada no index.html)
+  // Gera o QR Code
   // eslint-disable-next-line no-undef
   new QRCode(areaQr, { text: linkConfirmacao, width: 168, height: 168, colorDark: '#1F2D50', colorLight: '#ffffff' });
 
-  function renderizarCodigo() {
-    const atual = dbBuscarPorId('chamadas', chamada.id);
+  async function renderizarCodigo() {
+    const atual = await dbBuscarPorId('chamadas', chamada.id);
     if (!atual || !atual.ativa) return;
     areaCodigo.textContent = atual.codigoAtual;
   }
@@ -98,48 +99,51 @@ function abrirModalChamada(turma, professor) {
     const preenchimento = areaBarraTempo.querySelector('.chamada-barra-preenchimento');
     preenchimento.style.transition = 'none';
     preenchimento.style.width = '100%';
-    // força repaint antes de religar a transição
     void preenchimento.offsetWidth;
     preenchimento.style.transition = `width ${INTERVALO_ROTACAO_MS}ms linear`;
     preenchimento.style.width = '0%';
   }
 
-  function rotacionarCodigo() {
-    const atual = dbBuscarPorId('chamadas', chamada.id);
+  async function rotacionarCodigo() {
+    const atual = await dbBuscarPorId('chamadas', chamada.id);
     if (!atual || !atual.ativa) return;
-    dbAtualizar('chamadas', chamada.id, {
+    await dbAtualizar('chamadas', chamada.id, {
       codigoAnterior: atual.codigoAtual,
       codigoAtual: gerarCodigoChamada(),
       atualizadoEm: new Date().toISOString()
     });
-    renderizarCodigo();
+    await renderizarCodigo();
     reiniciarBarraTempo();
   }
 
-  function renderizarLista() {
+  async function renderizarLista() {
     areaLista.innerHTML = '';
-    const alunosDaTurma = alunosMatriculadosNaTurma(turma.id);
+    const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
+    const presencas = await dbListar('presencas');
 
     if (alunosDaTurma.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado nesta turma ainda.']));
       return;
     }
 
-    alunosDaTurma.forEach((aluno) => {
-      const presenca = dbListar('presencas').find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
-      areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, () => renderizarLista()));
-    });
+    for (const aluno of alunosDaTurma) {
+      const presenca = presencas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+      areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
+    }
   }
 
-  renderizarCodigo();
+  await renderizarCodigo();
   reiniciarBarraTempo();
-  renderizarLista();
+  await renderizarLista();
 
   cronometroRotacaoCodigo = setInterval(rotacionarCodigo, INTERVALO_ROTACAO_MS);
-  paradaAssinaturaChamada = dbAoAtualizar(() => {
-    renderizarLista();
-    renderizarCodigo();
-  });
+  
+  if (typeof dbAoAtualizar === 'function') {
+    paradaAssinaturaChamada = dbAoAtualizar(async () => {
+      await renderizarLista();
+      await renderizarCodigo();
+    });
+  }
 
   function fecharModal() {
     if (cronometroRotacaoCodigo) clearInterval(cronometroRotacaoCodigo);
@@ -150,9 +154,9 @@ function abrirModalChamada(turma, professor) {
   btnFechar.addEventListener('click', fecharModal);
   modal.addEventListener('click', (evento) => { if (evento.target === modal) fecharModal(); });
 
-  btnEncerrar.addEventListener('click', () => {
+  btnEncerrar.addEventListener('click', async () => {
     if (!confirmarAcao('Encerrar esta chamada? Alunos não vão mais conseguir confirmar presença por ela.')) return;
-    dbAtualizar('chamadas', chamada.id, { ativa: false });
+    await dbAtualizar('chamadas', chamada.id, { ativa: false });
     mostrarToast('Chamada encerrada.', 'sucesso');
     fecharModal();
   });
@@ -165,9 +169,11 @@ function abrirJanelaTelao(chamadaId) {
   else mostrarToast('O navegador bloqueou o pop-up. Permita pop-ups para destacar o telão.', 'erro');
 }
 
-function alunosMatriculadosNaTurma(turmaId) {
-  const idsAlunos = dbListar('matriculas').filter((m) => m.turmaId === turmaId).map((m) => m.alunoId);
-  return dbListar('alunos').filter((a) => idsAlunos.includes(a.id));
+async function alunosMatriculadosNaTurma(turmaId) {
+  const matriculas = await dbListar('matriculas');
+  const alunos = await dbListar('alunos');
+  const idsAlunos = matriculas.filter((m) => m.turmaId === turmaId).map((m) => m.alunoId);
+  return alunos.filter((a) => idsAlunos.includes(a.id));
 }
 
 function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
@@ -183,17 +189,18 @@ function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
 
   const tagStatus = criarElemento('span', { class: `tag tag-status-${status}` }, [ROTULOS_STATUS_PRESENCA[status]]);
 
-  function marcar(novoStatus) {
-    const existente = dbListar('presencas').find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+  async function marcar(novoStatus) {
+    const presencas = await dbListar('presencas');
+    const existente = presencas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
     if (existente) {
-      dbAtualizar('presencas', existente.id, { status: novoStatus, origem: 'manual', confirmadoEm: new Date().toISOString() });
+      await dbAtualizar('presencas', existente.id, { status: novoStatus, origem: 'manual', confirmadoEm: new Date().toISOString() });
     } else {
-      dbInserir('presencas', {
+      await dbInserir('presencas', {
         chamadaId: chamada.id, turmaId: turma.id, alunoId: aluno.id,
         status: novoStatus, origem: 'manual', confirmadoEm: new Date().toISOString()
       });
     }
-    aoAtualizar();
+    await aoAtualizar();
   }
 
   const acoesManuais = criarElemento('div', { class: 'chamada-acoes-manuais' }, [

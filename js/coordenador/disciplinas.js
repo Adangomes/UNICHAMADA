@@ -1,6 +1,6 @@
 /**
  * disciplinas.js — Cadastro de Disciplinas (Coordenador)
- * Disciplina: { nome, cursoId (curso vinculado), turno, cargaHoraria, professorId }
+ * Mapeia os dados do front para o padrão do banco (curso_id, carga_horaria, professor_id)
  */
 
 async function renderSecaoDisciplinas(container) {
@@ -35,14 +35,16 @@ async function renderSecaoDisciplinas(container) {
       criarElemento('input', { type: 'text', name: 'nome', required: 'true', value: disciplina?.nome || '' })
     ]);
 
+    const cursoAtualId = disciplina?.curso_id || disciplina?.cursoId || '';
     const campoCurso = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Curso vinculado']),
       criarElemento('select', { name: 'cursoId', required: 'true' }, [
         criarElemento('option', { value: '' }, ['Selecione o curso']),
-        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(disciplina?.cursoId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
+        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(cursoAtualId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
       ])
     ]);
 
+    const cargaAtual = disciplina?.carga_horaria !== undefined ? disciplina.carga_horaria : (disciplina?.cargaHoraria || '');
     const linha = criarElemento('div', { class: 'linha-campos' }, [
       criarElemento('div', { class: 'campo' }, [
         criarElemento('label', {}, ['Turno']),
@@ -53,15 +55,16 @@ async function renderSecaoDisciplinas(container) {
       ]),
       criarElemento('div', { class: 'campo' }, [
         criarElemento('label', {}, ['Carga horária (h)']),
-        criarElemento('input', { type: 'number', name: 'cargaHoraria', min: '1', value: disciplina?.cargaHoraria || '' })
+        criarElemento('input', { type: 'number', name: 'cargaHoraria', min: '1', value: cargaAtual })
       ])
     ]);
 
+    const professorAtualId = disciplina?.professor_id || disciplina?.professorId || '';
     const campoProfessor = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Professor responsável']),
       criarElemento('select', { name: 'professorId' }, [
         criarElemento('option', { value: '' }, ['A definir']),
-        ...professores.map((p) => criarElemento('option', { value: p.id, ...(disciplina?.professorId === p.id ? { selected: 'true' } : {}) }, [p.nome]))
+        ...professores.map((p) => criarElemento('option', { value: p.id, ...(professorAtualId === p.id ? { selected: 'true' } : {}) }, [p.nome]))
       ])
     ]);
 
@@ -94,7 +97,13 @@ async function renderSecaoDisciplinas(container) {
         return;
       }
 
-      const dados = { nome, cursoId, turno, cargaHoraria, professorId };
+      const dados = { 
+        nome, 
+        curso_id: cursoId, 
+        turno, 
+        carga_horaria: cargaHoraria, 
+        professor_id: professorId 
+      };
 
       if (idEmEdicao) {
         await dbAtualizar('disciplinas', idEmEdicao, dados);
@@ -135,8 +144,11 @@ async function renderSecaoDisciplinas(container) {
 
     const corpo = criarElemento('tbody', {});
     for (const disciplina of disciplinas) {
-      const curso = await dbBuscarPorId('cursos', disciplina.cursoId);
-      const professor = disciplina.professorId ? await dbBuscarPorId('professores', disciplina.professorId) : null;
+      const idCurso = disciplina.curso_id || disciplina.cursoId;
+      const idProfessor = disciplina.professor_id || disciplina.professorId;
+
+      const curso = idCurso ? await dbBuscarPorId('cursos', idCurso) : null;
+      const professor = idProfessor ? await dbBuscarPorId('professores', idProfessor) : null;
       
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [disciplina.nome]),

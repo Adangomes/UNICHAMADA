@@ -183,7 +183,7 @@ function montarItemTurma(turma, professor) {
   const btnGerarChamada = criarElemento('button', {
     class: 'btn-primario',
     onClick: () => abrirModalChamada(turma, professor)
-  }, ['📋 Gerar chamada']);
+  }, ['GERAR CHAMADA']);
 
   const cabecalho = criarElemento('div', { class: 'cabecalho-turma' }, [
     criarElemento('div', {}, [

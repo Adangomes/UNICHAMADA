@@ -3,7 +3,7 @@
  * Curso: { nome }
  */
 
-function renderSecaoCursos(container) {
+async function renderSecaoCursos(container) {
   container.innerHTML = '';
 
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -22,15 +22,23 @@ function renderSecaoCursos(container) {
 
   let idEmEdicao = null;
 
-  function montarFormulario() {
+  async function montarFormulario() {
     areaFormulario.innerHTML = '';
+
+    const curso = idEmEdicao ? await dbBuscarPorId('cursos', idEmEdicao) : null;
 
     const form = criarElemento('form', {});
     form.appendChild(criarElemento('h3', {}, [idEmEdicao ? 'Editar curso' : 'Novo curso']));
 
     const campoNome = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Nome do curso']),
-      criarElemento('input', { type: 'text', name: 'nome', placeholder: 'Ex.: Análise e Desenvolvimento de Sistemas', required: 'true' })
+      criarElemento('input', { 
+        type: 'text', 
+        name: 'nome', 
+        placeholder: 'Ex.: Análise e Desenvolvimento de Sistemas', 
+        required: 'true',
+        value: curso?.nome || ''
+      })
     ]);
 
     const botoes = criarElemento('div', { style: 'display:flex; gap:.6em; margin-top:.4em;' }, [
@@ -42,14 +50,14 @@ function renderSecaoCursos(container) {
         criarElemento('button', {
           type: 'button',
           class: 'btn-secundario',
-          onClick: () => { idEmEdicao = null; montarFormulario(); }
+          onClick: async () => { idEmEdicao = null; await montarFormulario(); }
         }, ['Cancelar'])
       );
     }
 
     form.append(campoNome, botoes);
 
-    form.addEventListener('submit', (evento) => {
+    form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       const nome = form.nome.value.trim();
       if (!campoObrigatorioPreenchido(nome)) {
@@ -58,23 +66,24 @@ function renderSecaoCursos(container) {
       }
 
       if (idEmEdicao) {
-        dbAtualizar('cursos', idEmEdicao, { nome });
+        await dbAtualizar('cursos', idEmEdicao, { nome });
         mostrarToast('Curso atualizado.', 'sucesso');
         idEmEdicao = null;
       } else {
-        dbInserir('cursos', { nome });
+        await dbInserir('cursos', { nome });
         mostrarToast('Curso cadastrado.', 'sucesso');
       }
-      montarFormulario();
-      montarLista();
+      await montarFormulario();
+      await montarLista();
     });
 
     areaFormulario.appendChild(form);
   }
 
-  function montarLista() {
+  async function montarLista() {
     areaLista.innerHTML = '';
-    const cursos = dbListar('cursos');
+    const cursos = await dbListar('cursos');
+    const disciplinas = await dbListar('disciplinas');
 
     if (cursos.length === 0) {
       areaLista.appendChild(
@@ -97,8 +106,8 @@ function renderSecaoCursos(container) {
     );
 
     const corpo = criarElemento('tbody', {});
-    cursos.forEach((curso) => {
-      const qtdDisciplinas = dbListar('disciplinas').filter((d) => d.cursoId === curso.id).length;
+    for (const curso of cursos) {
+      const qtdDisciplinas = disciplinas.filter((d) => d.cursoId === curso.id).length;
       corpo.appendChild(
         criarElemento('tr', {}, [
           criarElemento('td', {}, [curso.nome]),
@@ -106,21 +115,25 @@ function renderSecaoCursos(container) {
           criarElemento('td', { class: 'celula-acoes' }, [
             criarElemento('button', {
               class: 'btn-icone', title: 'Editar',
-              onClick: () => { idEmEdicao = curso.id; montarFormulario(); form_scrollTo(areaFormulario); }
+              onClick: async () => { 
+                idEmEdicao = curso.id; 
+                await montarFormulario(); 
+                form_scrollTo(areaFormulario); 
+              }
             }, ['Editar']),
             criarElemento('button', {
               class: 'btn-perigo', title: 'Excluir',
-              onClick: () => {
+              onClick: async () => {
                 if (!confirmarAcao(`Excluir o curso "${curso.nome}"?`)) return;
-                dbRemover('cursos', curso.id);
+                await dbRemover('cursos', curso.id);
                 mostrarToast('Curso excluído.', 'sucesso');
-                montarLista();
+                await montarLista();
               }
             }, ['Excluir'])
           ])
         ])
       );
-    });
+    }
     tabela.appendChild(corpo);
 
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
@@ -128,8 +141,8 @@ function renderSecaoCursos(container) {
 
   function form_scrollTo(el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
-  montarFormulario();
-  montarLista();
+  await montarFormulario();
+  await montarLista();
 }
 
 window.renderSecaoCursos = renderSecaoCursos;

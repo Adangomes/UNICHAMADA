@@ -3,18 +3,23 @@
  */
 
 function montarCabecalhoPainel(sessao, tipo) {
-  const { dados } = sessao;
+  // Trata tanto { tipo, dados: {...} } quanto o objeto do usuário direto
+  const dados = (sessao && sessao.dados) ? sessao.dados : (sessao || {});
+
+  const nome = dados.nome || 'Usuário';
+  const ra = dados.ra || '—';
+
   const foto = dados.fotoRosto
-    ? criarElemento('img', { class: 'foto-mini', src: dados.fotoRosto, alt: `Foto de ${dados.nome}` })
-    : criarElemento('div', { class: 'avatar-inicial' }, [iniciaisDoNome(dados.nome)]);
+    ? criarElemento('img', { class: 'foto-mini', src: dados.fotoRosto, alt: `Foto de ${nome}` })
+    : criarElemento('div', { class: 'avatar-inicial' }, [iniciaisDoNome(nome)]);
 
   const rotuloTipo = tipo === 'coordenador' ? 'Coordenador(a)' : 'Professor(a)';
 
   const identidade = criarElemento('div', { class: 'identidade' }, [
     foto,
     criarElemento('div', { class: 'textos' }, [
-      criarElemento('strong', {}, [dados.nome]),
-      criarElemento('span', {}, [`${rotuloTipo} · RA ${dados.ra}`])
+      criarElemento('strong', {}, [nome]),
+      criarElemento('span', {}, [`${rotuloTipo} · RA ${ra}`])
     ])
   ]);
 

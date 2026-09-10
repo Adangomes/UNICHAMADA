@@ -129,7 +129,7 @@ function renderSecaoProfessores(container) {
           criarElemento('button', {
             class: 'btn-icone',
             onClick: () => { idEmEdicao = professor.id; montarFormulario(); areaFormulario.scrollIntoView({ behavior: 'smooth' }); }
-          }, ['✏️ Editar']),
+          }, ['Editar']),
           criarElemento('button', {
             class: 'btn-perigo',
             onClick: () => {

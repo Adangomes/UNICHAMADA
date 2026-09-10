@@ -13,7 +13,7 @@ let pararAssinaturaAbaProfessor = null;
 let professorLogado = null;
 
 const ABAS_PROFESSOR = [
-  { chave: 'chamadas', rotulo: '📋 Chamadas', render: () => renderAbaChamadas(elementoConteudoProfessor, professorLogado) },
+  { chave: 'chamadas', rotulo: 'Chamadas', render: () => renderAbaChamadas(elementoConteudoProfessor, professorLogado) },
   { chave: 'turmas', rotulo: 'Minhas turmas', render: () => renderAbaTurmas(elementoConteudoProfessor, professorLogado) }
 ];
 

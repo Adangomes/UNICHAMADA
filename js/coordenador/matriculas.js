@@ -3,7 +3,7 @@
  * Matricula: { alunoId, turmaId, dataMatricula }
  */
 
-function renderSecaoMatriculas(container) {
+async function renderSecaoMatriculas(container) {
   container.innerHTML = '';
 
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -19,10 +19,18 @@ function renderSecaoMatriculas(container) {
   grade.append(areaFormulario, areaLista);
   container.append(cabecalho, grade);
 
-  function montarFormulario() {
+  async function montarFormulario() {
     areaFormulario.innerHTML = '';
-    const alunos = dbListar('alunos');
-    const turmas = dbListar('turmas');
+    const alunos = await dbListar('alunos');
+    const turmas = await dbListar('turmas');
+
+    const opcoesTurmas = await Promise.all(
+      turmas.map(async (t) => {
+        const disciplina = t.disciplinaId ? await dbBuscarPorId('disciplinas', t.disciplinaId) : null;
+        const rotulo = disciplina ? `${t.nome} — ${disciplina.nome}` : t.nome;
+        return criarElemento('option', { value: t.id }, [rotulo]);
+      })
+    );
 
     const form = criarElemento('form', {});
     form.appendChild(criarElemento('h3', {}, ['Nova matrícula']));
@@ -39,11 +47,7 @@ function renderSecaoMatriculas(container) {
       criarElemento('label', {}, ['Turma']),
       criarElemento('select', { name: 'turmaId', required: 'true' }, [
         criarElemento('option', { value: '' }, ['Selecione a turma']),
-        ...turmas.map((t) => {
-          const disciplina = dbBuscarPorId('disciplinas', t.disciplinaId);
-          const rotulo = disciplina ? `${t.nome} — ${disciplina.nome}` : t.nome;
-          return criarElemento('option', { value: t.id }, [rotulo]);
-        })
+        ...opcoesTurmas
       ])
     ]);
 
@@ -57,7 +61,7 @@ function renderSecaoMatriculas(container) {
       form.appendChild(criarElemento('p', { style: 'font-size:.78rem;color:var(--coral);margin-top:.6em;' }, ['Cadastre ao menos um aluno e uma turma antes de matricular.']));
     }
 
-    form.addEventListener('submit', (evento) => {
+    form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       const alunoId = form.alunoId.value;
       const turmaId = form.turmaId.value;
@@ -67,24 +71,25 @@ function renderSecaoMatriculas(container) {
         return;
       }
 
-      const jaMatriculado = dbListar('matriculas').find((m) => m.alunoId === alunoId && m.turmaId === turmaId);
+      const matriculas = await dbListar('matriculas');
+      const jaMatriculado = matriculas.find((m) => m.alunoId === alunoId && m.turmaId === turmaId);
       if (jaMatriculado) {
         mostrarToast('Este aluno já está matriculado nessa turma.', 'erro');
         return;
       }
 
-      dbInserir('matriculas', { alunoId, turmaId, dataMatricula: new Date().toISOString() });
+      await dbInserir('matriculas', { alunoId, turmaId, dataMatricula: new Date().toISOString() });
       mostrarToast('Matrícula realizada.', 'sucesso');
-      montarFormulario();
-      montarLista();
+      await montarFormulario();
+      await montarLista();
     });
 
     areaFormulario.appendChild(form);
   }
 
-  function montarLista() {
+  async function montarLista() {
     areaLista.innerHTML = '';
-    const matriculas = dbListar('matriculas');
+    const matriculas = await dbListar('matriculas');
 
     if (matriculas.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [
@@ -105,9 +110,10 @@ function renderSecaoMatriculas(container) {
     ]));
 
     const corpo = criarElemento('tbody', {});
-    matriculas.forEach((matricula) => {
-      const aluno = dbBuscarPorId('alunos', matricula.alunoId);
-      const turma = dbBuscarPorId('turmas', matricula.turmaId);
+    for (const matricula of matriculas) {
+      const aluno = matricula.alunoId ? await dbBuscarPorId('alunos', matricula.alunoId) : null;
+      const turma = matricula.turmaId ? await dbBuscarPorId('turmas', matricula.turmaId) : null;
+
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [aluno ? aluno.nome : '(aluno removido)']),
         criarElemento('td', { class: 'mono' }, [aluno ? aluno.ra : '—']),
@@ -116,23 +122,23 @@ function renderSecaoMatriculas(container) {
         criarElemento('td', { class: 'celula-acoes' }, [
           criarElemento('button', {
             class: 'btn-perigo',
-            onClick: () => {
+            onClick: async () => {
               if (!confirmarAcao('Cancelar esta matrícula?')) return;
-              dbRemover('matriculas', matricula.id);
+              await dbRemover('matriculas', matricula.id);
               mostrarToast('Matrícula cancelada.', 'sucesso');
-              montarLista();
+              await montarLista();
             }
           }, ['Cancelar'])
         ])
       ]));
-    });
+    }
     tabela.appendChild(corpo);
 
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  montarFormulario();
-  montarLista();
+  await montarFormulario();
+  await montarLista();
 }
 
 window.renderSecaoMatriculas = renderSecaoMatriculas;

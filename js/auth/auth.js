@@ -7,23 +7,21 @@
  *  - Se baterem com um registro em "professores" -> painel do professor.
  *  - Se não baterem com nada -> nada abre, e um aviso é exibido.
  * ------------------------------------------------------------------ */
- 
 
 const CHAVE_SESSAO = 'sistema-academico-sessao';
 
- 
- 
- 
-function autenticar(ra, email) {
+async function autenticar(ra, email) {
   const raNormalizado = ra.trim().toUpperCase();
   const emailNormalizado = email.trim().toLowerCase();
 
-  const coordenador = dbListar('coordenadores').find(
+  const coordenadores = await dbListar('coordenadores');
+  const coordenador = coordenadores.find(
     (c) => c.ra.toUpperCase() === raNormalizado && c.email.toLowerCase() === emailNormalizado
   );
   if (coordenador) return { tipo: 'coordenador', dados: coordenador };
 
-  const professor = dbListar('professores').find(
+  const professores = await dbListar('professores');
+  const professor = professores.find(
     (p) => p.ra.toUpperCase() === raNormalizado && p.email.toLowerCase() === emailNormalizado
   );
   if (professor) return { tipo: 'professor', dados: professor };
@@ -53,4 +51,3 @@ window.autenticar = autenticar;
 window.salvarSessao = salvarSessao;
 window.obterSessao = obterSessao;
 window.encerrarSessao = encerrarSessao;
-

@@ -107,7 +107,7 @@ function renderSecaoCursos(container) {
             criarElemento('button', {
               class: 'btn-icone', title: 'Editar',
               onClick: () => { idEmEdicao = curso.id; montarFormulario(); form_scrollTo(areaFormulario); }
-            }, ['✏️ Editar']),
+            }, ['Editar']),
             criarElemento('button', {
               class: 'btn-perigo', title: 'Excluir',
               onClick: () => {

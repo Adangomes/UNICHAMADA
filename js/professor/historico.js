@@ -8,8 +8,8 @@
  * ------------------------------------------------------------------
  */
 
-function abrirModalHistorico(turma, professor) {
-  const disciplina = dbBuscarPorId('disciplinas', turma.disciplinaId);
+async function abrirModalHistorico(turma, professor) {
+  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
 
   const btnFechar = criarElemento('button', { class: 'btn-icone', title: 'Fechar' }, ['✕ Fechar']);
   const areaLista = criarElemento('div', { class: 'historico-lista' });
@@ -26,9 +26,10 @@ function abrirModalHistorico(turma, professor) {
   const modal = criarElemento('div', { class: 'chamada-modal' }, [cartao]);
   document.body.appendChild(modal);
 
-  function renderizarLista() {
+  async function renderizarLista() {
     areaLista.innerHTML = '';
-    const chamadas = dbListar('chamadas')
+    const todasChamadas = await dbListar('chamadas');
+    const chamadas = todasChamadas
       .filter((c) => c.turmaId === turma.id)
       .sort((a, b) => new Date(b.geradaEm) - new Date(a.geradaEm));
 
@@ -37,23 +38,31 @@ function abrirModalHistorico(turma, professor) {
       return;
     }
 
-    chamadas.forEach((chamada) => areaLista.appendChild(montarCartaoChamadaHistorico(chamada, turma, renderizarLista)));
+    for (const chamada of chamadas) {
+      const cartaoChamada = await montarCartaoChamadaHistorico(chamada, turma, renderizarLista);
+      areaLista.appendChild(cartaoChamada);
+    }
   }
 
-  renderizarLista();
-  const pararAssinatura = dbAoAtualizar(renderizarLista);
+  await renderizarLista();
+
+  let pararAssinatura = null;
+  if (typeof dbAoAtualizar === 'function') {
+    pararAssinatura = dbAoAtualizar(async () => await renderizarLista());
+  }
 
   function fecharModal() {
-    pararAssinatura();
+    if (pararAssinatura) pararAssinatura();
     modal.remove();
   }
   btnFechar.addEventListener('click', fecharModal);
   modal.addEventListener('click', (evento) => { if (evento.target === modal) fecharModal(); });
 }
 
-function montarCartaoChamadaHistorico(chamada, turma, aoAtualizar) {
-  const alunosDaTurma = alunosMatriculadosNaTurma(turma.id);
-  const presencasDaChamada = dbListar('presencas').filter((p) => p.chamadaId === chamada.id);
+async function montarCartaoChamadaHistorico(chamada, turma, aoAtualizar) {
+  const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
+  const todasPresencas = await dbListar('presencas');
+  const presencasDaChamada = todasPresencas.filter((p) => p.chamadaId === chamada.id);
 
   const contagem = { presente: 0, falta: 0, falta_justificada: 0, aguardando: 0 };
   alunosDaTurma.forEach((aluno) => {
@@ -77,24 +86,31 @@ function montarCartaoChamadaHistorico(chamada, turma, aoAtualizar) {
 
   const corpoExpandido = criarElemento('div', { class: 'historico-item-alunos oculto' });
 
-  function preencherAlunos() {
+  async function preencherAlunos() {
     corpoExpandido.innerHTML = '';
     if (alunosDaTurma.length === 0) {
       corpoExpandido.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado.']));
       return;
     }
-    alunosDaTurma.forEach((aluno) => {
-      const presenca = dbListar('presencas').find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
-      corpoExpandido.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, () => { preencherAlunos(); aoAtualizar(); }));
-    });
+
+    const presencasAtualizadas = await dbListar('presencas');
+    for (const aluno of alunosDaTurma) {
+      const presenca = presencasAtualizadas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+      corpoExpandido.appendChild(
+        montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => {
+          await preencherAlunos();
+          await aoAtualizar();
+        })
+      );
+    }
   }
 
   let aberto = false;
-  cabecalho.addEventListener('click', () => {
+  cabecalho.addEventListener('click', async () => {
     aberto = !aberto;
     corpoExpandido.classList.toggle('oculto', !aberto);
     cabecalho.classList.toggle('historico-item-cabecalho-aberto', aberto);
-    if (aberto) preencherAlunos();
+    if (aberto) await preencherAlunos();
   });
 
   return criarElemento('div', { class: 'historico-item' }, [cabecalho, corpoExpandido]);

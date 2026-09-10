@@ -6,7 +6,7 @@
 
 // 1. Configuração do Supabase
 const SUPABASE_URL = 'https://xultvypwxwyxhfzwqdw.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Hz-73F700H3ROCfGhe1htg_p7f3P...'; // Cole a sua chave COMPLETA aqui
+const SUPABASE_KEY = 'sb_publishable_Hz-73f700H3ROCfGhe1htg_p7f2Pl99'; // Cole a sua chave COMPLETA aqui
 
 // Inicializa o cliente Supabase
 const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;

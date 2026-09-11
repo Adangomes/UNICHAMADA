@@ -1,6 +1,6 @@
 /**
  * matriculas.js — Matrículas (Coordenador)
- * Matricula: { alunoId, turmaId, dataMatricula }
+ * Mapeia os dados do front para o padrão do banco (aluno_id, turma_id, data_matricula)
  */
 
 async function renderSecaoMatriculas(container) {
@@ -26,7 +26,8 @@ async function renderSecaoMatriculas(container) {
 
     const opcoesTurmas = await Promise.all(
       turmas.map(async (t) => {
-        const disciplina = t.disciplinaId ? await dbBuscarPorId('disciplinas', t.disciplinaId) : null;
+        const idDisciplina = t.disciplina_id || t.disciplinaId;
+        const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
         const rotulo = disciplina ? `${t.nome} — ${disciplina.nome}` : t.nome;
         return criarElemento('option', { value: t.id }, [rotulo]);
       })
@@ -72,13 +73,25 @@ async function renderSecaoMatriculas(container) {
       }
 
       const matriculas = await dbListar('matriculas');
-      const jaMatriculado = matriculas.find((m) => m.alunoId === alunoId && m.turmaId === turmaId);
+      const jaMatriculado = matriculas.find((m) => {
+        const mAlunoId = m.aluno_id || m.alunoId;
+        const mTurmaId = m.turma_id || m.turmaId;
+        return mAlunoId === alunoId && mTurmaId === turmaId;
+      });
+
       if (jaMatriculado) {
         mostrarToast('Este aluno já está matriculado nessa turma.', 'erro');
         return;
       }
 
-      await dbInserir('matriculas', { alunoId, turmaId, dataMatricula: new Date().toISOString() });
+      // ENVIANDO EXATAMENTE NO FORMATO DO SEU SQL (aluno_id, turma_id, data_matricula)
+      const dados = { 
+        aluno_id: alunoId, 
+        turma_id: turmaId, 
+        data_matricula: new Date().toISOString() 
+      };
+
+      await dbInserir('matriculas', dados);
       mostrarToast('Matrícula realizada.', 'sucesso');
       await montarFormulario();
       await montarLista();
@@ -111,14 +124,18 @@ async function renderSecaoMatriculas(container) {
 
     const corpo = criarElemento('tbody', {});
     for (const matricula of matriculas) {
-      const aluno = matricula.alunoId ? await dbBuscarPorId('alunos', matricula.alunoId) : null;
-      const turma = matricula.turmaId ? await dbBuscarPorId('turmas', matricula.turmaId) : null;
+      const idAluno = matricula.aluno_id || matricula.alunoId;
+      const idTurma = matricula.turma_id || matricula.turmaId;
+      const dataMatricula = matricula.data_matricula || matricula.dataMatricula;
+
+      const aluno = idAluno ? await dbBuscarPorId('alunos', idAluno) : null;
+      const turma = idTurma ? await dbBuscarPorId('turmas', idTurma) : null;
 
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [aluno ? aluno.nome : '(aluno removido)']),
         criarElemento('td', { class: 'mono' }, [aluno ? aluno.ra : '—']),
         criarElemento('td', {}, [turma ? turma.nome : '(turma removida)']),
-        criarElemento('td', {}, [formatarData(matricula.dataMatricula)]),
+        criarElemento('td', {}, [formatarData(dataMatricula)]),
         criarElemento('td', { class: 'celula-acoes' }, [
           criarElemento('button', {
             class: 'btn-perigo',

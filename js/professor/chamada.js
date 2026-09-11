@@ -14,7 +14,7 @@
  */
 
 let paradaAssinaturaChamada = null;
-let cronometroRotacaoCodigo = null;
+let cronometroRotacaoCodigo = null; 
 
 const ROTULOS_STATUS_PRESENCA = {
   aguardando: 'Aguardando',

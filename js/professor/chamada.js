@@ -29,16 +29,69 @@ async function obterOuCriarChamadaAtiva(turmaId, professorId) {
     const tId = c.turma_id || c.turmaId;
     return tId === turmaId && c.ativa;
   });
-  if (existente) return existente;
+  
+  if (existente) {
+    // Se a chamada antiga já existe mas está sem latitude/longitude, 
+    // tenta atualizar caso o navegador permita agora.
+    if (!existente.latitude || !existente.longitude) {
+      try {
+        const pos = await obterPosicaoAtualAsync();
+        await dbAtualizar('chamadas', existente.id, {
+          latitude: pos.latitude,
+          longitude: pos.longitude
+        });
+        existente.latitude = pos.latitude;
+        existente.longitude = pos.longitude;
+      } catch (e) {
+        console.warn('Não foi possível atualizar a geolocalização da chamada existente:', e);
+      }
+    }
+    return existente;
+  }
+
+  // Tenta capturar a localização atual do professor via GPS antes de salvar
+  let latitude = null;
+  let longitude = null;
+  try {
+    const pos = await obterPosicaoAtualAsync();
+    latitude = pos.latitude;
+    longitude = pos.longitude;
+  } catch (erro) {
+    console.warn('Geolocalização do professor não obtida:', erro);
+  }
 
   return await dbInserir('chamadas', {
     turma_id: turmaId,
     professor_id: professorId,
     codigo_atual: gerarCodigoChamada(),
     codigo_anterior: null,
+    latitude: latitude,
+    longitude: longitude,
     gerada_em: new Date().toISOString(),
     atualizado_em: new Date().toISOString(),
     ativa: true
+  });
+}
+
+// Função auxiliar baseada em Promise para capturar o GPS facilmente com async/await
+function obterPosicaoAtualAsync() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocalização não suportada neste navegador.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   });
 }
 

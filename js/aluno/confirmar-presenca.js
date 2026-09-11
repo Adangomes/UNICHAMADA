@@ -5,7 +5,7 @@
  * "#presenca/<idDaChamada>"). Não passa pelo login normal.
  *
  * Etapas: 1) RA + e-mail  2) foto do rosto (comparada com a foto
- * cadastrada)  3) localização (raio de 500m da faculdade)  4) código
+ * cadastrada)  3) localização (raio de 100m)  4) código
  * que está mudando no telão do professor.
  * ------------------------------------------------------------------
  */
@@ -201,17 +201,15 @@ function renderPassoLocalizacao(estado) {
   const raiz = $('#tela-confirmar-presenca');
   raiz.innerHTML = '';
 
-  // Garante um fallback seguro caso a constante global CAMPUS não exista ou venha vazia
-  const nomeCampus = (typeof CAMPUS !== 'undefined' && CAMPUS && CAMPUS.nome) ? CAMPUS.nome : 'Faculdade';
-  const raioPermitido = (typeof RAIO_PERMITIDO_METROS !== 'undefined') ? RAIO_PERMITIDO_METROS : 500;
+  const raioPermitido = (typeof RAIO_PERMITIDO_METROS !== 'undefined') ? RAIO_PERMITIDO_METROS : 100;
 
   const status = criarElemento('div', { class: 'confirmacao-distancia oculto' });
   const btnVerificar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['📍 Permitir localização']);
 
   const conteudo = [
     criarElemento('div', { class: 'confirmacao-icone-central' }, ['📍']),
-    criarElemento('h2', {}, ['Confirme que você está na faculdade']),
-    criarElemento('p', { class: 'subtitulo' }, [`Você precisa estar a até ${raioPermitido}m de ${nomeCampus}.`]),
+    criarElemento('h2', {}, ['Confirme sua proximidade']),
+    criarElemento('p', { class: 'subtitulo' }, [`Você precisa estar a menos de ${raioPermitido} metros de onde a chamada foi aberta.`]),
     status,
     btnVerificar
   ];
@@ -222,9 +220,14 @@ function renderPassoLocalizacao(estado) {
     btnVerificar.disabled = true;
     btnVerificar.textContent = 'Verificando localização...';
     status.classList.remove('oculto');
-    status.textContent = 'Obtendo sua localização atual...';
+    status.textContent = 'Obtendo sua localização atual via GPS...';
 
-    const resultado = await verificarLocalizacao();
+    // Pega a latitude e longitude salvas na chamada do professor (suporta snake_case e camelCase)
+    const latProfessor = estado.chamada.latitude || estado.chamada.lat;
+    const lonProfessor = estado.chamada.longitude || estado.chamada.lon || estado.chamada.lng;
+
+    // AQUI ESTÁ A CORREÇÃO: Chamando explicitamente a função certa do geolocalizacao.js
+    const resultado = await verificarLocalizacaoAluno(latProfessor, lonProfessor);
 
     if (resultado.erro) {
       status.textContent = resultado.erro;
@@ -233,12 +236,12 @@ function renderPassoLocalizacao(estado) {
       return;
     }
     if (!resultado.permitido) {
-      status.textContent = `Você está a ${resultado.distancia}m da faculdade — fora do raio permitido de ${raioPermitido}m.`;
+      status.textContent = `Você está a ${resultado.distancia}m do local — fora do raio permitido de ${raioPermitido}m. aproxime-se.`;
       btnVerificar.disabled = false;
       btnVerificar.textContent = 'Tentar novamente';
       return;
     }
-    status.textContent = `Localização confirmada (a ${resultado.distancia}m da faculdade).`;
+    status.textContent = `Localização confirmada! (a ${resultado.distancia}m do local).`;
     setTimeout(() => renderPassoCodigo(estado), 500);
   });
 }

@@ -56,12 +56,17 @@ async function renderSecaoTurmas(container) {
       
       const disciplinaAtualId = turma?.disciplina_id || turma?.disciplinaId || '';
       
+      // CORREÇÃO AQUI: Lidando com curso_id vindo do banco (snake_case)
       disciplinas
-        .filter((d) => (d.curso_id || d.cursoId) === cursoIdSelecionado)
+        .filter((d) => {
+          const idCursoDisciplina = d.curso_id || d.cursoId;
+          return idCursoDisciplina === cursoIdSelecionado;
+        })
         .forEach((d) => {
           select.appendChild(criarElemento('option', { value: d.id, ...(disciplinaAtualId === d.id ? { selected: 'true' } : {}) }, [d.nome]));
         });
     }
+
     repopularDisciplinas(cursoAtualId);
     campoCurso.querySelector('select').addEventListener('change', (e) => repopularDisciplinas(e.target.value));
 
@@ -115,7 +120,6 @@ async function renderSecaoTurmas(container) {
         return;
       }
 
-      // ENVIANDO EXATAMENTE NO FORMATO DO SEU SQL (curso_id, disciplina_id, professor_id)
       const dados = { 
         nome, 
         curso_id: cursoId, 

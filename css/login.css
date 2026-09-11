@@ -39,12 +39,25 @@
   padding: 40px;
 }
 
+/* 11/09/2026 */
+/* Animação de rotação contínua e suave */
+@keyframes girarLento {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Arcos Curvos Decorativos */
 .arco-decorativo {
   position: absolute;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.15);
   pointer-events: none;
+  /* Aplica a animação: 25 segundos por volta, infinita e em ritmo constante (linear) */
+  animation: girarLento 25s linear infinite;
 }
 
 .arco-topo {
@@ -52,7 +65,7 @@
   height: 380px;
   top: -120px;
   left: -80px;
-  border-color: rgba(97, 39, 78, 0.35); /* Tom roxo sutil da referência */
+  border-color: rgba(97, 39, 78, 0.35); /* Tom roxo sutil */
 }
 
 .arco-base {
@@ -61,8 +74,9 @@
   bottom: -160px;
   right: -100px;
   border-color: rgba(255, 255, 255, 0.12);
+  /* Rotação no sentido oposto para dar um efeito visual mais dinâmico */
+  animation-direction: reverse; 
 }
-
 /* Tipografia UNI CHAMADAS */
 .login-brand {
   text-align: center;

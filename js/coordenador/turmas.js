@@ -1,6 +1,6 @@
 /**
  * turmas.js — Cadastro de Turmas (Coordenador)
- * Turma: { nome, cursoId, disciplinaId, professorId, turno, periodo }
+ * Mapeia os dados do front para o padrão do banco (curso_id, disciplina_id, professor_id)
  */
 
 async function renderSecaoTurmas(container) {
@@ -35,11 +35,12 @@ async function renderSecaoTurmas(container) {
       criarElemento('input', { type: 'text', name: 'nome', required: 'true', placeholder: 'Ex.: ADS-2026/2-A', value: turma?.nome || '' })
     ]);
 
+    const cursoAtualId = turma?.curso_id || turma?.cursoId || '';
     const campoCurso = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Curso']),
       criarElemento('select', { name: 'cursoId', required: 'true' }, [
         criarElemento('option', { value: '' }, ['Selecione o curso']),
-        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(turma?.cursoId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
+        ...cursos.map((c) => criarElemento('option', { value: c.id, ...(cursoAtualId === c.id ? { selected: 'true' } : {}) }, [c.nome]))
       ])
     ]);
 
@@ -52,21 +53,25 @@ async function renderSecaoTurmas(container) {
       const select = campoDisciplina.querySelector('select');
       select.innerHTML = '';
       select.appendChild(criarElemento('option', { value: '' }, ['Selecione a disciplina']));
+      
+      const disciplinaAtualId = turma?.disciplina_id || turma?.disciplinaId || '';
+      
       disciplinas
-        .filter((d) => d.cursoId === cursoIdSelecionado)
+        .filter((d) => (d.curso_id || d.cursoId) === cursoIdSelecionado)
         .forEach((d) => {
-          select.appendChild(criarElemento('option', { value: d.id, ...(turma?.disciplinaId === d.id ? { selected: 'true' } : {}) }, [d.nome]));
+          select.appendChild(criarElemento('option', { value: d.id, ...(disciplinaAtualId === d.id ? { selected: 'true' } : {}) }, [d.nome]));
         });
     }
-    repopularDisciplinas(turma?.cursoId || '');
+    repopularDisciplinas(cursoAtualId);
     campoCurso.querySelector('select').addEventListener('change', (e) => repopularDisciplinas(e.target.value));
 
     const professores = await dbListar('professores');
+    const professorAtualId = turma?.professor_id || turma?.professorId || '';
     const campoProfessor = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', {}, ['Professor']),
       criarElemento('select', { name: 'professorId' }, [
         criarElemento('option', { value: '' }, ['A definir']),
-        ...professores.map((p) => criarElemento('option', { value: p.id, ...(turma?.professorId === p.id ? { selected: 'true' } : {}) }, [p.nome]))
+        ...professores.map((p) => criarElemento('option', { value: p.id, ...(professorAtualId === p.id ? { selected: 'true' } : {}) }, [p.nome]))
       ])
     ]);
 
@@ -110,7 +115,15 @@ async function renderSecaoTurmas(container) {
         return;
       }
 
-      const dados = { nome, cursoId, disciplinaId, professorId, turno, periodo };
+      // ENVIANDO EXATAMENTE NO FORMATO DO SEU SQL (curso_id, disciplina_id, professor_id)
+      const dados = { 
+        nome, 
+        curso_id: cursoId, 
+        disciplina_id: disciplinaId, 
+        professor_id: professorId, 
+        turno, 
+        periodo 
+      };
 
       if (idEmEdicao) {
         await dbAtualizar('turmas', idEmEdicao, dados);
@@ -153,9 +166,13 @@ async function renderSecaoTurmas(container) {
 
     const corpo = criarElemento('tbody', {});
     for (const turma of turmas) {
-      const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
-      const professor = turma.professorId ? await dbBuscarPorId('professores', turma.professorId) : null;
-      const qtdAlunos = matriculas.filter((m) => m.turmaId === turma.id).length;
+      const idDisciplina = turma.disciplina_id || turma.disciplinaId;
+      const idProfessor = turma.professor_id || turma.professorId;
+
+      const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
+      const professor = idProfessor ? await dbBuscarPorId('professores', idProfessor) : null;
+      
+      const qtdAlunos = matriculas.filter((m) => (m.turma_id || m.turmaId) === turma.id).length;
 
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [turma.nome]),
@@ -178,7 +195,7 @@ async function renderSecaoTurmas(container) {
               if (!confirmarAcao(`Excluir a turma "${turma.nome}"?`)) return;
               await dbRemover('turmas', turma.id);
               
-              const matriculasParaRemover = matriculas.filter((m) => m.turmaId === turma.id);
+              const matriculasParaRemover = matriculas.filter((m) => (m.turma_id || m.turmaId) === turma.id);
               for (const m of matriculasParaRemover) {
                 await dbRemover('matriculas', m.id);
               }

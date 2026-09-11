@@ -32,8 +32,10 @@ async function montarTelaTelao(chamadaId) {
     return;
   }
 
-  const turma = chamada.turmaId ? await dbBuscarPorId('turmas', chamada.turmaId) : null;
-  const disciplina = (turma && turma.disciplinaId) ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const tId = chamada.turma_id || chamada.turmaId;
+  const turma = tId ? await dbBuscarPorId('turmas', tId) : null;
+  const idDisciplina = turma ? (turma.disciplina_id || turma.disciplinaId) : null;
+  const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
 
   const areaQr = criarElemento('div', { class: 'telao-qr' });
   const areaCodigo = criarElemento('div', { class: 'telao-codigo' });
@@ -69,13 +71,13 @@ async function montarTelaTelao(chamadaId) {
       return;
     }
     areaAviso.classList.add('oculto');
-    areaCodigo.textContent = atual.codigoAtual;
+    areaCodigo.textContent = atual.codigo_atual || atual.codigoAtual;
   }
 
   await renderizar();
 
   if (typeof dbAoAtualizar === 'function') {
-    paradaAssinaturaTelao = dbAoAtualizar(async () => await renderizar());
+    pararAssinaturaTelao = dbAoAtualizar(async () => await renderizar());
   }
 }
 

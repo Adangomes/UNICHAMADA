@@ -62,7 +62,10 @@ async function renderAbaChamadas(container, professor) {
   container.innerHTML = '';
 
   const todasturmas = await dbListar('turmas');
-  const turmas = todasturmas.filter((t) => t.professorId === professor.id);
+  const turmas = todasturmas.filter((t) => {
+    const pId = t.professor_id || t.professorId;
+    return pId === professor.id;
+  });
 
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
@@ -83,8 +86,13 @@ async function renderAbaChamadas(container, professor) {
   const todasChamadas = await dbListar('chamadas');
 
   for (const turma of turmas) {
-    const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
-    const chamadaAtiva = todasChamadas.find((c) => c.turmaId === turma.id && c.ativa);
+    const idDisciplina = turma.disciplina_id || turma.disciplinaId;
+    const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
+    
+    const chamadaAtiva = todasChamadas.find((c) => {
+      const tId = c.turma_id || c.turmaId;
+      return tId === turma.id && c.ativa;
+    });
 
     acoesRapidas.appendChild(criarElemento('div', { class: 'chamada-acao-rapida' }, [
       criarElemento('div', {}, [
@@ -110,8 +118,15 @@ async function renderAbaChamadas(container, professor) {
     const idsTurmas = turmas.map((t) => t.id);
     const chamadasAtuais = await dbListar('chamadas');
     const chamadasFiltradas = chamadasAtuais
-      .filter((c) => idsTurmas.includes(c.turmaId))
-      .sort((a, b) => new Date(b.geradaEm) - new Date(a.geradaEm));
+      .filter((c) => {
+        const tId = c.turma_id || c.turmaId;
+        return idsTurmas.includes(tId);
+      })
+      .sort((a, b) => {
+        const dataA = new Date(a.gerada_em || a.geradaEm);
+        const dataB = new Date(b.gerada_em || b.geradaEm);
+        return dataB - dataA;
+      });
 
     if (chamadasFiltradas.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhuma chamada foi gerada ainda. Use os botões acima para começar.']));
@@ -119,7 +134,8 @@ async function renderAbaChamadas(container, professor) {
     }
 
     for (const chamada of chamadasFiltradas) {
-      const turma = turmas.find((t) => t.id === chamada.turmaId);
+      const tId = chamada.turma_id || chamada.turmaId;
+      const turma = turmas.find((t) => t.id === tId);
       if (!turma) continue;
       const cardComTurma = await montarCartaoChamadaComTurma(chamada, turma, renderizarTodasChamadas);
       areaLista.appendChild(cardComTurma);
@@ -146,16 +162,25 @@ async function renderAbaTurmas(container, professor) {
   container.innerHTML = '';
 
   const todasturmas = await dbListar('turmas');
-  const turmas = todasturmas.filter((t) => t.professorId === professor.id);
+  const turmas = todasturmas.filter((t) => {
+    const pId = t.professor_id || t.professorId;
+    return pId === professor.id;
+  });
 
   const todasDisciplinas = await dbListar('disciplinas');
-  const disciplinas = todasDisciplinas.filter((d) => d.professorId === professor.id);
+  const disciplinas = todasDisciplinas.filter((d) => {
+    const pId = d.professor_id || d.professorId;
+    return pId === professor.id;
+  });
 
   const todasMatriculas = await dbListar('matriculas');
   const totalAlunos = new Set(
     todasMatriculas
-      .filter((m) => turmas.some((t) => t.id === m.turmaId))
-      .map((m) => m.alunoId)
+      .filter((m) => {
+        const tId = m.turma_id || m.turmaId;
+        return turmas.some((t) => t.id === tId);
+      })
+      .map((m) => m.aluno_id || m.alunoId)
   ).size;
 
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
@@ -193,11 +218,17 @@ function cartaoResumo(numero, rotulo) {
 }
 
 async function montarItemTurma(turma, professor) {
-  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
-  const curso = turma.cursoId ? await dbBuscarPorId('cursos', turma.cursoId) : null;
+  const idDisciplina = turma.disciplina_id || turma.disciplinaId;
+  const idCurso = turma.curso_id || turma.cursoId;
+
+  const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
+  const curso = idCurso ? await dbBuscarPorId('cursos', idCurso) : null;
   
   const todasMatriculas = await dbListar('matriculas');
-  const matriculas = todasMatriculas.filter((m) => m.turmaId === turma.id);
+  const matriculas = todasMatriculas.filter((m) => {
+    const tId = m.turma_id || m.turmaId;
+    return tId === turma.id;
+  });
 
   const btnGerarChamada = criarElemento('button', {
     class: 'btn-primario',
@@ -232,10 +263,12 @@ async function montarItemTurma(turma, professor) {
     
     const corpoTabela = criarElemento('tbody', {});
     for (const matricula of matriculas) {
-      const aluno = await dbBuscarPorId('alunos', matricula.alunoId);
+      const aId = matricula.aluno_id || matricula.alunoId;
+      const aluno = await dbBuscarPorId('alunos', aId);
       if (!aluno) continue;
+      const fotoRosto = aluno.foto_rosto || aluno.fotoRosto || iconePadraoFoto();
       corpoTabela.appendChild(criarElemento('tr', {}, [
-        criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` })]),
+        criarElemento('td', {}, [criarElemento('img', { class: 'celula-foto', src: fotoRosto, alt: `Foto de ${aluno.nome}` })]),
         criarElemento('td', {}, [aluno.nome]),
         criarElemento('td', { class: 'mono' }, [aluno.ra]),
         criarElemento('td', {}, [aluno.email])

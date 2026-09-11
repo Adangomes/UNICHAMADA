@@ -72,7 +72,7 @@
 
 .logo-uni {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 5rem;
+  font-size: 8rem; /* AQUI REGULA O TAMANHO*/
   font-weight: 300;
   color: #ffffff;
   margin: 0;

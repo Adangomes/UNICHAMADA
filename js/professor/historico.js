@@ -9,7 +9,8 @@
  */
 
 async function abrirModalHistorico(turma, professor) {
-  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const idDisciplina = turma.disciplina_id || turma.disciplinaId;
+  const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
 
   const btnFechar = criarElemento('button', { class: 'btn-icone', title: 'Fechar' }, ['✕ Fechar']);
   const areaLista = criarElemento('div', { class: 'historico-lista' });
@@ -30,8 +31,12 @@ async function abrirModalHistorico(turma, professor) {
     areaLista.innerHTML = '';
     const todasChamadas = await dbListar('chamadas');
     const chamadas = todasChamadas
-      .filter((c) => c.turmaId === turma.id)
-      .sort((a, b) => new Date(b.geradaEm) - new Date(a.geradaEm));
+      .filter((c) => (c.turma_id || c.turmaId) === turma.id)
+      .sort((a, b) => {
+        const dataA = new Date(a.gerada_em || a.geradaEm);
+        const dataB = new Date(b.gerada_em || b.geradaEm);
+        return dataB - dataA;
+      });
 
     if (chamadas.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhuma chamada foi gerada nesta turma ainda.']));
@@ -62,17 +67,19 @@ async function abrirModalHistorico(turma, professor) {
 async function montarCartaoChamadaHistorico(chamada, turma, aoAtualizar) {
   const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
   const todasPresencas = await dbListar('presencas');
-  const presencasDaChamada = todasPresencas.filter((p) => p.chamadaId === chamada.id);
+  const presencasDaChamada = todasPresencas.filter((p) => (p.chamada_id || p.chamadaId) === chamada.id);
 
   const contagem = { presente: 0, falta: 0, falta_justificada: 0, aguardando: 0 };
   alunosDaTurma.forEach((aluno) => {
-    const presenca = presencasDaChamada.find((p) => p.alunoId === aluno.id);
+    const presenca = presencasDaChamada.find((p) => (p.aluno_id || p.alunoId) === aluno.id);
     contagem[presenca ? presenca.status : 'aguardando']++;
   });
 
+  const dataGeracao = chamada.gerada_em || chamada.geradaEm;
+
   const cabecalho = criarElemento('button', { class: 'historico-item-cabecalho' }, [
     criarElemento('div', { class: 'historico-item-data' }, [
-      criarElemento('strong', {}, [formatarDataHora(chamada.geradaEm)]),
+      criarElemento('strong', {}, [formatarDataHora(dataGeracao)]),
       criarElemento('span', { class: `tag ${chamada.ativa ? 'tag-status-presente' : ''}` }, [chamada.ativa ? 'Ativa' : 'Encerrada'])
     ]),
     criarElemento('div', { class: 'historico-item-resumo' }, [
@@ -95,7 +102,11 @@ async function montarCartaoChamadaHistorico(chamada, turma, aoAtualizar) {
 
     const presencasAtualizadas = await dbListar('presencas');
     for (const aluno of alunosDaTurma) {
-      const presenca = presencasAtualizadas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+      const presenca = presencasAtualizadas.find((p) => {
+        const cId = p.chamada_id || p.chamadaId;
+        const aId = p.aluno_id || p.alunoId;
+        return cId === chamada.id && aId === aluno.id;
+      });
       corpoExpandido.appendChild(
         montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => {
           await preencherAlunos();

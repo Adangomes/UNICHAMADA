@@ -25,23 +25,27 @@ const ROTULOS_STATUS_PRESENCA = {
 
 async function obterOuCriarChamadaAtiva(turmaId, professorId) {
   const chamadas = await dbListar('chamadas');
-  const existente = chamadas.find((c) => c.turmaId === turmaId && c.ativa);
+  const existente = chamadas.find((c) => {
+    const tId = c.turma_id || c.turmaId;
+    return tId === turmaId && c.ativa;
+  });
   if (existente) return existente;
 
   return await dbInserir('chamadas', {
-    turmaId,
-    professorId,
-    codigoAtual: gerarCodigoChamada(),
-    codigoAnterior: null,
-    geradaEm: new Date().toISOString(),
-    atualizadoEm: new Date().toISOString(),
+    turma_id: turmaId,
+    professor_id: professorId,
+    codigo_atual: gerarCodigoChamada(),
+    codigo_anterior: null,
+    gerada_em: new Date().toISOString(),
+    atualizado_em: new Date().toISOString(),
     ativa: true
   });
 }
 
 async function abrirModalChamada(turma, professor) {
   const chamada = await obterOuCriarChamadaAtiva(turma.id, professor.id);
-  const disciplina = turma.disciplinaId ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const idDisciplina = turma.disciplina_id || turma.disciplinaId;
+  const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
 
   const linkConfirmacao = `${window.location.origin}${window.location.pathname}#presenca/${chamada.id}`;
 
@@ -92,7 +96,7 @@ async function abrirModalChamada(turma, professor) {
   async function renderizarCodigo() {
     const atual = await dbBuscarPorId('chamadas', chamada.id);
     if (!atual || !atual.ativa) return;
-    areaCodigo.textContent = atual.codigoAtual;
+    areaCodigo.textContent = atual.codigo_atual || atual.codigoAtual;
   }
 
   function reiniciarBarraTempo() {
@@ -108,9 +112,9 @@ async function abrirModalChamada(turma, professor) {
     const atual = await dbBuscarPorId('chamadas', chamada.id);
     if (!atual || !atual.ativa) return;
     await dbAtualizar('chamadas', chamada.id, {
-      codigoAnterior: atual.codigoAtual,
-      codigoAtual: gerarCodigoChamada(),
-      atualizadoEm: new Date().toISOString()
+      codigo_anterior: atual.codigo_atual || atual.codigoAtual,
+      codigo_atual: gerarCodigoChamada(),
+      atualizado_em: new Date().toISOString()
     });
     await renderizarCodigo();
     reiniciarBarraTempo();
@@ -127,7 +131,11 @@ async function abrirModalChamada(turma, professor) {
     }
 
     for (const aluno of alunosDaTurma) {
-      const presenca = presencas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+      const presenca = presencas.find((p) => {
+        const cId = p.chamada_id || p.chamadaId;
+        const aId = p.aluno_id || p.alunoId;
+        return cId === chamada.id && aId === aluno.id;
+      });
       areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
     }
   }
@@ -172,7 +180,9 @@ function abrirJanelaTelao(chamadaId) {
 async function alunosMatriculadosNaTurma(turmaId) {
   const matriculas = await dbListar('matriculas');
   const alunos = await dbListar('alunos');
-  const idsAlunos = matriculas.filter((m) => m.turmaId === turmaId).map((m) => m.alunoId);
+  const idsAlunos = matriculas
+    .filter((m) => (m.turma_id || m.turmaId) === turmaId)
+    .map((m) => m.aluno_id || m.alunoId);
   return alunos.filter((a) => idsAlunos.includes(a.id));
 }
 
@@ -180,7 +190,7 @@ function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
   const status = presenca ? presenca.status : 'aguardando';
 
   const bolinha = criarElemento('span', { class: `bolinha-status status-${status}` });
-  const foto = criarElemento('img', { class: 'celula-foto', src: aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` });
+  const foto = criarElemento('img', { class: 'celula-foto', src: aluno.foto_rosto || aluno.fotoRosto || iconePadraoFoto(), alt: `Foto de ${aluno.nome}` });
 
   const info = criarElemento('div', { class: 'chamada-aluno-info' }, [
     criarElemento('strong', {}, [aluno.nome]),
@@ -191,13 +201,27 @@ function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
 
   async function marcar(novoStatus) {
     const presencas = await dbListar('presencas');
-    const existente = presencas.find((p) => p.chamadaId === chamada.id && p.alunoId === aluno.id);
+    const existente = presencas.find((p) => {
+      const cId = p.chamada_id || p.chamadaId;
+      const aId = p.aluno_id || p.alunoId;
+      return cId === chamada.id && aId === aluno.id;
+    });
+
+    const timestamp = new Date().toISOString();
     if (existente) {
-      await dbAtualizar('presencas', existente.id, { status: novoStatus, origem: 'manual', confirmadoEm: new Date().toISOString() });
+      await dbAtualizar('presencas', existente.id, { 
+        status: novoStatus, 
+        origem: 'manual', 
+        confirmado_em: timestamp 
+      });
     } else {
       await dbInserir('presencas', {
-        chamadaId: chamada.id, turmaId: turma.id, alunoId: aluno.id,
-        status: novoStatus, origem: 'manual', confirmadoEm: new Date().toISOString()
+        chamada_id: chamada.id, 
+        turma_id: turma.id, 
+        aluno_id: aluno.id,
+        status: novoStatus, 
+        origem: 'manual', 
+        confirmado_em: timestamp
       });
     }
     await aoAtualizar();

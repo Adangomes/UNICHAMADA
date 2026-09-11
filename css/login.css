@@ -88,7 +88,7 @@
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.32em;
   margin-top: 6px;
-  margin-left: 13px; /* <--- Aumente o valor pra ir mais pra direita */
+  margin-left: 16px; /* <--- Aumente o valor pra ir mais pra direita */
 }
 
 /* ================= LADO DIREITO: CARD DE LOGIN ================= */

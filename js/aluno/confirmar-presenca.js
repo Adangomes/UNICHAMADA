@@ -133,7 +133,7 @@ function renderPassoRosto(estado) {
   wrapVideo.appendChild(video);
 
   const status = criarElemento('div', { class: 'confirmacao-status-ia oculto' });
-  const btnCapturar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['📷 Tirar foto e verificar']);
+  const btnCapturar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['VERIFICAR ID']);
 
   const conteudo = [
     criarElemento('h2', {}, ['Verificação facial']),
@@ -179,7 +179,7 @@ function renderPassoRosto(estado) {
     if (resultado.aprovado) {
       status.className = 'confirmacao-status-ia sucesso';
       status.innerHTML = '';
-      status.appendChild(criarElemento('span', {}, ['✅ Rosto reconhecido.']));
+      status.appendChild(criarElemento('span', {}, ['AUTENTICADO']));
       setTimeout(() => renderPassoLocalizacao(estado), 500);
     } else {
       status.className = 'confirmacao-status-ia erro';
@@ -204,10 +204,10 @@ function renderPassoLocalizacao(estado) {
   const raioPermitido = (typeof RAIO_PERMITIDO_METROS !== 'undefined') ? RAIO_PERMITIDO_METROS : 100;
 
   const status = criarElemento('div', { class: 'confirmacao-distancia oculto' });
-  const btnVerificar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['📍 Permitir localização']);
+  const btnVerificar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['PERMITIR LOCALIZAÇÃO']);
 
   const conteudo = [
-    criarElemento('div', { class: 'confirmacao-icone-central' }, ['📍']),
+    criarElemento('div', { class: 'confirmacao-icone-central' }, ['']),
     criarElemento('h2', {}, ['Confirme sua proximidade']),
     criarElemento('p', { class: 'subtitulo' }, [`Você precisa estar a menos de ${raioPermitido} metros de onde a chamada foi aberta.`]),
     status,

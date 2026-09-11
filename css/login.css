@@ -40,7 +40,7 @@
 }
 
 /* 11/09/2026 */
-/* Animação de rotação contínua e suave */
+/* Animação de rotação contínua */
 @keyframes girarLento {
   from {
     transform: rotate(0deg);
@@ -50,14 +50,26 @@
   }
 }
 
-/* Arcos Curvos Decorativos */
+/* Arcos Curvos Decorativos com Degradê Visible */
 .arco-decorativo {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.15);
   pointer-events: none;
-  /* Aplica a animação: 25 segundos por volta, infinita e em ritmo constante (linear) */
-  animation: girarLento 25s linear infinite;
+  /* Cria uma borda oca com gradiente que varia a transparência ao redor do círculo */
+  padding: 3px; /* Espessura do arco */
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.2) 40%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  /* Máscara CSS para deixar o centro transparente e só mostrar a borda */
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  
+  animation: girarLento 18s linear infinite;
 }
 
 .arco-topo {
@@ -65,7 +77,14 @@
   height: 380px;
   top: -120px;
   left: -80px;
-  border-color: rgba(97, 39, 78, 0.35); /* Tom roxo sutil */
+  /* Versão com tom de azul/roxo que vai do opaco ao transparente */
+  background: conic-gradient(
+    from 0deg,
+    rgba(140, 70, 120, 0.7) 0%,
+    rgba(255, 255, 255, 0.3) 35%,
+    transparent 65%,
+    rgba(140, 70, 120, 0.7) 100%
+  );
 }
 
 .arco-base {
@@ -73,9 +92,9 @@
   height: 450px;
   bottom: -160px;
   right: -100px;
-  border-color: rgba(255, 255, 255, 0.12);
-  /* Rotação no sentido oposto para dar um efeito visual mais dinâmico */
-  animation-direction: reverse; 
+  /* Rotação inversa para contraste visual */
+  animation-direction: reverse;
+  animation-duration: 25s;
 }
 /* Tipografia UNI CHAMADAS */
 .login-brand {

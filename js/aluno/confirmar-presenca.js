@@ -5,7 +5,7 @@
  * "#presenca/<idDaChamada>"). Não passa pelo login normal.
  *
  * Etapas: 1) RA + e-mail  2) foto do rosto (comparada com a foto
- * cadastrada)  3) localização (raio de 100m)  4) código
+ * cadastrada)  3) localização (raio de 100m da chamada)  4) código
  * que está mudando no telão do professor.
  * ------------------------------------------------------------------
  */
@@ -222,11 +222,17 @@ function renderPassoLocalizacao(estado) {
     status.classList.remove('oculto');
     status.textContent = 'Obtendo sua localização atual via GPS...';
 
-    // Pega a latitude e longitude salvas na chamada do professor (suporta snake_case e camelCase)
-    const latProfessor = estado.chamada.latitude || estado.chamada.lat;
-    const lonProfessor = estado.chamada.longitude || estado.chamada.lon || estado.chamada.lng;
+    // Pega as coordenadas da chamada do professor independentemente de como o banco as nomeou
+    const latProfessor = estado.chamada.latitude || estado.chamada.lat || estado.chamada.latitude_professor || estado.chamada.latProfessor;
+    const lonProfessor = estado.chamada.longitude || estado.chamada.lon || estado.chamada.lng || estado.chamada.longitude_professor || estado.chamada.lonProfessor;
 
-    // AQUI ESTÁ A CORREÇÃO: Chamando explicitamente a função certa do geolocalizacao.js
+    if (!latProfessor || !lonProfessor) {
+      status.textContent = 'Coordenadas da chamada inválidas ou ausentes.';
+      btnVerificar.disabled = false;
+      btnVerificar.textContent = 'Tentar novamente';
+      return;
+    }
+
     const resultado = await verificarLocalizacaoAluno(latProfessor, lonProfessor);
 
     if (resultado.erro) {
@@ -236,7 +242,7 @@ function renderPassoLocalizacao(estado) {
       return;
     }
     if (!resultado.permitido) {
-      status.textContent = `Você está a ${resultado.distancia}m do local — fora do raio permitido de ${raioPermitido}m. aproxime-se.`;
+      status.textContent = `Você está a ${resultado.distancia}m do local — fora do raio permitido de ${raioPermitido}m.`;
       btnVerificar.disabled = false;
       btnVerificar.textContent = 'Tentar novamente';
       return;

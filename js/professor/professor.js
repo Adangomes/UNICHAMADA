@@ -107,45 +107,59 @@ async function renderAbaChamadas(container, professor) {
   }
   container.appendChild(acoesRapidas);
 
-  // ---- Todas as chamadas já feitas, de todas as turmas ----
+  // ---- Todas as chamadas já feitas, de todas the turmas ----
   container.appendChild(criarElemento('h3', { style: 'margin:1.6em 0 .8em;' }, ['Todas as chamadas']));
 
   const areaLista = criarElemento('div', { class: 'historico-lista' });
   container.appendChild(areaLista);
 
+  let renderizando = false; // Trava de segurança anti-duplicação
+
   async function renderizarTodasChamadas() {
-    areaLista.innerHTML = '';
-    const idsTurmas = turmas.map((t) => t.id);
-    const chamadasAtuais = await dbListar('chamadas');
-    const chamadasFiltradas = chamadasAtuais
-      .filter((c) => {
-        const tId = c.turma_id || c.turmaId;
-        return idsTurmas.includes(tId);
-      })
-      .sort((a, b) => {
-        const dataA = new Date(a.gerada_em || a.geradaEm);
-        const dataB = new Date(b.gerada_em || b.geradaEm);
-        return dataB - dataA;
-      });
+    if (renderizando) return;
+    renderizando = true;
 
-    if (chamadasFiltradas.length === 0) {
-      areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhuma chamada foi gerada ainda. Use os botões acima para começar.']));
-      return;
-    }
+    try {
+      areaLista.innerHTML = '';
+      const idsTurmas = turmas.map((t) => t.id);
+      const chamadasAtuais = await dbListar('chamadas');
+      const chamadasFiltradas = chamadasAtuais
+        .filter((c) => {
+          const tId = c.turma_id || c.turmaId;
+          return idsTurmas.includes(tId);
+        })
+        .sort((a, b) => {
+          const dataA = new Date(a.gerada_em || a.geradaEm);
+          const dataB = new Date(b.gerada_em || b.geradaEm);
+          return dataB - dataA;
+        });
 
-    for (const chamada of chamadasFiltradas) {
-      const tId = chamada.turma_id || chamada.turmaId;
-      const turma = turmas.find((t) => t.id === tId);
-      if (!turma) continue;
-      const cardComTurma = await montarCartaoChamadaComTurma(chamada, turma, renderizarTodasChamadas);
-      areaLista.appendChild(cardComTurma);
+      if (chamadasFiltradas.length === 0) {
+        areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhuma chamada foi gerada ainda. Use os botões acima para começar.']));
+        return;
+      }
+
+      for (const chamada of chamadasFiltradas) {
+        const tId = chamada.turma_id || chamada.turmaId;
+        const turma = turmas.find((t) => t.id === tId);
+        if (!turma) continue;
+        const cardComTurma = await montarCartaoChamadaComTurma(chamada, turma, renderizarTodasChamadas);
+        areaLista.appendChild(cardComTurma);
+      }
+    } finally {
+      renderizando = false;
     }
   }
 
   await renderizarTodasChamadas();
 
   if (typeof dbAoAtualizar === 'function') {
-    pararAssinaturaAbaProfessor = dbAoAtualizar(async () => await renderizarTodasChamadas());
+    pararAssinaturaAbaProfessor = dbAoAtualizar(async () => {
+      // Debounce simples para garantir que múltiplas atualizações seguidas não gerem conflito
+      setTimeout(async () => {
+        await renderizarTodasChamadas();
+      }, 150);
+    });
   }
 }
 

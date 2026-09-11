@@ -201,13 +201,17 @@ function renderPassoLocalizacao(estado) {
   const raiz = $('#tela-confirmar-presenca');
   raiz.innerHTML = '';
 
+  // Garante um fallback seguro caso a constante global CAMPUS não exista ou venha vazia
+  const nomeCampus = (typeof CAMPUS !== 'undefined' && CAMPUS && CAMPUS.nome) ? CAMPUS.nome : 'Faculdade';
+  const raioPermitido = (typeof RAIO_PERMITIDO_METROS !== 'undefined') ? RAIO_PERMITIDO_METROS : 500;
+
   const status = criarElemento('div', { class: 'confirmacao-distancia oculto' });
   const btnVerificar = criarElemento('button', { type: 'button', class: 'btn-primario' }, ['📍 Permitir localização']);
 
   const conteudo = [
     criarElemento('div', { class: 'confirmacao-icone-central' }, ['📍']),
     criarElemento('h2', {}, ['Confirme que você está na faculdade']),
-    criarElemento('p', { class: 'subtitulo' }, [`Você precisa estar a até ${RAIO_PERMITIDO_METROS}m de ${CAMPUS.nome}.`]),
+    criarElemento('p', { class: 'subtitulo' }, [`Você precisa estar a até ${raioPermitido}m de ${nomeCampus}.`]),
     status,
     btnVerificar
   ];
@@ -229,7 +233,7 @@ function renderPassoLocalizacao(estado) {
       return;
     }
     if (!resultado.permitido) {
-      status.textContent = `Você está a ${resultado.distancia}m da faculdade — fora do raio permitido de ${RAIO_PERMITIDO_METROS}m.`;
+      status.textContent = `Você está a ${resultado.distancia}m da faculdade — fora do raio permitido de ${raioPermitido}m.`;
       btnVerificar.disabled = false;
       btnVerificar.textContent = 'Tentar novamente';
       return;

@@ -1,5 +1,5 @@
 /**
- * confirmar-presenca.js
+ * confirmar-presenca.js — Tela do Aluno (Confirmação de Presença via QR Code)
  * ------------------------------------------------------------------
  * Tela acessada pelo aluno ao ler o QR Code da chamada (rota
  * "#presenca/<idDaChamada>"). Não passa pelo login normal.
@@ -29,8 +29,10 @@ async function montarTelaConfirmarPresenca(chamadaId) {
     return;
   }
 
-  const turma = chamada.turmaId ? await dbBuscarPorId('turmas', chamada.turmaId) : null;
-  const disciplina = (turma && turma.disciplinaId) ? await dbBuscarPorId('disciplinas', turma.disciplinaId) : null;
+  const tId = chamada.turma_id || chamada.turmaId;
+  const turma = tId ? await dbBuscarPorId('turmas', tId) : null;
+  const idDisciplina = turma ? (turma.disciplina_id || turma.disciplinaId) : null;
+  const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
 
   const estado = { chamada, turma, disciplina, aluno: null, fotoCapturada: null };
 
@@ -171,7 +173,8 @@ function renderPassoRosto(estado) {
     status.appendChild(criarElemento('span', { class: 'girador' }));
     status.appendChild(criarElemento('span', {}, ['Verificando se é você...']));
 
-    const resultado = await compararRosto(estado.fotoCapturada, estado.aluno.fotoRosto);
+    const fotoAluno = estado.aluno.foto_rosto || estado.aluno.fotoRosto;
+    const resultado = await compararRosto(estado.fotoCapturada, fotoAluno);
 
     if (resultado.aprovado) {
       status.className = 'confirmacao-status-ia sucesso';
@@ -260,25 +263,37 @@ function renderPassoCodigo(estado) {
       return;
     }
 
-    const codigoValido = digitado === chamadaAtual.codigoAtual || digitado === chamadaAtual.codigoAnterior;
+    const codigoAtualBanco = chamadaAtual.codigo_atual || chamadaAtual.codigoAtual;
+    const codigoAnteriorBanco = chamadaAtual.codigo_anterior || chamadaAtual.codigoAnterior;
+
+    const codigoValido = digitado === codigoAtualBanco || digitado === codigoAnteriorBanco;
     if (!codigoValido) {
       exibirErroPasso(erro, 'Código incorreto. Confira o código que está no telão e tente de novo.');
       return;
     }
 
     const presencas = await dbListar('presencas');
-    const existente = presencas.find((p) => p.chamadaId === estado.chamada.id && p.alunoId === estado.aluno.id);
+    const existente = presencas.find((p) => {
+      const cId = p.chamada_id || p.chamadaId;
+      const aId = p.aluno_id || p.alunoId;
+      return cId === estado.chamada.id && aId === estado.aluno.id;
+    });
 
+    const timestamp = new Date().toISOString();
     if (existente) {
-      await dbAtualizar('presencas', existente.id, { status: 'presente', origem: 'qrcode', confirmadoEm: new Date().toISOString() });
+      await dbAtualizar('presencas', existente.id, { 
+        status: 'presente', 
+        origem: 'qrcode', 
+        confirmado_em: timestamp 
+      });
     } else {
       await dbInserir('presencas', {
-        chamadaId: estado.chamada.id,
-        turmaId: estado.turma.id,
-        alunoId: estado.aluno.id,
+        chamada_id: estado.chamada.id,
+        turma_id: estado.turma.id,
+        aluno_id: estado.aluno.id,
         status: 'presente',
         origem: 'qrcode',
-        confirmadoEm: new Date().toISOString()
+        confirmado_em: timestamp
       });
     }
 

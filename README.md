@@ -1,75 +1,101 @@
-# Sistema Acadêmico — Front-end (projeto acadêmico)
+# Sistema Acadêmico
 
-Front-end puro (HTML + CSS + JS, sem framework e sem build), pronto para publicar
-no GitHub Pages. Os dados são simulados em `localStorage` no formato de tabelas
-relacionais (id + chaves estrangeiras), para facilitar a migração futura para
-PostgreSQL/SQL via API.
+Sistema de gestão acadêmica com **controle de presença por QR Code**, construído em
+front-end puro (HTML + CSS + JS, sem framework e sem build) e persistência em
+**Supabase (PostgreSQL)**.
 
-## Estrutura
+> Projeto acadêmico. Login por RA + e-mail, três perfis de acesso (coordenador,
+> professor e aluno) e um fluxo de chamada em tempo real com QR Code rotativo,
+> reconhecimento facial simulado e validação de geolocalização.
+
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Front-end | HTML5, CSS3, JavaScript (vanilla, sem build step) |
+| Banco de dados | [Supabase](https://supabase.com) (PostgreSQL) |
+| Autenticação/dados | `@supabase/supabase-js` (client-side) |
+| Hospedagem | GitHub Pages |
+
+> **Nota de migração:** este projeto começou simulando as tabelas relacionais em
+> `localStorage` (id + chaves estrangeiras) justamente para facilitar uma futura
+> migração para SQL. Essa migração já foi feita — o "banco" hoje é Supabase real,
+> mantendo os mesmos nomes de tabelas e campos definidos na fase inicial.
+
+## Funcionalidades
+
+- **Login único** por RA + e-mail, que identifica automaticamente se é
+  coordenador ou professor e abre o painel correspondente.
+- **Coordenador:** CRUD completo de Cursos, Professores, Alunos (com foto do
+  rosto), Disciplinas, Turmas e Matrículas.
+- **Professor:** painel com as turmas atribuídas, geração de chamada e
+  histórico por turma.
+- **Chamada em tempo real:**
+  - QR Code + código de 6 caracteres, rotativo a cada 45 segundos.
+  - Lista de alunos ao vivo (cinza = aguardando, verde = presente).
+  - Modo "telão": janela separada (`window.open`) só com QR + código gigante,
+    pronta para projetar — precisa ficar aberta junto com o modal principal,
+    que é quem controla a rotação do código.
+- **Aluno:** confirma presença via RA/e-mail → foto do rosto → geolocalização
+  (raio de 500 m do campus, configurável) → código do telão.
+- **Histórico de chamadas:** cada chamada pode ser expandida para ajuste manual
+  de presença (Presente / Falta / Falta justificada), mesmo após encerrada.
+
+## Estrutura do projeto
 
 ```
-index.html                 → única página (login + as duas telas)
+index.html                    → única página (login + as duas telas)
 css/
-  base.css                 → reset, variáveis, tipografia, botões, inputs
-  login.css                → tela de login ("carteirinha")
-  painel.css               → layout comum das telas internas (header, nav, tabelas)
+  base.css                    → reset, variáveis, tipografia, botões, inputs
+  login.css                   → tela de login ("carteirinha")
+  painel.css                  → layout comum das telas internas
 js/
-  data/db.js                → "banco" (tabelas em localStorage) + funções genéricas de CRUD
-  auth/auth.js               → login por RA + e-mail (identifica coordenador ou professor)
-  utils/helpers.js           → $ , criarElemento, toast, validações
-  utils/camera.js            → captura de foto do rosto (câmera ao vivo ou galeria)
-  utils/cabecalho.js         → cabeçalho compartilhado dos painéis
+  data/db.js                  → client Supabase + funções genéricas de CRUD
+  auth/auth.js                → login por RA + e-mail
+  utils/helpers.js            → $, criarElemento, toast, validações
+  utils/camera.js             → captura de foto do rosto
+  utils/cabecalho.js          → cabeçalho compartilhado dos painéis
   coordenador/
-    cursos.js                → CRUD de Cursos
+    cursos.js                 → CRUD de Cursos
     professores.js            → CRUD de Professores
-    alunos.js                  → CRUD de Alunos (com foto do rosto)
+    alunos.js                 → CRUD de Alunos (com foto do rosto)
     disciplinas.js             → CRUD de Disciplinas
-    turmas.js                   → CRUD de Turmas
+    turmas.js                  → CRUD de Turmas
     matriculas.js               → Matrículas (aluno + turma)
     coordenador.js               → monta o painel e a navegação por abas
   professor/
-    chamada.js                   → gera/mostra o modal de chamada (QR + código rotativo + lista ao vivo)
-    historico.js                  → histórico de chamadas por turma, com ajuste manual de presença/falta
-    telao.js                       → tela enxuta (QR + código gigante) para abrir em janela separada e projetar
-    professor.js                    → painel do professor (turmas atribuídas + ações)
-  aluno/confirmar-presenca.js       → fluxo do aluno: RA/e-mail → rosto → localização → código
-  main.js                            → login, troca entre telas e roteamento (#presenca/, #telao/)
+    chamada.js                   → modal de chamada (QR + código + lista ao vivo)
+    historico.js                  → histórico de chamadas por turma
+    telao.js                       → tela enxuta pra projetar (QR + código)
+    professor.js                    → painel do professor
+  aluno/confirmar-presenca.js       → fluxo do aluno
+  main.js                            → login, troca de telas, roteamento (#presenca/, #telao/)
 ```
 
-## Sistema de chamada (resumo)
+## Configuração
 
-1. Na tela do professor, cada turma tem os botões **Histórico** e **Gerar chamada**.
-2. **Gerar chamada** abre um modal com QR Code + um código de 6 caracteres que muda
-   a cada 45 segundos, e a lista de alunos (cinza = aguardando, verde = presente).
-   O botão **🖥️ Destacar pro telão** abre esse QR Code + código numa janela separada
-   (`window.open`), pronta pra arrastar pro monitor/projetor da sala — enquanto essa
-   janela do telão estiver aberta, mantenha o modal de chamada também aberto na aba
-   principal, pois é ele quem faz o código trocar.
-3. O aluno lê o QR Code (ou abre o link) e passa por: RA + e-mail → foto do rosto
-   (comparação simulada, ver comentário em `reconhecimento-facial.js`) → localização
-   (raio de 500m do campus, configurável em `geolocalizacao.js`) → digitar o código
-   do telão. Ao confirmar, a linha dele muda de cinza pra verde na tela do professor.
-4. **Histórico** lista todas as chamadas já geradas para aquela turma. Cada uma pode
-   ser expandida para ver e **ajustar manualmente** (Presente / Falta / Falta
-   justificada) a presença de qualquer aluno, mesmo em chamadas já encerradas.
+### 1. Criar o projeto no Supabase
 
-## Como funciona o login (uma única tela)
+1. Crie um projeto em [supabase.com](https://supabase.com).
+2. Rode as migrations em `docs/schema.sql` *(adicionar este arquivo com o DDL
+   das tabelas: cursos, professores, alunos, disciplinas, turmas, matriculas,
+   chamadas, presencas)*.
+3. Copie a **Project URL** e a **anon/public key** em
+   `Project Settings > API`.
 
-O formulário de login pede **RA** e **e-mail**:
+### 2. Configurar as credenciais no front-end
 
-- Se baterem com o cadastro do **coordenador**, abre o painel do coordenador.
-- Se baterem com o cadastro de um **professor** (criado pelo coordenador), abre
-  o painel daquele professor, mostrando só as disciplinas/turmas atribuídas a ele.
-- Se não baterem com nada, **nada é aberto** — aparece um aviso.
+Crie `js/data/config.js` (não versionado — adicione ao `.gitignore`):
 
-Credencial padrão do coordenador (já vem cadastrada):
-- RA: `COORD001`
-- E-mail: `coordenador@instituicao.edu.br`
+```js
+export const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
+export const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLICA";
+```
 
-## Como testar localmente
+> A chave `anon` é pública por design — a segurança real vem das **Row Level
+> Security (RLS) policies** configuradas no Supabase, não do sigilo da chave.
 
-Como o projeto usa `fetch` de módulos via `<script>` normais (sem `type="module"`),
-basta abrir `index.html` num servidor estático simples (não precisa build):
+### 3. Rodar localmente
 
 ```bash
 npx serve .
@@ -77,9 +103,24 @@ npx serve .
 python3 -m http.server 8080
 ```
 
-Depois é só publicar a pasta inteira no GitHub Pages.
+### 4. Publicar
 
-## Próximo passo (fora do escopo deste front-end)
+Basta publicar a pasta inteira no GitHub Pages (branch `gh-pages` ou pasta
+`/docs`).
 
-Trocar `js/data/db.js` por chamadas a uma API real ligada a PostgreSQL/SQL,
-mantendo os mesmos nomes de tabelas e campos já usados aqui.
+## Login padrão (seed)
+
+Credencial do coordenador já cadastrada na base:
+
+- **RA:** `COORD001`
+- **E-mail:** `coordenador@instituicao.edu.br`
+
+## Roadmap
+
+- [ ] Substituir o reconhecimento facial simulado por um serviço real
+      (ex.: AWS Rekognition, face-api.js).
+- [ ] Mover a validação de geolocalização e a rotação do código de chamada
+      para uma Edge Function do Supabase (hoje roda no client).
+- [ ] Exportar relatórios de frequência (CSV/PDF).
+- [ ] Documentar o schema do banco em `docs/schema.sql` e um
+      `docs/ARCHITECTURE.md` com os fluxos de chamada e autenticação.

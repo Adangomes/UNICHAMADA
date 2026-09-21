@@ -26,6 +26,14 @@ function iniciarAplicacao() {
     abrirPainel(sessaoExistente);
     return;
   }
+
+  // 1. Injeta dinamicamente o HTML do login dentro da section #tela-login
+  const containerLogin = $('#tela-login');
+  if (containerLogin && typeof renderizarTelaLogin === 'function') {
+    renderizarTelaLogin(containerLogin);
+  }
+
+  // 2. Configura os ouvintes de evento no formulário recém-injetado
   configurarFormularioLogin();
 }
 
@@ -39,7 +47,9 @@ function configurarFormularioLogin() {
   const form = $('#form-login');
   const aviso = $('#aviso-login');
 
-  // Adicionado 'async' aqui no evento de submit
+  // Trava de segurança contra o erro de 'addEventListener on null'
+  if (!form) return;
+
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const ra = form.ra.value.trim();
@@ -50,7 +60,6 @@ function configurarFormularioLogin() {
       return;
     }
 
-    // Adicionado 'await' aqui para o JavaScript esperar o Supabase responder de verdade
     const resultado = await autenticar(ra, email);
 
     if (!resultado) {
@@ -65,6 +74,7 @@ function configurarFormularioLogin() {
 }
 
 function exibirAvisoLogin(aviso, mensagem) {
+  if (!aviso) return;
   aviso.textContent = mensagem;
   aviso.classList.remove('oculto');
 }

@@ -45,7 +45,6 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 │   └── painel.css              # Layout e grids dos painéis administrativos
 └── js/
     ├── data/
-    │   ├── supabaseClient.js   # Inicialização e exportação do cliente Supabase
     │   └── db.js               # Camada de abstração e consultas de dados (Data Mapper)
     ├── auth/
     │   └── auth.js             # Gerenciamento de sessão e contexto do usuário

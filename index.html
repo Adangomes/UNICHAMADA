@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistema Acadêmico</title>
 
+  <!-- Estilos CSS -->
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/login.css" />
   <link rel="stylesheet" href="css/painel.css" />
@@ -12,53 +13,15 @@
   <link rel="stylesheet" href="css/confirmar-presenca.css" />
   <link rel="stylesheet" href="css/telao.css" />
 
-  <!-- Biblioteca de QR Code (davidshimjs/qrcodejs) -->
+  <!-- Bibliotecas Externas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  
-  <!-- ================= TELA DE LOGIN (única porta de entrada) ================= -->
-  <section id="tela-login">
-    <div class="login-wrapper">
-      
-      <!-- Lado Esquerdo: Marca, Cores e Formas Geométricas -->
-      <div class="login-banner">
-        <div class="arco-decorativo arco-topo"></div>
-        <div class="login-brand">
-          <h1 class="logo-uni">UNI</h1>
-          <span class="logo-sub">CHAMADAS</span>
-        </div>
-        <div class="arco-decorativo arco-base"></div>
-      </div>
-
-      <!-- Lado Direito: Formulário de Acesso (Mantido Intacto) -->
-      <div class="carteirinha-login">
-        <div class="carteirinha-topo">
-          <span class="selo">Sistema Acadêmico</span>
-          <h1>Acesso</h1>
-        </div>
-        <div class="carteirinha-corpo">
-          <p class="instrucao">
-          </p>
-          <form id="form-login" onsubmit="return false;" novalidate>
-            <div class="campo">
-              <label for="input-ra">RA</label>
-              <input id="input-ra" name="ra" type="text" data-mono="true" autocomplete="off" required />
-            </div>
-            <div class="campo">
-              <label for="input-email">E-mail</label>
-              <input id="input-email" name="email" type="email" autocomplete="off" required />
-            </div>
-            <button type="submit" class="btn-primario">Entrar</button>
-          </form>
-          <p id="aviso-login" class="aviso-login oculto"></p>
-        </div>
-      </div>
-
-    </div>
-  </section>
+  <!-- ================= SEÇÕES DAS TELAS (SPA) ================= -->
+  <!-- A tela de login agora é injetada dinamicamente via js/login/login.js -->
+  <section id="tela-login"></section>
 
   <!-- ================= TELA DO COORDENADOR ================= -->
   <section id="tela-coordenador" class="painel oculto"></section>
@@ -72,9 +35,11 @@
   <!-- ================= TELÃO (janela separada, para projetar) ================= -->
   <section id="tela-telao" class="oculto"></section>
 
-  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth > telas > main) ================= -->
+  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth/login > telas > main) ================= -->
+  <!-- Camada de Dados -->
   <script src="js/data/db.js"></script>
 
+  <!-- Utilitários -->
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/camera.js"></script>
   <script src="js/utils/cabecalho.js"></script>
@@ -82,8 +47,11 @@
   <script src="js/utils/reconhecimento-facial.js"></script>
   <script src="js/utils/codigo-rotativo.js"></script>
 
+  <!-- Autenticação & Módulo de Login -->
+  <script src="js/login/login.js"></script>
   <script src="js/auth/auth.js"></script>
 
+  <!-- Módulos do Coordenador -->
   <script src="js/coordenador/cursos.js"></script>
   <script src="js/coordenador/professores.js"></script>
   <script src="js/coordenador/alunos.js"></script>
@@ -92,13 +60,16 @@
   <script src="js/coordenador/matriculas.js"></script>
   <script src="js/coordenador/coordenador.js"></script>
 
+  <!-- Módulos do Professor -->
   <script src="js/professor/chamada.js"></script>
   <script src="js/professor/historico.js"></script>
   <script src="js/professor/telao.js"></script>
   <script src="js/professor/professor.js"></script>
 
+  <!-- Módulos do Aluno -->
   <script src="js/aluno/confirmar-presenca.js"></script>
 
+  <!-- Main (Orquestrador) -->
   <script src="js/main.js"></script>
 </body>
 </html>

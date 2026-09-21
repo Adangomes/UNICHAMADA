@@ -17,7 +17,7 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 - **Autenticação Multi-Perfil:** Identificação automática no login por credencial (RA/E-mail) para direcionamento aos painéis de Coordenador ou Professor.
 - **Painel Coordenador:** Gestão (CRUD) de Cursos, Professores, Alunos (com foto cadastral), Disciplinas, Turmas e Matrículas.

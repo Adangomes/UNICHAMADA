@@ -6,7 +6,7 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 
 ---
 
-## 🛠️ Stack Tecnológica
+## Stack Tecnológica
 
 | Camada | Tecnologia |
 | :--- | :--- |
@@ -34,7 +34,7 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 
 ---
 
-## 📁 Estrutura de Pastas
+## Estrutura de Pastas
 
 ```text
 .

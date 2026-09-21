@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sistema Acadêmico</title>
-
   <!-- Estilos CSS -->
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/login.css" />
@@ -12,34 +11,26 @@
   <link rel="stylesheet" href="css/chamada.css" />
   <link rel="stylesheet" href="css/confirmar-presenca.css" />
   <link rel="stylesheet" href="css/telao.css" />
-
   <!-- Bibliotecas Externas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
-
   <!-- ================= SEÇÕES DAS TELAS (SPA) ================= -->
   <!-- A tela de login agora é injetada dinamicamente via js/login/login.js -->
   <section id="tela-login"></section>
-
   <!-- ================= TELA DO COORDENADOR ================= -->
   <section id="tela-coordenador" class="painel oculto"></section>
-
   <!-- ================= TELA DO PROFESSOR ================= -->
   <section id="tela-professor" class="painel oculto"></section>
-
   <!-- ================= TELA DE CONFIRMAÇÃO DE PRESENÇA (aluno via QR Code) ================= -->
   <section id="tela-confirmar-presenca" class="oculto"></section>
-
   <!-- ================= TELÃO (janela separada, para projetar) ================= -->
   <section id="tela-telao" class="oculto"></section>
-
   <!-- ================= SCRIPTS (ordem importa: dados > utils > auth/login > telas > main) ================= -->
   <!-- Camada de Dados -->
   <script src="js/data/db.js"></script>
-
   <!-- Utilitários -->
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/camera.js"></script>
@@ -47,11 +38,9 @@
   <script src="js/utils/geolocalizacao.js"></script>
   <script src="js/utils/reconhecimento-facial.js"></script>
   <script src="js/utils/codigo-rotativo.js"></script>
-
   <!-- Autenticação & Módulo de Login -->
   <script src="js/login/login.js"></script>
   <script src="js/auth/auth.js"></script>
-
   <!-- Módulos do Coordenador -->
   <script src="js/coordenador/cursos.js"></script>
   <script src="js/coordenador/professores.js"></script>
@@ -60,16 +49,13 @@
   <script src="js/coordenador/turmas.js"></script>
   <script src="js/coordenador/matriculas.js"></script>
   <script src="js/coordenador/coordenador.js"></script>
-
   <!-- Módulos do Professor -->
   <script src="js/professor/chamada.js"></script>
   <script src="js/professor/historico.js"></script>
   <script src="js/professor/telao.js"></script>
   <script src="js/professor/professor.js"></script>
-
   <!-- Módulos do Aluno -->
   <script src="js/aluno/confirmar-presenca.js"></script>
-
   <!-- Main (Orquestrador) -->
   <script src="js/main.js"></script>
 </body>

@@ -1,10 +1,6 @@
 /**
+ * js/login/login.js
  * Componente da Tela de Login
- */
-
-/**
- * Monta o HTML da Tela de Login no contêiner informado.
- * @param {HTMLElement} container - Elemento pai (ex: #tela-login)
  */
 function renderizarTelaLogin(container) {
   if (!container) return;
@@ -45,9 +41,4 @@ function renderizarTelaLogin(container) {
       </div>
     </div>
   `;
-
-  // Re-vincula os eventos do formulário de login após renderizar no DOM
-  if (typeof vincularEventosLogin === 'function') {
-    vincularEventosLogin();
-  }
 }

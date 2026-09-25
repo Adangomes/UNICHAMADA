@@ -366,58 +366,57 @@ async function renderSecaoNotificacoes(container) {
     }
 
     // População de Linhas (Rows)
-    for (const notif of notificacoes) {
-      /** @type {string} Formatação textual legível dos destinatários */
-      let txtDestinatarios = '—';
-      
-      if (notif.destinatarios) {
-        const dests = Array.isArray(notif.destinatarios) ? notif.destinatarios : [notif.destinatarios];
-        if (dests.includes('todos')) {
-          txtDestinatarios = 'Todos';
-        } else {
-          const nomes = dests.map(id => {
-            const p = listaProfs.find(prof => prof.id === id);
-            // Formata para exibir apenas o primeiro/segundo nome e evitar estouro de layout
-            return p ? p.nome.split(' ')[1] || p.nome : 'Prof.'; 
-          });
-          txtDestinatarios = nomes.join(', ');
-        }
-      }
-
-      corpo.appendChild(
-        criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
-          criarElemento('td', { style: 'padding: 10px;' }, [formatarDataBR(notif.data)]),
-          criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
-          criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]),
-          criarElemento('td', { style: 'padding: 10px; text-align: right; display: flex; gap: 8px; justify-content: flex-end;' }, [
-            
-            // Botão de Editar
-            criarElemento('button', {
-              style: 'background: none; border: none; color: #4267B2; cursor: pointer; padding: 4px 8px;',
-              onClick: async () => {
-                idEmEdicao = notif.id;
-                await montarFormulario();
-                areaFormulario.scrollIntoView({ behavior: 'smooth' });
-              }
-            }, ['Editar']),
-
-            // Botão de Excluir
-            criarElemento('button', {
-              style: 'background: none; border: none; color: #d9534f; cursor: pointer; padding: 4px 8px;',
-              onClick: async () => {
-                if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
-                
-                await dbRemover('notificacoes', notif.id);
-                mostrarToast('Notificação excluída.', 'sucesso');
-                await montarLista();
-              }
-            }, ['Excluir'])
-
-          ])
-        ])
-      );
+   // População de Linhas (Rows)
+for (const notif of notificacoes) {
+  /** @type {string} Formatação textual legível dos destinatários */
+  let txtDestinatarios = '—';
+  
+  if (notif.destinatarios) {
+    const dests = Array.isArray(notif.destinatarios) ? notif.destinatarios : [notif.destinatarios];
+    if (dests.includes('todos')) {
+      txtDestinatarios = 'Todos';
+    } else {
+      const nomes = dests.map(id => {
+        const p = listaProfs.find(prof => prof.id === id);
+        return p ? p.nome.split(' ')[1] || p.nome : 'Prof.'; 
+      });
+      txtDestinatarios = nomes.join(', ');
     }
+  }
 
+  corpo.appendChild(
+    criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
+      criarElemento('td', { style: 'padding: 10px;' }, [formatarDataBR(notif.data)]),
+      criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
+      criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]),
+      criarElemento('td', { class: 'celula-acoes' }, [
+        
+        // Botão de Editar usando a classe .btn-icone
+        criarElemento('button', {
+          class: 'btn-icone',
+          onClick: async () => {
+            idEmEdicao = notif.id;
+            await montarFormulario();
+            areaFormulario.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, ['Editar']),
+
+        // Botão de Excluir usando a classe .btn-perigo
+        criarElemento('button', {
+          class: 'btn-perigo',
+          onClick: async () => {
+            if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
+            
+            await dbRemover('notificacoes', notif.id);
+            mostrarToast('Notificação excluída.', 'sucesso');
+            await montarLista();
+          }
+        }, ['Excluir'])
+
+      ])
+    ])
+  );
+}
     tabela.appendChild(corpo);
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }

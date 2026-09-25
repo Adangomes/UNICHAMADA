@@ -256,85 +256,181 @@
   margin: 0 0 .3em .1em;
 }
 
-/* ---------------------------- Painel de Frequência (Meses) ---------------------------- */
+/* ---------------------------- Frequências (tabela mensal, aluno x data) ---------------------------- */
 
-.freq-painel {
-  background: var(--papel-cartao);
-  border: 1px solid var(--linha);
-  border-radius: var(--raio);
-  padding: 1.2em;
-}
+.freq-painel { margin-top: .2em; }
 
 .freq-filtros {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1em;
-  margin-bottom: 1em;
+  gap: .8em;
+  margin-bottom: .9em;
+  flex-wrap: wrap;
+}
+.freq-label-select {
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  font-size: .82rem;
+  color: var(--grafite-suave);
+  font-weight: 600;
+}
+.freq-select-turma {
+  font-family: inherit;
+  font-size: .84rem;
+  padding: .4em .6em;
+  border-radius: var(--raio-pequeno);
+  border: 1px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--tinta);
 }
 
+.freq-tabs {
+  display: flex;
+  gap: .4em;
+  flex-wrap: wrap;
+  margin-bottom: 1em;
+}
+.freq-tabs button {
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .5em 1em;
+  border-radius: 999px;
+  border: 1.5px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--grafite-suave);
+}
+.freq-tabs button.ativo {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #fff;
+}
+
+/* Mês ainda sem nenhuma chamada gerada: fica esmaecido até o professor usar */
+.freq-tabs button.sem-dados {
+  opacity: .45;
+  border-style: dashed;
+  background: transparent;
+}
+.freq-tabs button.sem-dados.ativo {
+  opacity: .8;
+  background: var(--papel);
+  border-style: solid;
+  color: var(--grafite-suave);
+}
+
+/* Abas de ano: mesma pílula, um pouco mais discreta que as de mês */
+.freq-filtros {
+  justify-content: flex-start;
+}
 .freq-stepper-ano {
   display: flex;
   align-items: center;
   gap: .5em;
-  font-weight: 600;
+  margin-left: auto;
 }
-
+.freq-stepper-valor {
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--tinta);
+  min-width: 2.6em;
+  text-align: center;
+}
 .freq-stepper-seta {
-  background: transparent;
-  border: 1px solid var(--linha);
-  border-radius: 6px;
-  padding: .2em .6em;
-  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--grafite-suave);
   font-size: .9rem;
+  line-height: 1;
 }
-
+.freq-stepper-seta:hover { border-color: var(--tinta); color: var(--tinta); }
 .freq-stepper-seta.desabilitado {
-  opacity: .4;
-  cursor: not-allowed;
+  opacity: .35;
+  pointer-events: none;
 }
 
-/* Alinha os 12 meses lado a lado de forma limpa e responsiva */
-.freq-tabs {
+.freq-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--papel-cartao);
+}
+
+.freq-tabela {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 480px;
+}
+.freq-tabela th,
+.freq-tabela td {
+  border-bottom: 1px solid var(--linha);
+  padding: .6em .7em;
+  text-align: center;
+  white-space: nowrap;
+}
+.freq-tabela tr:last-child td { border-bottom: none; }
+
+.freq-th-aluno,
+.freq-td-aluno {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--papel-cartao);
+  z-index: 1;
+  min-width: 190px;
+  border-right: 1px solid var(--linha);
+}
+.freq-td-aluno {
   display: flex;
   align-items: center;
-  gap: .4em;
-  overflow-x: auto;
-  padding-bottom: .6em;
-  margin-bottom: 1em;
-  border-bottom: 1px solid var(--linha);
+  gap: .6em;
+}
+.freq-td-aluno strong { display: block; font-size: .86rem; }
+.freq-ra { font-size: .72rem; color: var(--grafite-suave); }
+
+.celula-foto-mini {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
-.freq-tabs button {
-  background: transparent;
-  border: none;
-  padding: .4em .8em;
-  font-size: .82rem;
-  font-weight: 500;
+.freq-th-data {
+  font-size: .74rem;
+  font-weight: 700;
   color: var(--grafite-suave);
-  border-radius: var(--raio-pequeno);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .15s ease;
+}
+.freq-th-data span { display: block; }
+.freq-badge-ativa {
+  display: inline-block;
+  margin-top: .2em;
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--coral);
+  font-weight: 700;
 }
 
-.freq-tabs button:hover {
-  background: rgba(31, 45, 80, .05);
-  color: var(--tinta);
+.freq-status-botao {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--linha);
+  background: transparent;
+  font-weight: 700;
+  font-size: .85rem;
+  line-height: 1;
+  color: var(--grafite-suave);
 }
+.freq-status-botao.status-aguardando { color: #B9B4A4; border-color: #B9B4A4; }
+.freq-status-botao.status-presente { background: rgba(62,124,90,.12); border-color: var(--verde-aprovado); color: var(--verde-aprovado); }
+.freq-status-botao.status-falta { background: rgba(214,91,74,.1); border-color: var(--coral); color: var(--coral); }
+.freq-status-botao.status-falta_justificada { background: rgba(201,138,30,.12); border-color: var(--amarelo-alerta); color: var(--amarelo-alerta); }
 
-/* Mês selecionado */
-.freq-tabs button.ativo {
-  background: var(--tinta);
-  color: #fff;
-  font-weight: 600;
-}
-
-/* Meses sem chamadas gravadas (fundo esmaecido) */
-.freq-tabs button.sem-dados {
-  opacity: .5;
-}
-
-.freq-tabs button.sem-dados.ativo {
-  opacity: 1;
+@media (max-width: 720px) {
+  .freq-td-aluno { min-width: 150px; }
 }

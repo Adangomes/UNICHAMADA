@@ -3,7 +3,7 @@
  * 
  * Este módulo provê as rotinas de busca, cálculo de pendências, notificação sonora,
  * injeção resiliente do componente visual do sino no cabeçalho e exibição da janela
- * modal com atualização automática de estado no PostgreSQL.
+ * modal com atualização automática de estado no PostgreSQL/Supabase.
  * 
  * @module NotificacoesProfessor
  * @requires dbListar
@@ -25,28 +25,46 @@ let contadorAnteriorNotificacoes = 0;
  *
  * @async
  * @param {string} professorId - UUID do professor autenticado.
- * @returns {Promise<{pendentes: Array<Object>, todas: Array<Object>}>} Chaveiro com coleções filtradas.
+ * @returns {Promise<{pendentes: Array<Object>, todas: Array<Object>}>} Coleções filtradas.
  */
 async function buscarNotificacoesProfessor(professorId) {
   try {
     const relacoes = await dbListar('notificacao_professores') || [];
     const notificacoes = await dbListar('notificacoes') || [];
 
-    // Mapeia os vínculos direcionados a este professor
-    const minhasRelacoes = relacoes.filter(r => r.professor_id === professorId || r.professorId === professorId);
+    // Mapeia os vínculos de leitura direcionados a este professor
+    const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
     const relacoesMap = new Map(minhasRelacoes.map(r => [r.notificacao_id || r.notificacaoId, r]));
 
-    // Filtra avisos globais ('todos') ou direcionados especificamente
+    // Filtra avisos destinados a "todos" ou especificamente ao professor
     const minhasNotificacoes = notificacoes.filter(n => {
+      // 1. Se já existe relação criada para esta notificação no banco
       if (relacoesMap.has(n.id)) return true;
-      if (n.destinatarios && Array.isArray(n.destinatarios) && n.destinatarios.includes('todos')) return true;
-      return false;
+
+      // 2. Trata e normaliza os destinatários
+      let dests = n.destinatarios;
+      if (typeof dests === 'string') {
+        try { 
+          dests = JSON.parse(dests); 
+        } catch (e) { 
+          dests = [dests]; 
+        }
+      }
+
+      // Se destinatários estiver vazio/nulo, assume como notificação pública/global
+      if (!dests) return true;
+
+      if (Array.isArray(dests)) {
+        return dests.includes('todos') || dests.includes(professorId);
+      }
+
+      return dests === 'todos' || dests === professorId;
     }).map(n => {
       const rel = relacoesMap.get(n.id);
       return {
         ...n,
         relacaoId: rel ? rel.id : null,
-        lida: rel ? rel.lida : false
+        lida: rel ? Boolean(rel.lida) : false
       };
     });
 
@@ -64,7 +82,6 @@ async function buscarNotificacoesProfessor(professorId) {
 
 /**
  * Injeta o componente do sino no cabeçalho do painel do professor.
- * Implementa estratégia de busca resiliente direcionada ao botão "Sair".
  *
  * @async
  * @param {HTMLElement} cabecalhoElemento - Contêiner pai do cabeçalho retornado por `montarCabecalhoPainel`.
@@ -87,7 +104,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
     style: 'position: relative; cursor: pointer; display: inline-flex; align-items: center; margin-right: 15px; vertical-align: middle; z-index: 100;' 
   });
 
-  // Ícone SVG vetorizado com stroke branco para alto contraste no topo escuro + Badge numérico
+  // Ícone SVG vetorizado com badge numérico
   containerSino.innerHTML = `
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -130,10 +147,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
     abrirModalNotificacoesProfessor(todas, professor, atualizarContador);
   });
 
-  // ---------------------------------------------------------------------------
-  // ESTRATÉGIA DE ANCORAGEM RESILIENTE NO DOM
-  // ---------------------------------------------------------------------------
-  // Varre a árvore em busca do botão "Sair" para anexar o sino imediatamente à sua esquerda
+  // Ancoragem resiliente no DOM (ao lado do botão "Sair" ou dentro da div do usuário)
   const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button'));
   const btnSair = todosBotoes.find(btn => btn.textContent.trim().toLowerCase().includes('sair') || btn.classList.contains('btn-sair'));
 
@@ -146,7 +160,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
     localInsercao.appendChild(containerSino);
   }
 
-  // Assinatura reativa no banco para atualizar o sino em tempo real sem refresh
+  // Assinatura reativa no banco para atualizar o sino sem dar refresh
   if (typeof dbAoAtualizar === 'function') {
     dbAoAtualizar(async () => {
       await atualizarContador();
@@ -155,8 +169,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
 }
 
 /**
- * Sintetiza um aviso sonoro (Bip duplo suave) via Web Audio API,
- * dispensando dependências de arquivos estáticos de áudio.
+ * Sintetiza um aviso sonoro via Web Audio API.
  *
  * @function tocarSomNotificacao
  */
@@ -179,13 +192,13 @@ function tocarSomNotificacao() {
     osc.start();
     osc.stop(audioContext.currentTime + 0.3);
   } catch (e) {
-    console.log('[notificacao.js] Áudio automático bloqueado pela política de Autoplay do navegador.');
+    console.log('[notificacao.js] Áudio automático bloqueado pela política do navegador.');
   }
 }
 
 /**
  * Constrói e exibe a janela modal com a listagem de avisos e 
- * executa a persistência de leitura (`lida = true`) no banco relacional.
+ * executa a persistência de leitura (`lida = true`) no Supabase.
  *
  * @param {Array<Object>} listaNotificacoes - Coleção completa de notificações do professor.
  * @param {Object} professor - Dados do professor autenticado.
@@ -228,7 +241,8 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
       const titulo = criarElemento('h4', { style: 'margin: 0 0 5px 0; font-size: 1em; color: #222;' }, [notif.titulo]);
       const mensagem = criarElemento('p', { style: 'margin: 0 0 8px 0; font-size: 0.9em; color: #555; white-space: pre-wrap;' }, [notif.mensagem]);
       
-      const dataFormatada = notif.criado_em ? new Date(notif.criado_em).toLocaleDateString('pt-BR') : '';
+      const rawData = notif.criado_em || notif.criadoEm || notif.data;
+      const dataFormatada = rawData ? new Date(rawData).toLocaleDateString('pt-BR') : '';
       const rodape = criarElemento('small', { style: 'color: #999; font-size: 0.75em;' }, [dataFormatada]);
 
       item.append(titulo, mensagem, rodape);
@@ -242,9 +256,10 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
         item.appendChild(linkAnexo);
       }
 
-      // Ao visualizar/interagir com o item, efetua o UPDATE no banco e zera o badge do sino
+      // Ao interagir com o item, efetua o UPDATE/INSERT no banco de dados e zera o badge
       if (!notif.lida) {
         const marcarComoLida = async () => {
+          if (notif.lida) return;
           notif.lida = true;
           item.style.borderLeftColor = '#ccc';
           item.style.background = '#f9f9f9';
@@ -256,12 +271,13 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
                 lida_em: new Date().toISOString()
               });
             } else {
-              await dbInserir('notificacao_professores', {
+              const res = await dbInserir('notificacao_professores', {
                 notificacao_id: notif.id,
                 professor_id: professor.id,
                 lida: true,
                 lida_em: new Date().toISOString()
               });
+              if (res && res.id) notif.relacaoId = res.id;
             }
             await callbackAtualizar();
           } catch (e) {
@@ -287,5 +303,5 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
   document.body.appendChild(overlay);
 }
 
-// Injeção da função de entrada no escopo global
+// Exposição no escopo global
 window.inicializarSinoNotificacoes = inicializarSinoNotificacoes;

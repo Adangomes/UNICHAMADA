@@ -121,7 +121,9 @@ async function renderSecaoProfessores(container) {
 
     const corpo = criarElemento('tbody', {});
     for (const professor of professores) {
-      const qtd = disciplinas.filter((d) => d.professorId === professor.id).length;
+      const qtd = disciplinas.filter(
+  (d) => String(d.professor_id) === String(professor.id) || String(d.professor_id) === String(professor.ra)
+).length;
       corpo.appendChild(criarElemento('tr', {}, [
         criarElemento('td', {}, [professor.nome]),
         criarElemento('td', { class: 'mono' }, [professor.ra]),

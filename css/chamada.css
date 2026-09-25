@@ -255,3 +255,86 @@
   color: var(--tinta);
   margin: 0 0 .3em .1em;
 }
+
+/* ---------------------------- Painel de Frequência (Meses) ---------------------------- */
+
+.freq-painel {
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 1.2em;
+}
+
+.freq-filtros {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.freq-stepper-ano {
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  font-weight: 600;
+}
+
+.freq-stepper-seta {
+  background: transparent;
+  border: 1px solid var(--linha);
+  border-radius: 6px;
+  padding: .2em .6em;
+  cursor: pointer;
+  font-size: .9rem;
+}
+
+.freq-stepper-seta.desabilitado {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* Alinha os 12 meses lado a lado de forma limpa e responsiva */
+.freq-tabs {
+  display: flex;
+  align-items: center;
+  gap: .4em;
+  overflow-x: auto;
+  padding-bottom: .6em;
+  margin-bottom: 1em;
+  border-bottom: 1px solid var(--linha);
+}
+
+.freq-tabs button {
+  background: transparent;
+  border: none;
+  padding: .4em .8em;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--grafite-suave);
+  border-radius: var(--raio-pequeno);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+
+.freq-tabs button:hover {
+  background: rgba(31, 45, 80, .05);
+  color: var(--tinta);
+}
+
+/* Mês selecionado */
+.freq-tabs button.ativo {
+  background: var(--tinta);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Meses sem chamadas gravadas (fundo esmaecido) */
+.freq-tabs button.sem-dados {
+  opacity: .5;
+}
+
+.freq-tabs button.sem-dados.ativo {
+  opacity: 1;
+}

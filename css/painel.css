@@ -333,3 +333,15 @@ tbody tr:hover { background: rgba(31,45,80,.025); }
   .grade-secao { grid-template-columns: 1fr; }
   .linha-campos { grid-template-columns: 1fr; }
 }
+/* Garante que a célula de ações ocupe toda a altura e aplique a borda corretamente */
+tbody td:last-child {
+  border-bottom: 1px solid var(--linha);
+}
+
+.celula-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .5em;
+  white-space: nowrap;
+}

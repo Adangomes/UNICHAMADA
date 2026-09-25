@@ -4,93 +4,90 @@
 
 /* Posicionamento do campo do seletor */
 .seletor-professor-container {
-  position: relative; /* Define o contexto de posicionamento relativo para que o dropdown (.seletor-professor-dropdown) se alinhe com base neste contêiner */
-  width: 100%;        /* Garante que o contêiner ocupe 100% da largura disponível no elemento pai */
+  position: relative; /* Define o contexto de posicionamento relativo para o dropdown */
+  width: 100%;        /* Garante que o contêiner ocupe 100% da largura disponível */
 }
 
 /* Caixa principal do Select */
 .seletor-professor-box {
-  display: flex;                /* Utiliza o modelo Flexbox para alinhar o texto e o ícone de seta em linha */
-  justify-content: space-between;/* Move o texto do seletor para a esquerda e o ícone de seta para a extrema direita */
-  align-items: center;          /* Centraliza verticalmente o texto e a seta no meio do elemento */
-  width: 100%;                  /* Preenche toda a largura do seu contêiner pai */
-  min-height: 42px;             /* Define uma altura mínima para proporcionar uma boa área de clique */
-  padding: 10px 14px;           /* Espaçamento interno (10px superior/inferior e 14px nas laterais) */
-  background-color: #ffffff;    /* Fundo branco para o campo */
-  border: 1px solid #cccccc;    /* Borda suave padrão em tom cinza claro */
-  border-radius: 6px;           /* Arredondamento suave das bordas */
-  cursor: pointer;              /* Modifica o ponteiro do mouse para indicar que o campo é clicável */
-  box-sizing: border-box;       /* Garante que padding e bordas estejam inclusos na largura total de 100% */
-  transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Animação suave para efeitos no foco/hover */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Efeito ao passar o mouse na caixa do seletor */
 .seletor-professor-box:hover {
-  border-color: #999999; /* Escurece a borda para destacar a interatividade */
+  border-color: #999999;
 }
 
 /* Estilo do texto interno do seletor */
 .seletor-professor-box span {
-  font-size: 0.9em;  /* Tamanho de fonte ligeiramente reduzido e elegante */
-  color: #333333;    /* Tom de texto cinza escuro para melhor legibilidade */
+  font-size: 0.9em;
+  color: #333333;
 }
 
 /* Estilo da seta indicadora (▼) */
 .seletor-professor-box .seta {
-  font-size: 0.75em;  /* Escala menor para o ícone indicativo */
-  color: #888888;     /* Cor neutra para não ofuscar o texto principal */
-  margin-left: 8px;   /* Margem de segurança em relação ao texto */
+  font-size: 0.75em;
+  color: #888888;
+  margin-left: 8px;
 }
 
 /* Dropdown Suspenso */
 .seletor-professor-dropdown {
-  position: absolute; /* Remove o elemento do fluxo normal e posiciona sobreposto na tela */
-  top: 100%;          /* Alinha o topo do dropdown diretamente abaixo da borda inferior do contêiner pai */
-  left: 0;            /* Alinha à borda esquerda do pai */
-  width: 100%;        /* Força a largura a ser idêntica à do contêiner pai, resolvendo a quebra de layout */
-  max-height: 200px;  /* Limita a altura máxima a 200px */
-  margin-top: 4px;    /* Distância de 4px em relação à caixa principal */
-  padding: 6px 0;     /* Espaçamento interno superior e inferior */
-  background-color: #ffffff; /* Fundo branco opaco para cobrir elementos subjacentes */
-  border: 1px solid #e0e0e0; /* Borda suave */
-  border-radius: 6px;        /* Cantos arredondados */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); /* Sombra projetada para efeito de elevação em camadas (z-index) */
-  overflow-y: auto;   /* Adiciona barra de rolagem vertical automaticamente quando exceder max-height */
-  z-index: 100;       /* Eleva o elemento acima de outros componentes para não ser cortado */
-  box-sizing: border-box; /* Inclui bordas e padding na regra de largura do elemento */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  margin-top: 4px;
+  padding: 6px 0;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  overflow-y: auto;
+  z-index: 100;
+  box-sizing: border-box;
 }
 
 /* Linha de cada opção (Checkbox + Label) */
 .seletor-opcao-item {
-  display: flex;           /* Flexbox para alinhar o checkbox e o rótulo horizontalmente */
-  align-items: center;     /* Centralização vertical do conteúdo */
-  justify-content: flex-start; /* Garante o alinhamento de checkbox e texto à esquerda */
-  gap: 10px;               /* Distância entre o checkbox e o nome do professor */
-  padding: 8px 12px;       /* Área interna clicável confortável */
-  cursor: pointer;         /* Muda o cursor para mãozinha */
-  font-size: 0.88em;       /* Tamanho da fonte padrão para as opções */
-  color: #444444;          /* Cor cinza escuro para a tipografia */
-  transition: background-color 0.15s ease; /* Transição suave do fundo no hover */
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.88em;
+  color: #444444;
+  transition: background-color 0.15s ease;
 }
 
-/* Efeito ao passar o mouse sobre cada opção do dropdown */
 .seletor-opcao-item:hover {
-  background-color: #f5f7fa; /* Destaque sutil com tom cinza/azul claro */
+  background-color: #f5f7fa;
 }
 
-/* Estilo específico para o elemento checkbox HTML */
 .seletor-opcao-item input[type="checkbox"] {
-  cursor: pointer; /* Indicação explícita de elemento clicável */
-  width: 16px;     /* Largura fixa do checkbox */
-  height: 16px;    /* Altura fixa do checkbox */
-  margin: 0;       /* Anula margens padrão do navegador */
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
 }
 
-/* Estilização diferenciada da opção global "Todos os Professores" */
 .seletor-opcao-item.todos {
-  border-bottom: 1px solid #eeeeee; /* Linha divisória horizontal para separar a opção global */
-  font-weight: 600;                 /* Tipografia em negrito para destaque */
-  color: #111111;                   /* Tom de texto mais escuro */
+  border-bottom: 1px solid #eeeeee;
+  font-weight: 600;
+  color: #111111;
 }
 
 
@@ -99,22 +96,17 @@
    ========================================================================== */
 
 /* Contêiner do ícone do sino na barra superior do painel */
-/* Contêiner do ícone do sino na barra superior do painel */
 .container-sino-notificacao {
   position: relative;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 6px;
+  margin-right: 12px;
   border-radius: 50%;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-
-  /* CONTROLO FINO DE POSIÇÃO:
-     Varia este valor em pixels para mover o sino para a direita sem quebrar o layout!
-     Exemplos para testar: 50px, 150px, 300px, 450px... */
-  transform: translateX(550px); 
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
-
 
 .container-sino-notificacao:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -129,12 +121,12 @@
   color: #000000;
 }
 
-/* Indicador numérico vermelho (Badge) exatamente como a imagem */
+/* Indicador numérico vermelho (Badge) */
 .badge-notificacao {
   position: absolute;
   top: -2px;
   right: -4px;
-  background-color: #ff3b30; /* Vermelho padrão de alerta */
+  background-color: #ff3b30;
   color: #ffffff;
   border-radius: 50%;
   font-size: 0.7em;
@@ -148,7 +140,6 @@
   animation: pulsoNotificacao 1.5s infinite;
 }
 
-/* Animação suave de pulso para chamar a atenção do professor */
 @keyframes pulsoNotificacao {
   0% {
     transform: scale(1);
@@ -161,6 +152,7 @@
   }
 }
 
+
 /* ==========================================================================
    Modal do Histórico de Notificações
    ========================================================================== */
@@ -171,12 +163,12 @@
   border-radius: 8px;
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
-  border-left: 4px solid #007bff; /* Borda azul para notificações não lidas */
+  border-left: 4px solid #007bff;
   transition: all 0.2s ease;
 }
 
 .modal-notificacao-item.lida {
-  border-left-color: #cccccc; /* Borda cinza para notificações já visualizadas */
+  border-left-color: #cccccc;
   background-color: #f9f9f9;
 }
 
@@ -196,4 +188,58 @@
 .modal-notificacao-item small {
   color: #888888;
   font-size: 0.78em;
+}
+
+
+/* ==========================================================================
+   Módulo: Estilização das Ações da Tabela (Botões Editar e Excluir)
+   ========================================================================== */
+
+.celula-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Padronização base idêntica para ambos os botões */
+.celula-acoes .btn-icone,
+.celula-acoes .btn-perigo,
+tbody td .btn-icone,
+tbody td .btn-perigo {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35em 0.75em;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+/* Botão Editar (.btn-icone) */
+.celula-acoes .btn-icone,
+tbody td .btn-icone {
+  color: #4267B2;
+  border: 1.5px solid transparent;
+}
+
+.celula-acoes .btn-icone:hover,
+tbody td .btn-icone:hover {
+  border-color: #4267B2;
+  background-color: rgba(66, 103, 178, 0.08);
+}
+
+/* Botão Excluir (.btn-perigo) */
+.celula-acoes .btn-perigo,
+tbody td .btn-perigo {
+  color: #d9534f;
+  border: 1.5px solid #d9534f;
+}
+
+.celula-acoes .btn-perigo:hover,
+tbody td .btn-perigo:hover {
+  background-color: #d9534f;
+  color: #ffffff;
 }

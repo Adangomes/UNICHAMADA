@@ -73,3 +73,21 @@ INSERT INTO chamadas (id, turma_id, professor_id, codigo_atual, codigo_anterior,
 INSERT INTO presencas (id, chamada_id, turma_id, aluno_id, status, origem, confirmado_em) VALUES
 ('h0000000-0000-0000-0000-000000000001', 'g0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000001', 'presente',          'qrcode', now() - interval '2 days'),
 ('h0000000-0000-0000-0000-000000000002', 'g0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000002', 'falta_justificada', 'manual', now() - interval '2 days');
+
+-- ---------------------------------------------------------------------------
+-- NOTIFICAÇÕES (Exemplo de aviso enviado pelo Coordenador)
+-- ---------------------------------------------------------------------------
+INSERT INTO notificacoes (id, coordenador_id, titulo, mensagem, anexo_url) VALUES
+('n0000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'Entrega dos Planos de Ensino', 'Prezados professores, lembrem-se de enviar os planos de ensino até a próxima sexta-feira.', NULL);
+
+-- ---------------------------------------------------------------------------
+-- NOTIFICAÇÃO_PROFESSORES (Distribuição do aviso para cada professor)
+-- ---------------------------------------------------------------------------
+-- Pendente para o prof. Decio Alves (b000...0001)
+INSERT INTO notificacao_professores (id, notificacao_id, professor_id, lida, lida_em) VALUES
+('p0000000-0000-0000-0000-000000000001', 'n0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', FALSE, NULL);
+
+-- Já lida pela profa. Ana Beatriz Souza (b000...0002)
+INSERT INTO notificacao_professores (id, notificacao_id, professor_id, lida, lida_em) VALUES
+('p0000000-0000-0000-0000-000000000002', 'n0000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000002', TRUE, now() - interval '1 hour');
+

@@ -174,6 +174,45 @@ CREATE TABLE presencas (
     CONSTRAINT uq_presencas_chamada_aluno UNIQUE (chamada_id, aluno_id)
 );
 
+-- 1. Tabela principal de Notificações enviadas pela Coordenação
+CREATE TABLE notificacoes (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    coordenador_id  UUID NOT NULL,
+    titulo          VARCHAR(150) NOT NULL,
+    mensagem        TEXT NOT NULL,
+    anexo_url       TEXT, -- Opcional: link da imagem/vídeo anexado
+    criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    -- Chave estrangeira relacionando com a tabela de coordenadores
+    CONSTRAINT fk_notificacao_coordenador 
+        FOREIGN KEY (coordenador_id) 
+        REFERENCES coordenadores(id) 
+        ON DELETE CASCADE
+);
+
+-- 2. Tabela de Relacionamento/Visualização (Status individual para cada Professor)
+CREATE TABLE notificacoes (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    coordenador_id  UUID NOT NULL REFERENCES coordenadores(id) ON DELETE CASCADE,
+    titulo          VARCHAR(150) NOT NULL,
+    mensagem        TEXT NOT NULL,
+    anexo_url       TEXT,
+    criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE notificacao_professores (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    notificacao_id  UUID NOT NULL REFERENCES notificacoes(id) ON DELETE CASCADE,
+    professor_id    UUID NOT NULL REFERENCES professores(id) ON DELETE CASCADE,
+    lida            BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE = ativa o sino e toca o som no painel do professor
+    lida_em         TIMESTAMPTZ,                    -- Salva a data/hora exata em que o professor clicou e abriu
+
+    CONSTRAINT uq_notificacao_professor UNIQUE (notificacao_id, professor_id)
+);
+
+-- Índice otimizado para carregar instantaneamente o sino no login do professor
+CREATE INDEX ix_notif_prof_pendentes ON notificacao_professores (professor_id) WHERE lida = FALSE;
+CREATE INDEX ix_notificacoes_coordenador_id ON notificacoes (coordenador_id);
 CREATE INDEX ix_presencas_chamada_id ON presencas (chamada_id);
 CREATE INDEX ix_presencas_turma_id   ON presencas (turma_id);
 CREATE INDEX ix_presencas_aluno_id   ON presencas (aluno_id);

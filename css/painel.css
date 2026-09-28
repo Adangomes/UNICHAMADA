@@ -80,7 +80,7 @@
 
 /* Navegação lateral (abas do coordenador) */
 .painel-nav {
-  width: 210px;
+  width: 240px;
   flex-shrink: 0;
   padding: 1.4em 1em;
   display: flex;
@@ -92,8 +92,8 @@
   text-align: left;
   background: transparent;
   color: var(--grafite-suave);
-  padding: .65em .9em;
-  font-size: .9rem;
+  padding: .85em 1.1em; /* Aumentado para dar mais área de clique */
+  font-size: .98rem;    /* Aumentado levemente a fonte */
   font-weight: 500;
   border-radius: var(--raio-pequeno);
 }

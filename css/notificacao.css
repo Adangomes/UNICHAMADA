@@ -95,32 +95,50 @@
    Módulo: Notificações do Professor (Sino + Badge de Notificação + Modal)
    ========================================================================== */
 
-/* Contêiner do ícone do sino na barra superior do painel */
+/* ==========================================================================
+   Módulo: Notificações (Sino na Barra Superior)
+   Responsável pelo posicionamento, contexto de empilhamento e feedback visual.
+   ========================================================================== */
+
+/* Contêiner principal do ícone do sino de notificações */
 .container-sino-notificacao {
+  /* Define contexto de posicionamento relativo para ancorar o badge absoluto (.badge-notificacao) */
   position: relative;
+  /* Melhora a affordance indicando que o elemento é interativo ao passar o cursor */
   cursor: pointer;
+  /* Mantém o comportamento inline no fluxo flexbox/grid, permitindo centralização dos filhos */
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Área de clique estendida (hitbox) sem alterar as dimensões do SVG interno */
   padding: 6px;
+  /* Empurra o elemento para a extrema direita caso o container pai seja flexbox */
+  margin-left: auto !important;
+
+  /* Espaçamento de respiro em relação aos elementos vizinhos à direita (ex: botão Sair) */
   margin-right: 12px;
+  /* Mantém o formato circular perfeito ao aplicar o efeito de hover/background */
   border-radius: 50%;
+  /* Suaviza as transições de estado para evitar mudanças bruscas de interface */
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }
-
+/* Feedback visual de foco/hover no contêiner do sino */
 .container-sino-notificacao:hover {
+  /* Fundo sutil com opacidade baixa para adaptar-se a diferentes temas de cabeçalho */
   background-color: rgba(0, 0, 0, 0.05);
 }
-
+/* Estilização base do ícone SVG renderizado */
 .container-sino-notificacao svg {
+  /* Cor neutra secundária para manter contraste adequado sem roubar foco da tela */
   color: #333333;
+  /* Transição suave para a troca de cor de estado */
   transition: color 0.2s ease;
 }
-
+/* Destaque visual do ícone SVG ao interagir com o contêiner */
 .container-sino-notificacao:hover svg {
+  /* Escurece para preto puro reforçando a indicação visual de seleção */
   color: #000000;
 }
-
 /* Indicador numérico vermelho (Badge) */
 .badge-notificacao {
   position: absolute;
@@ -139,7 +157,6 @@
   box-shadow: 0 2px 5px rgba(220, 53, 69, 0.4);
   animation: pulsoNotificacao 1.5s infinite;
 }
-
 @keyframes pulsoNotificacao {
   0% {
     transform: scale(1);

@@ -111,7 +111,7 @@
   align-items: center;
   justify-content: center;
   /* Área de clique estendida (hitbox) sem alterar as dimensões do SVG interno */
-  padding: 6px;
+  padding: 30px;
   /* Empurra o elemento para a extrema direita caso o container pai seja flexbox */
   margin-left: auto !important;
 

@@ -140,7 +140,8 @@ async function renderSecaoCursos(container) {
     for (const curso of cursos) {
       // Conta quantas disciplinas têm esse curso como cursoId
       // (não é uma relação carregada do banco, é calculada aqui na hora)
-      const qtdDisciplinas = disciplinas.filter((d) => d.cursoId === curso.id).length;
+      // Usa curso_id (como está no Supabase) ou cai no valor da coluna 'disciplinas' da tabela cursos
+      const qtdDisciplinas = curso.disciplinas ?? disciplinas.filter((d) => d.curso_id === curso.id).length;
 
       corpo.appendChild(
         criarElemento('tr', {}, [

@@ -191,15 +191,7 @@ CREATE TABLE notificacoes (
         ON DELETE CASCADE
 );
 
--- 2. Tabela de Relacionamento/Visualização (Status individual para cada Professor)
-CREATE TABLE notificacoes (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    coordenador_id  UUID NOT NULL REFERENCES coordenadores(id) ON DELETE CASCADE,
-    titulo          VARCHAR(150) NOT NULL,
-    mensagem        TEXT NOT NULL,
-    anexo_url       TEXT,
-    criado_em       TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+
 
 CREATE TABLE notificacao_professores (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),

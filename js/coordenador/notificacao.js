@@ -24,7 +24,7 @@
  * @returns {Promise<void>}
  */
 async function renderSecaoNotificacoes(container) {
-  // Limpa o conteúdo anterior do container para garantir idempotência na renderização
+  // Limpa o conteúdo anterior do container
   container.innerHTML = '';
 
   // ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ async function renderSecaoNotificacoes(container) {
   /** Cabeçalho da seção com título e descrição */
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
-      criarElemento('h2', {}, ['']),
+      criarElemento('h2', {}, ['Notificações']),
       criarElemento('p', {}, ['Notifique professores sobre atualizações e mudanças.'])
     ])
   ]);
@@ -47,12 +47,12 @@ async function renderSecaoNotificacoes(container) {
   grade.append(areaFormulario, areaLista);
   container.append(cabecalho, grade);
 
-  /** 
-   * Guarda o ID do registro em edição. 
-   * Se `null`, indica fluxo de criação (Nova Notificação). 
-   * @type {string|number|null} 
-   */
+  /** Guarda o ID do registro em edição (null = criação) */
   let idEmEdicao = null;
+
+  // Obtém o coordenador logado para gravar no coordenador_id do Supabase
+  const usuarioLogado = JSON.parse(localStorage.getItem('usuario_logado') || '{}');
+  const coordenadorId = usuarioLogado.id || '10000000-0000-0000-0000-000000000001';
 
   // ---------------------------------------------------------------------------
   // 2. SUB-ROTINA: MONTAGEM DO FORMULÁRIO
@@ -60,16 +60,23 @@ async function renderSecaoNotificacoes(container) {
 
   /**
    * Constrói e renderiza o formulário de notificação (Criação ou Edição).
-   * Lida com seletores customizados múltiplos, uploads e validações.
-   * 
-   * @async
-   * @returns {Promise<void>}
    */
   async function montarFormulario() {
     areaFormulario.innerHTML = '';
     
     // Busca dados caso seja um fluxo de edição
     const notificacao = idEmEdicao ? await dbBuscarPorId('notificacoes', idEmEdicao) : null;
+
+    // Busca vínculos de destinatários já salvos no banco para pré-selecionar ao editar
+    let vinculosExistentes = [];
+    if (idEmEdicao) {
+      try {
+        const todosVinculos = await dbListar('notificacao_professores') || [];
+        vinculosExistentes = todosVinculos.filter(v => v.notificacao_id === idEmEdicao);
+      } catch (err) {
+        console.warn('[notificacao.js] Erro ao buscar vínculos existentes:', err);
+      }
+    }
 
     const form = criarElemento('form', { style: 'display: flex; flex-direction: column; gap: 1em;' });
     
@@ -89,58 +96,45 @@ async function renderSecaoNotificacoes(container) {
       }, ['PROFESSOR'])
     );
 
-    // Caixa principal do Select (visível)
     const caixaSeletor = criarElemento('div', { class: 'seletor-professor-box' });
     const textoSeletor = criarElemento('span', {}, ['Carregando professores...']);
     const iconeSeta = criarElemento('span', { class: 'seta' }, ['▼']);
     caixaSeletor.append(textoSeletor, iconeSeta);
     divProfessor.appendChild(caixaSeletor);
 
-    // Menu suspenso (Dropdown list) ocultado via estilo inline inicialmente
     const dropdownOpcoes = criarElemento('div', {
       class: 'seletor-professor-dropdown',
       style: 'display: none;'
     });
     divProfessor.appendChild(dropdownOpcoes);
 
-    // Controle de visibilidade do dropdown com encerramento de propagação de clique externo
     caixaSeletor.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdownOpcoes.style.display = dropdownOpcoes.style.display === 'none' ? 'block' : 'none';
     });
     
-    // Oculta o dropdown ao clicar em qualquer outra parte do documento
     document.addEventListener('click', () => dropdownOpcoes.style.display = 'none');
     dropdownOpcoes.addEventListener('click', (e) => e.stopPropagation());
 
-    // Obtenção da lista de professores via DB com padrão de Resiliência (Fallback Mock)
     let listaProfessores = [];
     try {
       listaProfessores = await dbListar('professores') || [];
     } catch (err) {
-      console.warn('[notificacao.js] Falha ao carregar professores. Utilizando dados de fallback.', err);
-      listaProfessores = [
-        { id: '1', nome: 'Prof. João Silva' },
-        { id: '2', nome: 'Profª. Maria Oliveira' },
-        { id: '3', nome: 'Prof. Carlos Souza' }
-      ];
+      console.warn('[notificacao.js] Falha ao carregar professores.', err);
     }
 
-    /** 
-     * Estado local das chaves/IDs dos destinatários selecionados.
-     * Pode conter 'todos' ou array contendo IDs específicos de professores.
-     * @type {Array<string>} 
-     */
+    /** Estado local dos destinatários selecionados */
     let selecionados = [];
-    if (notificacao?.destinatarios) {
-      selecionados = Array.isArray(notificacao.destinatarios) ? notificacao.destinatarios : [notificacao.destinatarios];
+    if (idEmEdicao && vinculosExistentes.length > 0) {
+      if (listaProfessores.length > 0 && vinculosExistentes.length >= listaProfessores.length) {
+        selecionados = ['todos'];
+      } else {
+        selecionados = vinculosExistentes.map(v => v.professor_id);
+      }
     } else {
-      selecionados = ['todos']; // Estado inicial padrão
+      selecionados = ['todos'];
     }
 
-    /**
-     * Atualiza o rótulo descritivo da caixa do seletor com base no estado de `selecionados`.
-     */
     function atualizarTextoSeletor() {
       if (selecionados.includes('todos')) {
         textoSeletor.textContent = 'Todos os Professores';
@@ -164,7 +158,6 @@ async function renderSecaoNotificacoes(container) {
 
     const checkboxesProf = [];
 
-    // Renderização iterativa das opções individuais de professores
     listaProfessores.forEach(prof => {
       const divProf = criarElemento('div', { class: 'seletor-opcao-item' });
       const checkProf = criarElemento('input', { type: 'checkbox', value: prof.id });
@@ -176,10 +169,9 @@ async function renderSecaoNotificacoes(container) {
       
       checkboxesProf.push({ id: prof.id, checkbox: checkProf });
 
-      // Manipulação de seleção individual
       divProf.addEventListener('click', (e) => {
         if (e.target !== checkProf) checkProf.checked = !checkProf.checked;
-        checkTodos.checked = false; // Mutualmente exclusivo com "Todos"
+        checkTodos.checked = false;
 
         if (checkProf.checked) {
           selecionados = selecionados.filter(s => s !== 'todos');
@@ -191,7 +183,6 @@ async function renderSecaoNotificacoes(container) {
       });
     });
 
-    // Manipulação de seleção global ("Todos os Professores")
     divTodos.addEventListener('click', (e) => {
       if (e.target !== checkTodos) checkTodos.checked = !checkTodos.checked;
       
@@ -204,7 +195,6 @@ async function renderSecaoNotificacoes(container) {
       atualizarTextoSeletor();
     });
 
-    // Inicializa a label descritiva do seletor
     atualizarTextoSeletor();
 
     // -------------------------------------------------------------------------
@@ -240,12 +230,11 @@ async function renderSecaoNotificacoes(container) {
         name: 'anexo',
         accept: 'image/*,video/*',
         style: 'font-size: 0.9em; margin-bottom: 2px;'
-      }),
-      criarElemento('p', { style: 'font-size: 0.72em; color: #888; margin: 0;' }, [''])
+      })
     ]);
 
     // -------------------------------------------------------------------------
-    // 2.3 Botões de Ação do Formulário
+    // 2.3 Botões de Ação
     // -------------------------------------------------------------------------
     const botaoEnvio = criarElemento('button', {
       type: 'submit',
@@ -255,7 +244,6 @@ async function renderSecaoNotificacoes(container) {
 
     const botoes = criarElemento('div', { style: 'display: flex; gap: 0.6em; align-items: center;' }, [botaoEnvio]);
 
-    // Exibe o botão "Cancelar" apenas se for um fluxo de edição
     if (idEmEdicao) {
       botoes.appendChild(criarElemento('button', {
         type: 'button',
@@ -270,7 +258,7 @@ async function renderSecaoNotificacoes(container) {
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
     // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Envio do Formulário (Submit)
+    // 2.4 Event Handler: Submit
     // -------------------------------------------------------------------------
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -278,7 +266,6 @@ async function renderSecaoNotificacoes(container) {
       const titulo = form.titulo.value.trim();
       const mensagem = form.mensagem.value.trim();
 
-      // Validações de Negócio
       if (selecionados.length === 0) {
         mostrarToast('Por favor, selecione pelo menos um professor ou "Todos".', 'erro');
         return;
@@ -289,25 +276,35 @@ async function renderSecaoNotificacoes(container) {
         return;
       }
 
-      /** @type {Object} Payload do registro de notificação */
-      const dados = {
-        titulo,
-        mensagem,
-        destinatarios: selecionados,
-        data: new Date().toISOString().split('T')[0] // Formato YYYY-MM-DD
+      // Payload compatível com a tabela 'notificacoes' do Supabase
+      const dadosNotificacao = {
+        coordenador_id: coordenadorId,
+        titulo: titulo,
+        mensagem: mensagem
       };
 
-      // Persistência no Banco de Dados
       if (idEmEdicao) {
-        await dbAtualizar('notificacoes', idEmEdicao, dados);
+        await dbAtualizar('notificacoes', idEmEdicao, dadosNotificacao);
+        
+        // Remove vínculos antigos para regravar atualizado
+        if (typeof supabase !== 'undefined') {
+          await supabase.from('notificacao_professores').delete().eq('notificacao_id', idEmEdicao);
+        }
+        await vincularProfessores(idEmEdicao, selecionados, listaProfessores);
+
         mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
         idEmEdicao = null;
       } else {
-        await dbInserir('notificacoes', dados);
+        const novaNotificacao = await dbInserir('notificacoes', dadosNotificacao);
+        const notifId = novaNotificacao?.id || (Array.isArray(novaNotificacao) ? novaNotificacao[0]?.id : null);
+
+        if (notifId) {
+          await vincularProfessores(notifId, selecionados, listaProfessores);
+        }
+
         mostrarToast('Notificação enviada!', 'sucesso');
       }
 
-      // Re-renderização dos componentes afetados
       await montarFormulario();
       await montarLista();
     });
@@ -316,20 +313,41 @@ async function renderSecaoNotificacoes(container) {
   }
 
   // ---------------------------------------------------------------------------
-  // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM (Histórico de Notificações)
+  // HELPER: Insere as linhas na tabela 'notificacao_professores'
   // ---------------------------------------------------------------------------
+  async function vincularProfessores(notificacaoId, selecionados, listaProfessores) {
+    let idsProfessores = [];
 
-  /**
-   * Constrói e renderiza a tabela com as notificações previamente enviadas.
-   * 
-   * @async
-   * @returns {Promise<void>}
-   */
+    if (selecionados.includes('todos')) {
+      idsProfessores = listaProfessores.map(p => p.id);
+    } else {
+      idsProfessores = selecionados;
+    }
+
+    if (idsProfessores.length === 0) return;
+
+    const registros = idsProfessores.map(profId => ({
+      notificacao_id: notificacaoId,
+      professor_id: profId,
+      lida: false
+    }));
+
+    if (typeof supabase !== 'undefined') {
+      await supabase.from('notificacao_professores').insert(registros);
+    } else {
+      for (const reg of registros) {
+        await dbInserir('notificacao_professores', reg);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM (Histórico)
+  // ---------------------------------------------------------------------------
   async function montarLista() {
     areaLista.innerHTML = '';
     const notificacoes = await dbListar('notificacoes');
 
-    // Estado Vazio (Empty State)
     if (!notificacoes || notificacoes.length === 0) {
       areaLista.appendChild(
         criarElemento('div', {
@@ -339,10 +357,23 @@ async function renderSecaoNotificacoes(container) {
       return;
     }
 
-    // Ordenação Decrescente por Data (Mais recente primeiro)
-    notificacoes.sort((a, b) => new Date(b.data) - new Date(a.data));
+    let vinculosProfessores = [];
+    try {
+      vinculosProfessores = await dbListar('notificacao_professores') || [];
+    } catch (e) {
+      console.warn('[notificacao.js] Erro ao carregar notificacao_professores:', e);
+    }
 
-    // Construção da Tabela
+    let listaProfs = [];
+    try { 
+      listaProfs = await dbListar('professores') || []; 
+    } catch (e) {
+      console.warn('[notificacao.js] Erro ao carregar professores:', e);
+    }
+
+    // Ordenação Decrescente por Data de criação (criado_em / data)
+    notificacoes.sort((a, b) => new Date(b.criado_em || b.data || 0) - new Date(a.criado_em || a.data || 0));
+
     const tabela = criarElemento('table', { style: 'width: 100%; border-collapse: collapse;' });
     tabela.appendChild(
       criarElemento('thead', {}, [
@@ -356,87 +387,74 @@ async function renderSecaoNotificacoes(container) {
     );
 
     const corpo = criarElemento('tbody', {});
-    
-    // Mapeamento dos professores para converter IDs em Nomes na tabela
-    let listaProfs = [];
-    try { 
-      listaProfs = await dbListar('professores') || []; 
-    } catch (e) {
-      console.warn('[notificacao.js] Falha ao carregar relação de professores para a tabela.', e);
+
+    for (const notif of notificacoes) {
+      let txtDestinatarios = '—';
+      
+      // Busca no banco quais professores estão vinculados a essa notificação
+      const vinculos = vinculosProfessores.filter(v => v.notificacao_id === notif.id);
+      
+      if (vinculos.length > 0) {
+        if (listaProfs.length > 0 && vinculos.length >= listaProfs.length) {
+          txtDestinatarios = 'Todos';
+        } else {
+          const nomes = vinculos.map(v => {
+            const p = listaProfs.find(prof => prof.id === v.professor_id);
+            return p ? p.nome.split(' ')[0] : 'Prof.';
+          });
+          txtDestinatarios = nomes.join(', ');
+        }
+      } else if (notif.destinatarios) {
+        const dests = Array.isArray(notif.destinatarios) ? notif.destinatarios : [notif.destinatarios];
+        txtDestinatarios = dests.includes('todos') ? 'Todos' : dests.length + ' prof(s)';
+      }
+
+      // Tratamento para formatar 'criado_em' do Supabase ou 'data' do localStorage
+      const dataExibicao = notif.criado_em 
+        ? new Date(notif.criado_em).toLocaleDateString('pt-BR') 
+        : formatarDataBR(notif.data);
+
+      corpo.appendChild(
+        criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
+          criarElemento('td', { style: 'padding: 10px;' }, [dataExibicao]),
+          criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
+          criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]),
+          criarElemento('td', { class: 'celula-acoes' }, [
+            criarElemento('button', {
+              class: 'btn-icone',
+              onClick: async () => {
+                idEmEdicao = notif.id;
+                await montarFormulario();
+                areaFormulario.scrollIntoView({ behavior: 'smooth' });
+              }
+            }, ['Editar']),
+
+            criarElemento('button', {
+              class: 'btn-perigo',
+              onClick: async () => {
+                if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
+                
+                await dbRemover('notificacoes', notif.id);
+                mostrarToast('Notificação excluída.', 'sucesso');
+                await montarLista();
+              }
+            }, ['Excluir'])
+          ])
+        ])
+      );
     }
 
-    // População de Linhas (Rows)
-   // População de Linhas (Rows)
-for (const notif of notificacoes) {
-  /** @type {string} Formatação textual legível dos destinatários */
-  let txtDestinatarios = '—';
-  
-  if (notif.destinatarios) {
-    const dests = Array.isArray(notif.destinatarios) ? notif.destinatarios : [notif.destinatarios];
-    if (dests.includes('todos')) {
-      txtDestinatarios = 'Todos';
-    } else {
-      const nomes = dests.map(id => {
-        const p = listaProfs.find(prof => prof.id === id);
-        return p ? p.nome.split(' ')[1] || p.nome : 'Prof.'; 
-      });
-      txtDestinatarios = nomes.join(', ');
-    }
-  }
-
-  corpo.appendChild(
-    criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
-      criarElemento('td', { style: 'padding: 10px;' }, [formatarDataBR(notif.data)]),
-      criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
-      criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]),
-      criarElemento('td', { class: 'celula-acoes' }, [
-        
-        // Botão de Editar usando a classe .btn-icone
-        criarElemento('button', {
-          class: 'btn-icone',
-          onClick: async () => {
-            idEmEdicao = notif.id;
-            await montarFormulario();
-            areaFormulario.scrollIntoView({ behavior: 'smooth' });
-          }
-        }, ['Editar']),
-
-        // Botão de Excluir usando a classe .btn-perigo
-        criarElemento('button', {
-          class: 'btn-perigo',
-          onClick: async () => {
-            if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
-            
-            await dbRemover('notificacoes', notif.id);
-            mostrarToast('Notificação excluída.', 'sucesso');
-            await montarLista();
-          }
-        }, ['Excluir'])
-
-      ])
-    ])
-  );
-}
     tabela.appendChild(corpo);
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  // ---------------------------------------------------------------------------
-  // 4. INICIALIZAÇÃO DO MÓDULO
-  // ---------------------------------------------------------------------------
+  // Inicialização
   await montarFormulario();
   await montarLista();
 }
 
 /**
- * Utilitário para formatação de strings de data padrão ISO para o padrão brasileiro.
- *
- * @function formatarDataBR
- * @param {string} dataISO - Data no formato `AAAA-MM-DD`.
- * @returns {string} Data formatada no padrão `DD/MM/AAAA` ou '—' se inválida/vazia.
- * 
- * @example
- * formatarDataBR('2026-09-17'); // Retorna '17/09/2026'
+ * Utilitário para formatação de strings de data ISO para o padrão brasileiro.
  */
 function formatarDataBR(dataISO) {
   if (!dataISO) return '—';
@@ -445,8 +463,5 @@ function formatarDataBR(dataISO) {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
-// -----------------------------------------------------------------------------
-// EXPOSIÇÃO GLOBAL
-// -----------------------------------------------------------------------------
-// Injeta a função principal no escopo global (Window) para acoplamento com o roteador/UI
+// Exposição Global
 window.renderSecaoNotificacoes = renderSecaoNotificacoes;

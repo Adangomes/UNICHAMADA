@@ -63,6 +63,7 @@ CREATE UNIQUE INDEX uq_professores_email_lower ON professores (LOWER(email));
 CREATE TABLE cursos (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nome        VARCHAR(150) NOT NULL,
+    disciplinas INTEGER NOT NULL DEFAULT 0, -- Nova coluna adicionada
     criado_em   TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     CONSTRAINT uq_cursos_nome UNIQUE (nome)

@@ -1,37 +1,14 @@
 /**
  * @fileoverview notificacao.js — Módulo de Gerenciamento de Avisos e Notificações (Painel do Coordenador)
- * 
- * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
- * exclusão e listagem de notificações enviadas pela coordenação para os professores.
- * 
- * @module SeçãoNotificacoes
- * @requires dbBuscarPorId
- * @requires dbListar
- * @requires dbInserir
- * @requires dbAtualizar
- * @requires dbRemover
- * @requires criarElemento
- * @requires mostrarToast
- * @requires campoObrigatorioPreenchido
- * @requires confirmarAcao
+ * Integração 100% nativa com o Supabase (tabelas 'notificacoes' e 'notificacao_professores')
  */
 
-/**
- * Renderiza a seção principal de gerenciamento de notificações dentro de um container do DOM.
- *
- * @async
- * @param {HTMLElement} container - O elemento do DOM onde o módulo de notificações será montado.
- * @returns {Promise<void>}
- */
 async function renderSecaoNotificacoes(container) {
-  // Limpa o conteúdo anterior do container
   container.innerHTML = '';
 
   // ---------------------------------------------------------------------------
   // 1. ESTRUTURAÇÃO DO LAYOUT (DOM Base)
   // ---------------------------------------------------------------------------
-  
-  /** Cabeçalho da seção com título e descrição */
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Notificações']),
@@ -39,7 +16,6 @@ async function renderSecaoNotificacoes(container) {
     ])
   ]);
 
-  /** Grade responsiva dividindo formulário (esquerda) e listagem (direita) */
   const grade = criarElemento('div', { class: 'grade-secao' });
   const areaFormulario = criarElemento('div', { class: 'cartao' });
   const areaLista = criarElemento('div', { style: 'flex: 1;' });
@@ -47,48 +23,43 @@ async function renderSecaoNotificacoes(container) {
   grade.append(areaFormulario, areaLista);
   container.append(cabecalho, grade);
 
-  /** Guarda o ID do registro em edição (null = criação) */
   let idEmEdicao = null;
 
-  // Obtém o coordenador logado para gravar no coordenador_id do Supabase
-  const usuarioLogado = JSON.parse(localStorage.getItem('usuario_logado') || '{}');
-  const coordenadorId = usuarioLogado.id || '10000000-0000-0000-0000-000000000001';
-
   // ---------------------------------------------------------------------------
-  // 2. SUB-ROTINA: MONTAGEM DO FORMULÁRIO
+  // 2. MONTAGEM DO FORMULÁRIO
   // ---------------------------------------------------------------------------
-
-  /**
-   * Constrói e renderiza o formulário de notificação (Criação ou Edição).
-   */
   async function montarFormulario() {
     areaFormulario.innerHTML = '';
     
-    // Busca dados caso seja um fluxo de edição
-    const notificacao = idEmEdicao ? await dbBuscarPorId('notificacoes', idEmEdicao) : null;
-
-    // Busca vínculos de destinatários já salvos no banco para pré-selecionar ao editar
+    // Busca notificação no Supabase em caso de edição
+    let notificacao = null;
     let vinculosExistentes = [];
+
     if (idEmEdicao) {
-      try {
-        const todosVinculos = await dbListar('notificacao_professores') || [];
-        vinculosExistentes = todosVinculos.filter(v => v.notificacao_id === idEmEdicao);
-      } catch (err) {
-        console.warn('[notificacao.js] Erro ao buscar vínculos existentes:', err);
-      }
+      const { data: notifData } = await supabase
+        .from('notificacoes')
+        .select('*')
+        .eq('id', idEmEdicao)
+        .single();
+      
+      notificacao = notifData;
+
+      const { data: vincData } = await supabase
+        .from('notificacao_professores')
+        .select('professor_id')
+        .eq('notificacao_id', idEmEdicao);
+
+      vinculosExistentes = vincData || [];
     }
 
     const form = criarElemento('form', { style: 'display: flex; flex-direction: column; gap: 1em;' });
-    
     form.appendChild(
       criarElemento('h3', { style: 'margin-bottom: 0.5em; font-size: 1.1em; color: #333;' }, [
         idEmEdicao ? 'Editar notificação' : 'Nova notificação'
       ])
     );
 
-    // -------------------------------------------------------------------------
-    // 2.1 Componente Customizado: Seletor Multi-select de Professores (Dropdown)
-    // -------------------------------------------------------------------------
+    // Seletor de Professores
     const divProfessor = criarElemento('div', { class: 'campo seletor-professor-container' });
     divProfessor.appendChild(
       criarElemento('label', { 
@@ -116,23 +87,21 @@ async function renderSecaoNotificacoes(container) {
     document.addEventListener('click', () => dropdownOpcoes.style.display = 'none');
     dropdownOpcoes.addEventListener('click', (e) => e.stopPropagation());
 
-    let listaProfessores = [];
-    try {
-      listaProfessores = await dbListar('professores') || [];
-    } catch (err) {
-      console.warn('[notificacao.js] Falha ao carregar professores.', err);
-    }
+    // Busca lista de professores do Supabase
+    const { data: listaProfessores } = await supabase
+      .from('professores')
+      .select('id, nome')
+      .order('nome');
 
-    /** Estado local dos destinatários selecionados */
-    let selecionados = [];
+    const profs = listaProfessores || [];
+
+    let selecionados = ['todos'];
     if (idEmEdicao && vinculosExistentes.length > 0) {
-      if (listaProfessores.length > 0 && vinculosExistentes.length >= listaProfessores.length) {
+      if (profs.length > 0 && vinculosExistentes.length >= profs.length) {
         selecionados = ['todos'];
       } else {
         selecionados = vinculosExistentes.map(v => v.professor_id);
       }
-    } else {
-      selecionados = ['todos'];
     }
 
     function atualizarTextoSeletor() {
@@ -141,14 +110,13 @@ async function renderSecaoNotificacoes(container) {
       } else if (selecionados.length === 0) {
         textoSeletor.textContent = 'Selecione o professor';
       } else if (selecionados.length === 1) {
-        const prof = listaProfessores.find(p => p.id === selecionados[0]);
+        const prof = profs.find(p => p.id === selecionados[0]);
         textoSeletor.textContent = prof ? prof.nome : '1 professor selecionado';
       } else {
         textoSeletor.textContent = `${selecionados.length} professores selecionados`;
       }
     }
 
-    // Opção "Todos os Professores"
     const divTodos = criarElemento('div', { class: 'seletor-opcao-item todos' });
     const checkTodos = criarElemento('input', { type: 'checkbox' });
     checkTodos.checked = selecionados.includes('todos');
@@ -158,12 +126,11 @@ async function renderSecaoNotificacoes(container) {
 
     const checkboxesProf = [];
 
-    listaProfessores.forEach(prof => {
+    profs.forEach(prof => {
       const divProf = criarElemento('div', { class: 'seletor-opcao-item' });
       const checkProf = criarElemento('input', { type: 'checkbox', value: prof.id });
       
       checkProf.checked = selecionados.includes(prof.id) && !selecionados.includes('todos');
-      
       divProf.append(checkProf, criarElemento('span', {}, [prof.nome]));
       dropdownOpcoes.appendChild(divProf);
       
@@ -197,9 +164,7 @@ async function renderSecaoNotificacoes(container) {
 
     atualizarTextoSeletor();
 
-    // -------------------------------------------------------------------------
-    // 2.2 Campos do Formulário (Título, Mensagem, Anexo)
-    // -------------------------------------------------------------------------
+    // Campos Título e Mensagem
     const campoTitulo = criarElemento('div', { class: 'campo' }, [
       criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['TÍTULO']),
       criarElemento('input', {
@@ -233,9 +198,6 @@ async function renderSecaoNotificacoes(container) {
       })
     ]);
 
-    // -------------------------------------------------------------------------
-    // 2.3 Botões de Ação
-    // -------------------------------------------------------------------------
     const botaoEnvio = criarElemento('button', {
       type: 'submit',
       class: 'btn-primario',
@@ -257,9 +219,7 @@ async function renderSecaoNotificacoes(container) {
 
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
-    // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Submit
-    // -------------------------------------------------------------------------
+    // Envio do formulário direto para o Supabase
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       
@@ -276,33 +236,60 @@ async function renderSecaoNotificacoes(container) {
         return;
       }
 
-      // Payload compatível com a tabela 'notificacoes' do Supabase
-      const dadosNotificacao = {
-        coordenador_id: coordenadorId,
-        titulo: titulo,
-        mensagem: mensagem
-      };
+      // Busca o ID do Coordenador direto na tabela 'coordenadores'
+      const { data: coordData } = await supabase.from('coordenadores').select('id').limit(1);
+      const coordenadorId = coordData?.[0]?.id;
+
+      if (!coordenadorId) {
+        mostrarToast('Erro: Nenhum coordenador cadastrado no sistema.', 'erro');
+        return;
+      }
+
+      let notificacaoId = idEmEdicao;
 
       if (idEmEdicao) {
-        await dbAtualizar('notificacoes', idEmEdicao, dadosNotificacao);
-        
-        // Remove vínculos antigos para regravar atualizado
-        if (typeof supabase !== 'undefined') {
-          await supabase.from('notificacao_professores').delete().eq('notificacao_id', idEmEdicao);
-        }
-        await vincularProfessores(idEmEdicao, selecionados, listaProfessores);
+        // Atualiza na tabela 'notificacoes'
+        await supabase
+          .from('notificacoes')
+          .update({ titulo, mensagem })
+          .eq('id', idEmEdicao);
 
-        mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
+        // Limpa vínculos antigos
+        await supabase
+          .from('notificacao_professores')
+          .delete()
+          .eq('notificacao_id', idEmEdicao);
+
+        mostrarToast('Notificação atualizada!', 'sucesso');
         idEmEdicao = null;
       } else {
-        const novaNotificacao = await dbInserir('notificacoes', dadosNotificacao);
-        const notifId = novaNotificacao?.id || (Array.isArray(novaNotificacao) ? novaNotificacao[0]?.id : null);
+        // Insere na tabela 'notificacoes'
+        const { data: novaNotif, error } = await supabase
+          .from('notificacoes')
+          .insert([{ coordenador_id: coordenadorId, titulo, mensagem }])
+          .select();
 
-        if (notifId) {
-          await vincularProfessores(notifId, selecionados, listaProfessores);
+        if (error || !novaNotif?.[0]) {
+          console.error(error);
+          mostrarToast('Erro ao enviar notificação.', 'erro');
+          return;
         }
 
+        notificacaoId = novaNotif[0].id;
         mostrarToast('Notificação enviada!', 'sucesso');
+      }
+
+      // Insere vínculos na tabela 'notificacao_professores'
+      let idsParaVincular = selecionados.includes('todos') ? profs.map(p => p.id) : selecionados;
+      
+      if (idsParaVincular.length > 0) {
+        const registros = idsParaVincular.map(pId => ({
+          notificacao_id: notificacaoId,
+          professor_id: pId,
+          lida: false
+        }));
+
+        await supabase.from('notificacao_professores').insert(registros);
       }
 
       await montarFormulario();
@@ -313,42 +300,27 @@ async function renderSecaoNotificacoes(container) {
   }
 
   // ---------------------------------------------------------------------------
-  // HELPER: Insere as linhas na tabela 'notificacao_professores'
-  // ---------------------------------------------------------------------------
-  async function vincularProfessores(notificacaoId, selecionados, listaProfessores) {
-    let idsProfessores = [];
-
-    if (selecionados.includes('todos')) {
-      idsProfessores = listaProfessores.map(p => p.id);
-    } else {
-      idsProfessores = selecionados;
-    }
-
-    if (idsProfessores.length === 0) return;
-
-    const registros = idsProfessores.map(profId => ({
-      notificacao_id: notificacaoId,
-      professor_id: profId,
-      lida: false
-    }));
-
-    if (typeof supabase !== 'undefined') {
-      await supabase.from('notificacao_professores').insert(registros);
-    } else {
-      for (const reg of registros) {
-        await dbInserir('notificacao_professores', reg);
-      }
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM (Histórico)
+  // 3. MONTAGEM DA LISTAGEM (Histórico do Supabase)
   // ---------------------------------------------------------------------------
   async function montarLista() {
     areaLista.innerHTML = '';
-    const notificacoes = await dbListar('notificacoes');
 
-    if (!notificacoes || notificacoes.length === 0) {
+    // Busca notificações do Supabase
+    const { data: notificacoes, error } = await supabase
+      .from('notificacoes')
+      .select(`
+        id,
+        titulo,
+        mensagem,
+        criado_em,
+        notificacao_professores (
+          professor_id,
+          professores ( nome )
+        )
+      `)
+      .order('criado_em', { ascending: false });
+
+    if (error || !notificacoes || notificacoes.length === 0) {
       areaLista.appendChild(
         criarElemento('div', {
           style: 'border: 1px solid #e0e0e0; background-color: #fcfcfc; border-radius: 8px; padding: 2.5em; text-align: center; color: #888; font-size: 0.95em;'
@@ -357,22 +329,10 @@ async function renderSecaoNotificacoes(container) {
       return;
     }
 
-    let vinculosProfessores = [];
-    try {
-      vinculosProfessores = await dbListar('notificacao_professores') || [];
-    } catch (e) {
-      console.warn('[notificacao.js] Erro ao carregar notificacao_professores:', e);
-    }
-
-    let listaProfs = [];
-    try { 
-      listaProfs = await dbListar('professores') || []; 
-    } catch (e) {
-      console.warn('[notificacao.js] Erro ao carregar professores:', e);
-    }
-
-    // Ordenação Decrescente por Data de criação (criado_em / data)
-    notificacoes.sort((a, b) => new Date(b.criado_em || b.data || 0) - new Date(a.criado_em || a.data || 0));
+    // Busca total de professores para comparar se enviou para "Todos"
+    const { count: totalProfessores } = await supabase
+      .from('professores')
+      .select('*', { count: 'exact', head: true });
 
     const tabela = criarElemento('table', { style: 'width: 100%; border-collapse: collapse;' });
     tabela.appendChild(
@@ -390,29 +350,20 @@ async function renderSecaoNotificacoes(container) {
 
     for (const notif of notificacoes) {
       let txtDestinatarios = '—';
-      
-      // Busca no banco quais professores estão vinculados a essa notificação
-      const vinculos = vinculosProfessores.filter(v => v.notificacao_id === notif.id);
-      
+      const vinculos = notif.notificacao_professores || [];
+
       if (vinculos.length > 0) {
-        if (listaProfs.length > 0 && vinculos.length >= listaProfs.length) {
+        if (totalProfessores && vinculos.length >= totalProfessores) {
           txtDestinatarios = 'Todos';
         } else {
-          const nomes = vinculos.map(v => {
-            const p = listaProfs.find(prof => prof.id === v.professor_id);
-            return p ? p.nome.split(' ')[0] : 'Prof.';
-          });
+          const nomes = vinculos.map(v => v.professores?.nome?.split(' ')[0] || 'Prof.');
           txtDestinatarios = nomes.join(', ');
         }
-      } else if (notif.destinatarios) {
-        const dests = Array.isArray(notif.destinatarios) ? notif.destinatarios : [notif.destinatarios];
-        txtDestinatarios = dests.includes('todos') ? 'Todos' : dests.length + ' prof(s)';
       }
 
-      // Tratamento para formatar 'criado_em' do Supabase ou 'data' do localStorage
       const dataExibicao = notif.criado_em 
         ? new Date(notif.criado_em).toLocaleDateString('pt-BR') 
-        : formatarDataBR(notif.data);
+        : '—';
 
       corpo.appendChild(
         criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
@@ -434,7 +385,7 @@ async function renderSecaoNotificacoes(container) {
               onClick: async () => {
                 if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
                 
-                await dbRemover('notificacoes', notif.id);
+                await supabase.from('notificacoes').delete().eq('id', notif.id);
                 mostrarToast('Notificação excluída.', 'sucesso');
                 await montarLista();
               }
@@ -448,20 +399,8 @@ async function renderSecaoNotificacoes(container) {
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  // Inicialização
   await montarFormulario();
   await montarLista();
 }
 
-/**
- * Utilitário para formatação de strings de data ISO para o padrão brasileiro.
- */
-function formatarDataBR(dataISO) {
-  if (!dataISO) return '—';
-  const parts = dataISO.split('-');
-  if (parts.length < 3) return dataISO;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-}
-
-// Exposição Global
 window.renderSecaoNotificacoes = renderSecaoNotificacoes;

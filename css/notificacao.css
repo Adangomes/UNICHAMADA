@@ -1,0 +1,262 @@
+/* ==========================================================================
+   Módulo: Notificações (Layout & Custom Multi-select Dropdown)
+   ========================================================================== */
+
+/* Posicionamento do campo do seletor */
+.seletor-professor-container {
+  position: relative; /* Define o contexto de posicionamento relativo para o dropdown */
+  width: 100%;        /* Garante que o contêiner ocupe 100% da largura disponível */
+}
+
+/* Caixa principal do Select */
+.seletor-professor-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 6px;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efeito ao passar o mouse na caixa do seletor */
+.seletor-professor-box:hover {
+  border-color: #999999;
+}
+
+/* Estilo do texto interno do seletor */
+.seletor-professor-box span {
+  font-size: 0.9em;
+  color: #333333;
+}
+
+/* Estilo da seta indicadora (▼) */
+.seletor-professor-box .seta {
+  font-size: 0.75em;
+  color: #888888;
+  margin-left: 8px;
+}
+
+/* Dropdown Suspenso */
+.seletor-professor-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  margin-top: 4px;
+  padding: 6px 0;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  overflow-y: auto;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+/* Linha de cada opção (Checkbox + Label) */
+.seletor-opcao-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.88em;
+  color: #444444;
+  transition: background-color 0.15s ease;
+}
+
+.seletor-opcao-item:hover {
+  background-color: #f5f7fa;
+}
+
+.seletor-opcao-item input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.seletor-opcao-item.todos {
+  border-bottom: 1px solid #eeeeee;
+  font-weight: 600;
+  color: #111111;
+}
+
+
+/* ==========================================================================
+   Módulo: Notificações do Professor (Sino + Badge de Notificação + Modal)
+   ========================================================================== */
+
+/* ==========================================================================
+   Módulo: Notificações (Sino na Barra Superior)
+   Responsável pelo posicionamento, contexto de empilhamento e feedback visual.
+   ========================================================================== */
+
+/* Contêiner principal do ícone do sino de notificações */
+.container-sino-notificacao {
+  /* Define contexto de posicionamento relativo para ancorar o badge absoluto (.badge-notificacao) */
+  position: relative;
+  /* Melhora a affordance indicando que o elemento é interativo ao passar o cursor */
+  cursor: pointer;
+  /* Mantém o comportamento inline no fluxo flexbox/grid, permitindo centralização dos filhos */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Área de clique estendida (hitbox) sem alterar as dimensões do SVG interno */
+  padding: 12px;
+  /* Empurra o elemento para a extrema direita caso o container pai seja flexbox */
+  margin-left: auto !important;
+
+  /* Espaçamento de respiro em relação aos elementos vizinhos à direita (ex: botão Sair) */
+  margin-right: 12px;
+  /* Mantém o formato circular perfeito ao aplicar o efeito de hover/background */
+  border-radius: 50%;
+  /* Suaviza as transições de estado para evitar mudanças bruscas de interface */
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+/* Feedback visual de foco/hover no contêiner do sino */
+.container-sino-notificacao:hover {
+  /* Fundo sutil com opacidade baixa para adaptar-se a diferentes temas de cabeçalho */
+  background-color: rgba(0, 0, 0, 0.05);
+}
+/* Estilização base do ícone SVG renderizado */
+.container-sino-notificacao svg {
+  /* Cor neutra secundária para manter contraste adequado sem roubar foco da tela */
+  color: #333333;
+  /* Transição suave para a troca de cor de estado */
+  transition: color 0.2s ease;
+}
+/* Destaque visual do ícone SVG ao interagir com o contêiner */
+.container-sino-notificacao:hover svg {
+  /* Escurece para preto puro reforçando a indicação visual de seleção */
+  color: #000000;
+}
+/* Indicador numérico vermelho (Badge) */
+.badge-notificacao {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background-color: #ff3b30;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 0.7em;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  text-align: center;
+  line-height: 18px;
+  padding: 0 4px;
+  box-shadow: 0 2px 5px rgba(220, 53, 69, 0.4);
+  animation: pulsoNotificacao 1.5s infinite;
+}
+@keyframes pulsoNotificacao {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+/* ==========================================================================
+   Modal do Histórico de Notificações
+   ========================================================================== */
+
+.modal-notificacao-item {
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-left: 4px solid #007bff;
+  transition: all 0.2s ease;
+}
+
+.modal-notificacao-item.lida {
+  border-left-color: #cccccc;
+  background-color: #f9f9f9;
+}
+
+.modal-notificacao-item h4 {
+  margin: 0 0 6px 0;
+  font-size: 1em;
+  color: #222222;
+}
+
+.modal-notificacao-item p {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  color: #555555;
+  white-space: pre-wrap;
+}
+
+.modal-notificacao-item small {
+  color: #888888;
+  font-size: 0.78em;
+}
+
+
+/* ==========================================================================
+   Módulo: Estilização das Ações da Tabela (Botões Editar e Excluir)
+   ========================================================================== */
+
+.celula-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* Padronização base idêntica para ambos os botões */
+.celula-acoes .btn-icone,
+.celula-acoes .btn-perigo,
+tbody td .btn-icone,
+tbody td .btn-perigo {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35em 0.75em;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+/* Botão Editar (.btn-icone) */
+.celula-acoes .btn-icone,
+tbody td .btn-icone {
+  color: #4267B2;
+  border: 1.5px solid transparent;
+}
+
+.celula-acoes .btn-icone:hover,
+tbody td .btn-icone:hover {
+  border-color: #4267B2;
+  background-color: rgba(66, 103, 178, 0.08);
+}
+
+/* Botão Excluir (.btn-perigo) */
+.celula-acoes .btn-perigo,
+tbody td .btn-perigo {
+  color: #d9534f;
+  border: 1.5px solid #d9534f;
+}
+
+.celula-acoes .btn-perigo:hover,
+tbody td .btn-perigo:hover {
+  background-color: #d9534f;
+  color: #ffffff;
+}

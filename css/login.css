@@ -1,0 +1,233 @@
+/* ==========================================================================
+   LOGIN.CSS — Tela de acesso estilo Split Screen com Marca "UNI CHAMADAS"
+   ========================================================================== */
+
+#tela-login {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fundo gradiente inspirado no tom do círculo */
+  background: linear-gradient(135deg, #1b323c 0%, #0d1e25 100%);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Container Principal Split Screen */
+.login-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 920px;
+  min-height: 480px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ================= LADO ESQUERDO: BANNER E MARCA ================= */
+.login-banner {
+  flex: 1;
+  background: linear-gradient(145deg, #2a6162 0%, #1d4348 50%, #153236 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px;
+}
+
+/* Animação de rotação contínua e suave */
+@keyframes girarLento {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Arcos Curvos Decorativos com Tracejado Dinâmico (Visíveis ao girar) */
+.arco-decorativo {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  box-sizing: border-box;
+  animation: girarLento 20s linear infinite;
+}
+
+.arco-topo {
+  width: 380px;
+  height: 380px;
+  top: -120px;
+  left: -80px;
+  border: 3px dashed rgba(255, 255, 255, 0.35);
+  border-top-color: rgba(255, 255, 255, 0.85);
+}
+
+.arco-base {
+  width: 480px;
+  height: 480px;
+  bottom: -180px;
+  right: -110px;
+  border: 4px dotted rgba(255, 255, 255, 0.25);
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+  animation-direction: reverse;
+  animation-duration: 30s;
+}
+
+/* Tipografia UNI CHAMADAS */
+.login-brand {
+  text-align: center;
+  z-index: 2;
+  user-select: none;
+}
+
+.logo-uni {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 8rem; /* AQUI REGULA O TAMANHO*/
+  font-weight: 300;
+  color: #ffffff;
+  margin: 0;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.logo-sub {
+  display: block;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.32em;
+  margin-top: 6px;
+  margin-left: 16px; /* <--- Aumente o valor pra ir mais pra direita */
+}
+
+/* ================= LADO DIREITO: CARD DE LOGIN ================= */
+.carteirinha-login {
+  width: 100%;
+  max-width: 420px;
+  background: var(--papel-cartao, #ffffff);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.carteirinha-topo {
+  background: #1b313a; /* Tom azul profundo harmonizado */
+  color: #fff;
+  padding: 1.8em 1.8em 1.4em;
+  position: relative;
+}
+
+.carteirinha-topo .selo {
+  font-family: var(--fonte-mono, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.carteirinha-topo h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  margin: 0.25em 0 0;
+}
+
+.carteirinha-topo::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #d65b4a, #d65b4a 8px,
+    transparent 8px, transparent 16px
+  );
+  opacity: 0.85;
+}
+
+.carteirinha-corpo {
+  padding: 2em 1.8em 1.8em;
+}
+
+.carteirinha-corpo .instrucao {
+  color: var(--grafite-suave, #555);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: -0.2em 0 1.4em;
+}
+
+#form-login .campo {
+  margin-bottom: 1.1em;
+}
+
+#form-login label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.4em;
+  color: #333;
+}
+
+#form-login input {
+  width: 100%;
+  padding: 0.75em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+#form-login .btn-primario {
+  width: 100%;
+  margin-top: 0.6em;
+  font-size: 1rem;
+  background: #1b313a;
+  color: #fff;
+  padding: 0.8em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#form-login .btn-primario:hover {
+  background: #25434f;
+}
+
+.aviso-login {
+  margin-top: 1em;
+  padding: 0.75em 0.9em;
+  border-radius: 6px;
+  font-size: 0.86rem;
+  border-left: 3px solid #d65b4a;
+  background: rgba(214, 91, 74, 0.08);
+  color: #8a3527;
+}
+
+.aviso-login.oculto { 
+  display: none !important; 
+}
+
+/* Responsividade: para telas menores de celular */
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+    max-width: 420px;
+  }
+  .login-banner {
+    padding: 30px 20px;
+    min-height: 160px;
+  }
+  .logo-uni {
+    font-size: 3.5rem;
+  }
+  .logo-sub {
+    font-size: 1rem;
+  }
+}

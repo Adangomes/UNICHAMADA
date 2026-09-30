@@ -1,0 +1,436 @@
+/* ==========================================================================
+   CHAMADA.CSS — Modal de geração de chamada (professor)
+   ========================================================================== */
+
+.chamada-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 45, 80, .6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.chamada-cartao {
+  background: var(--papel-cartao);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-forte);
+  width: 100%;
+  max-width: 920px;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.chamada-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 1.2em 1.4em;
+  border-bottom: 1px solid var(--linha);
+  position: sticky;
+  top: 0;
+  background: var(--papel-cartao);
+  z-index: 2;
+}
+.chamada-topo h3 { margin-bottom: .1em; }
+.chamada-topo p { color: var(--grafite-suave); font-size: .86rem; margin: 0; }
+
+.chamada-corpo {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.4em;
+  padding: 1.4em;
+}
+
+.chamada-lado-qr {
+  text-align: center;
+}
+.chamada-qr {
+  display: flex;
+  justify-content: center;
+  padding: 1em;
+  background: #fff;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  margin-bottom: .9em;
+}
+
+.chamada-codigo {
+  font-family: var(--fonte-mono);
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: .18em;
+  color: var(--tinta);
+  background: rgba(31, 45, 80, .06);
+  border-radius: var(--raio-pequeno);
+  padding: .3em .2em;
+  margin-bottom: .6em;
+}
+
+.chamada-barra-tempo {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--linha);
+  overflow: hidden;
+  margin-bottom: .9em;
+}
+.chamada-barra-preenchimento {
+  height: 100%;
+  width: 100%;
+  background: var(--coral);
+}
+
+.chamada-instrucao {
+  font-size: .8rem;
+  color: var(--grafite-suave);
+  line-height: 1.5;
+}
+
+.chamada-lado-lista h4 {
+  font-size: .95rem;
+  margin-bottom: .7em;
+}
+
+.chamada-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .55em;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: .3em;
+}
+
+.chamada-linha-aluno {
+  display: flex;
+  align-items: center;
+  gap: .7em;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio-pequeno);
+  padding: .55em .7em;
+  flex-wrap: wrap;
+}
+
+.bolinha-status {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #B9B4A4; /* aguardando = cinza */
+}
+.bolinha-status.status-presente { background: var(--verde-aprovado); }
+.bolinha-status.status-falta { background: var(--coral); }
+.bolinha-status.status-falta_justificada { background: var(--amarelo-alerta); }
+
+.chamada-aluno-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 120px;
+}
+.chamada-aluno-info strong { font-size: .88rem; }
+.chamada-aluno-info span { font-size: .74rem; color: var(--grafite-suave); }
+
+.tag-status-presente { background: rgba(62, 124, 90, .12); color: var(--verde-aprovado); }
+.tag-status-falta { background: rgba(214, 91, 74, .1); color: var(--coral); }
+.tag-status-falta_justificada { background: rgba(201, 138, 30, .12); color: var(--amarelo-alerta); }
+
+.chamada-acoes-manuais {
+  display: flex;
+  gap: .35em;
+  flex-wrap: wrap;
+}
+
+.btn-mini {
+  font-size: .74rem;
+  padding: .38em .6em;
+  border-radius: 6px;
+  border: 1.5px solid var(--linha);
+  background: transparent;
+  color: var(--grafite-suave);
+  font-weight: 600;
+}
+.btn-mini-presente:hover { border-color: var(--verde-aprovado); color: var(--verde-aprovado); }
+.btn-mini-falta:hover { border-color: var(--coral); color: var(--coral); }
+.btn-mini-justificada:hover { border-color: var(--amarelo-alerta); color: var(--amarelo-alerta); }
+
+@media (max-width: 720px) {
+  .chamada-corpo { grid-template-columns: 1fr; }
+  .chamada-lista { max-height: 320px; }
+}
+
+/* ---------------------------- Histórico de chamadas ---------------------------- */
+
+.historico-cartao { max-width: 760px; }
+
+.historico-corpo {
+  padding: 1.2em 1.4em 1.6em;
+}
+
+.historico-lista {
+  display: flex;
+  flex-direction: column;
+  gap: .7em;
+}
+
+.historico-item {
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+
+.historico-item-cabecalho {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  flex-wrap: wrap;
+  background: var(--papel-cartao);
+  padding: .85em 1em;
+  text-align: left;
+}
+.historico-item-cabecalho:hover { background: rgba(31,45,80,.03); }
+.historico-item-cabecalho-aberto { background: rgba(31,45,80,.045); }
+
+.historico-item-data {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+  font-size: .88rem;
+}
+
+.historico-item-resumo {
+  display: flex;
+  gap: .4em;
+  flex-wrap: wrap;
+}
+
+.historico-seta {
+  color: var(--grafite-suave);
+  transition: transform .15s ease;
+}
+.historico-item-cabecalho-aberto .historico-seta { transform: rotate(180deg); }
+
+.historico-item-alunos {
+  padding: .8em 1em 1em;
+  display: flex;
+  flex-direction: column;
+  gap: .5em;
+  border-top: 1px solid var(--linha);
+  background: var(--papel);
+}
+
+/* ---------------------------- Aba "Chamadas" do professor ---------------------------- */
+
+.chamadas-acoes-rapidas {
+  display: flex;
+  flex-direction: column;
+  gap: .6em;
+  margin-bottom: .4em;
+}
+
+.chamada-acao-rapida {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  flex-wrap: wrap;
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: .8em 1.1em;
+}
+.chamada-acao-rapida strong { display: block; font-size: .95rem; }
+.chamada-acao-rapida span { font-size: .8rem; color: var(--grafite-suave); }
+
+.chamada-card-turma-label {
+  font-family: var(--fonte-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--tinta);
+  margin: 0 0 .3em .1em;
+}
+
+/* ---------------------------- Frequências (tabela mensal, aluno x data) ---------------------------- */
+
+.freq-painel { margin-top: .2em; }
+
+.freq-filtros {
+  display: flex;
+  align-items: center;
+  gap: .8em;
+  margin-bottom: .9em;
+  flex-wrap: wrap;
+}
+.freq-label-select {
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  font-size: .82rem;
+  color: var(--grafite-suave);
+  font-weight: 600;
+}
+.freq-select-turma {
+  font-family: inherit;
+  font-size: .84rem;
+  padding: .4em .6em;
+  border-radius: var(--raio-pequeno);
+  border: 1px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--tinta);
+}
+
+.freq-tabs {
+  display: flex;
+  gap: .4em;
+  flex-wrap: wrap;
+  margin-bottom: 1em;
+}
+.freq-tabs button {
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .5em 1em;
+  border-radius: 999px;
+  border: 1.5px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--grafite-suave);
+}
+.freq-tabs button.ativo {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #fff;
+}
+
+/* Mês ainda sem nenhuma chamada gerada: fica esmaecido até o professor usar */
+.freq-tabs button.sem-dados {
+  opacity: .45;
+  border-style: dashed;
+  background: transparent;
+}
+.freq-tabs button.sem-dados.ativo {
+  opacity: .8;
+  background: var(--papel);
+  border-style: solid;
+  color: var(--grafite-suave);
+}
+
+/* Abas de ano: mesma pílula, um pouco mais discreta que as de mês */
+.freq-filtros {
+  justify-content: flex-start;
+}
+.freq-stepper-ano {
+  display: flex;
+  align-items: center;
+  gap: .5em;
+  margin-left: auto;
+}
+.freq-stepper-valor {
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--tinta);
+  min-width: 2.6em;
+  text-align: center;
+}
+.freq-stepper-seta {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--linha);
+  background: var(--papel-cartao);
+  color: var(--grafite-suave);
+  font-size: .9rem;
+  line-height: 1;
+}
+.freq-stepper-seta:hover { border-color: var(--tinta); color: var(--tinta); }
+.freq-stepper-seta.desabilitado {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.freq-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--papel-cartao);
+}
+
+.freq-tabela {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 480px;
+}
+.freq-tabela th,
+.freq-tabela td {
+  border-bottom: 1px solid var(--linha);
+  padding: .6em .7em;
+  text-align: center;
+  white-space: nowrap;
+}
+.freq-tabela tr:last-child td { border-bottom: none; }
+
+.freq-th-aluno,
+.freq-td-aluno {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--papel-cartao);
+  z-index: 1;
+  min-width: 190px;
+  border-right: 1px solid var(--linha);
+}
+.freq-td-aluno {
+  display: flex;
+  align-items: center;
+  gap: .6em;
+}
+.freq-td-aluno strong { display: block; font-size: .86rem; }
+.freq-ra { font-size: .72rem; color: var(--grafite-suave); }
+
+.celula-foto-mini {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.freq-th-data {
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--grafite-suave);
+}
+.freq-th-data span { display: block; }
+.freq-badge-ativa {
+  display: inline-block;
+  margin-top: .2em;
+  font-size: .62rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--coral);
+  font-weight: 700;
+}
+
+.freq-status-botao {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--linha);
+  background: transparent;
+  font-weight: 700;
+  font-size: .85rem;
+  line-height: 1;
+  color: var(--grafite-suave);
+}
+.freq-status-botao.status-aguardando { color: #B9B4A4; border-color: #B9B4A4; }
+.freq-status-botao.status-presente { background: rgba(62,124,90,.12); border-color: var(--verde-aprovado); color: var(--verde-aprovado); }
+.freq-status-botao.status-falta { background: rgba(214,91,74,.1); border-color: var(--coral); color: var(--coral); }
+.freq-status-botao.status-falta_justificada { background: rgba(201,138,30,.12); border-color: var(--amarelo-alerta); color: var(--amarelo-alerta); }
+
+@media (max-width: 720px) {
+  .freq-td-aluno { min-width: 150px; }
+}

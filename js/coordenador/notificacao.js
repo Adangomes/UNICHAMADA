@@ -17,8 +17,9 @@
  * @requires confirmarAcao
  */
 
-// URL do Webhook do n8n hospedado no Render
-const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/787c3594-f407-40d8-bb35-41a1b7d9b9d4';
+
+// URL do Webhook do n8n atualizada para o ngrok local
+const N8N_WEBHOOK_URL = 'https://ferocity-precision-salami.ngrok-free.dev/webhook/787c3594-f407-40d8-bb35-41a1b7d9b9d4';
 
 /**
  * Dispara um webhook para o n8n contendo os dados da notificação.

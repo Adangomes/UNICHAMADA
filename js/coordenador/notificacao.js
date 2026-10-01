@@ -3,7 +3,7 @@
  * 
  * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
  * exclusão e listagem de notificações enviadas pela coordenação para os professores,
- * integrando persistência no banco de dados e envio automatizado via webhook (n8n).
+ * integrando persistência no banco de dados do Supabase.
  * 
  * @module SeçãoNotificacoes
  * @requires dbBuscarPorId
@@ -16,53 +16,6 @@
  * @requires campoObrigatorioPreenchido
  * @requires confirmarAcao
  */
-
-
-// URL do Webhook do n8n atualizada para o ngrok local
-const N8N_WEBHOOK_URL = 'https://ferocity-precision-salami.ngrok-free.dev/webhook-test/a433e4ac-6653-4517-8157-0dd9887b6473';
-/**
- * Dispara um webhook para o n8n contendo os dados da notificação.
- * Função isolada para manter a responsabilidade única e não bloquear o fluxo principal.
- * 
- * @async
- * @param {Object} payload - Dados da notificação a serem enviados.
- * @param {string} payload.titulo - Título da notificação.
- * @param {string} payload.mensagem - Corpo da mensagem.
- * @param {Array<string>} payload.destinatarios - Lista de IDs dos professores ou ['todos'].
- * @returns {Promise<void>}
- */
-async function dispararWebhookN8n(payload) {
-  try {
-    // Verifica se a constante global do Webhook existe
-    if (typeof N8N_WEBHOOK_URL === 'undefined' || !N8N_WEBHOOK_URL) {
-      console.warn('[notificacao.js] N8N_WEBHOOK_URL não está definida. O disparo para o n8n foi ignorado.');
-      return;
-    }
-
-    console.log('[notificacao.js] Disparando webhook para n8n...', payload);
-
-    const resposta = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...payload,
-        data_envio: new Date().toISOString(),
-        origem: 'UNICHAMADA - Painel do Coordenador'
-      })
-    });
-
-    if (!resposta.ok) {
-      throw new Error(`Erro na resposta do n8n: ${resposta.status} ${resposta.statusText}`);
-    }
-
-    console.log('[notificacao.js] Webhook n8n executado com sucesso!');
-  } catch (erro) {
-    // Logamos o erro para não quebrar a experiência do usuário
-    console.error('[notificacao.js] Falha ao comunicar com o n8n:', erro);
-  }
-}
 
 /**
  * Renderiza a seção principal de gerenciamento de notificações dentro de um container do DOM.
@@ -287,7 +240,7 @@ async function renderSecaoNotificacoes(container) {
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
     // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Submit (Persistência + Webhook N8N)
+    // 2.4 Event Handler: Submit (Persistência via Supabase)
     // -------------------------------------------------------------------------
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -305,7 +258,6 @@ async function renderSecaoNotificacoes(container) {
         return;
       }
 
-      // Desativa o botão temporariamente para evitar duplo clique
       botaoEnvio.disabled = true;
       botaoEnvio.textContent = 'Enviando...';
 
@@ -326,13 +278,12 @@ async function renderSecaoNotificacoes(container) {
 
       try {
         if (idEmEdicao) {
-          // Atualiza registro existente
           await dbAtualizar('notificacoes', idEmEdicao, dadosNotificacao);
           mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
           idEmEdicao = null;
         } else {
-          // 1. Insere a notificação na tabela 'notificacoes'
-          const res = await dbInserir('notificacoes', dadosNotificacao);
+          // 1. Insere na tabela 'notificacoes_coordenador' (que vai disparar a trigger do Supabase automaticamente)
+          const res = await dbInserir('notificacoes_coordenador', dadosNotificacao);
           const notifId = res?.id || (Array.isArray(res) ? res[0]?.id : null);
 
           // 2. Cria os vínculos na tabela 'notificacao_professores'
@@ -350,15 +301,7 @@ async function renderSecaoNotificacoes(container) {
             }
           }
 
-          // 3. Integração n8n: Dispara o webhook após salvar no banco com sucesso
-          await dispararWebhookN8n({
-            titulo: titulo,
-            mensagem: mensagem,
-            destinatarios: selecionados.includes('todos') ? 'Todos os Professores' : targetProfs,
-            quantidade_professores: targetProfs.length
-          });
-
-          mostrarToast('Notificação enviada e processada!', 'sucesso');
+          mostrarToast('Notificação enviada e salva no banco!', 'sucesso');
         }
       } catch (err) {
         console.error('[notificacao.js] Erro ao salvar:', err);
@@ -382,7 +325,7 @@ async function renderSecaoNotificacoes(container) {
     
     let notificacoes = [];
     try {
-      notificacoes = await dbListar('notificacoes') || [];
+      notificacoes = await dbListar('notificacoes_coordenador') || [];
     } catch (err) {
       console.warn('[notificacao.js] Erro ao listar notificações:', err);
     }
@@ -410,7 +353,6 @@ async function renderSecaoNotificacoes(container) {
       console.warn('[notificacao.js] Erro ao carregar professores:', e);
     }
 
-    // Ordenação Decrescente por Data
     notificacoes.sort((a, b) => new Date(b.criado_em || b.data || 0) - new Date(a.criado_em || a.data || 0));
 
     const tabela = criarElemento('table', { style: 'width: 100%; border-collapse: collapse;' });
@@ -470,7 +412,7 @@ async function renderSecaoNotificacoes(container) {
               onClick: async () => {
                 if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
                 
-                await dbRemover('notificacoes', notif.id);
+                await dbRemover('notificacoes_coordenador', notif.id);
                 mostrarToast('Notificação excluída.', 'sucesso');
                 await montarLista();
               }
@@ -484,14 +426,10 @@ async function renderSecaoNotificacoes(container) {
     areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  // Inicialização
   await montarFormulario();
   await montarLista();
 }
 
-/**
- * Utilitário para formatação de data
- */
 function formatarDataBR(dataISO) {
   if (!dataISO) return '—';
   const parts = dataISO.split('-');

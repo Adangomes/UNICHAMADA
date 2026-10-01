@@ -19,8 +19,7 @@
 
 
 // URL do Webhook do n8n atualizada para o ngrok local
-const N8N_WEBHOOK_URL = 'https://ferocity-precision-salami.ngrok-free.dev/webhook/787c3594-f407-40d8-bb35-41a1b7d9b9d4';
-
+const N8N_WEBHOOK_URL = 'https://ferocity-precision-salami.ngrok-free.dev/webhook/a433e4ac-6653-4517-8157-0dd9887b6473';
 /**
  * Dispara um webhook para o n8n contendo os dados da notificação.
  * Função isolada para manter a responsabilidade única e não bloquear o fluxo principal.

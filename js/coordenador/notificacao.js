@@ -2,7 +2,8 @@
  * @fileoverview notificacao.js — Módulo de Gerenciamento de Avisos e Notificações (Painel do Coordenador)
  * 
  * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
- * exclusão e listagem de notificações enviadas pela coordenação para os professores.
+ * exclusão e listagem de notificações enviadas pela coordenação para os professores,
+ * integrando persistência no banco de dados e envio automatizado via webhook (n8n).
  * 
  * @module SeçãoNotificacoes
  * @requires dbBuscarPorId
@@ -15,6 +16,50 @@
  * @requires campoObrigatorioPreenchido
  * @requires confirmarAcao
  */
+
+/**
+ * Dispara um webhook para o n8n contendo os dados da notificação.
+ * Função isolada para manter a responsabilidade única e não bloquear o fluxo principal.
+ * 
+ * @async
+ * @param {Object} payload - Dados da notificação a serem enviados.
+ * @param {string} payload.titulo - Título da notificação.
+ * @param {string} payload.mensagem - Corpo da mensagem.
+ * @param {Array<string>} payload.destinatarios - Lista de IDs dos professores ou ['todos'].
+ * @returns {Promise<void>}
+ */
+async function dispararWebhookN8n(payload) {
+  try {
+    // Verifica se a constante global do Webhook (definida em n8n.js) existe
+    if (typeof N8N_WEBHOOK_URL === 'undefined' || !N8N_WEBHOOK_URL) {
+      console.warn('[notificacao.js] N8N_WEBHOOK_URL não está definida. O disparo para o n8n foi ignorado.');
+      return;
+    }
+
+    console.log('[notificacao.js] Disparando webhook para n8n...', payload);
+
+    const resposta = await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...payload,
+        data_envio: new Date().toISOString(),
+        origem: 'UNICHAMADA - Painel do Coordenador'
+      })
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`Erro na resposta do n8n: ${resposta.status} ${resposta.statusText}`);
+    }
+
+    console.log('[notificacao.js] Webhook n8n executado com sucesso!');
+  } catch (erro) {
+    // Apenas logamos o erro para não quebrar a experiência do usuário caso o túnel caia
+    console.error('[notificacao.js] Falha ao comunicar com o n8n:', erro);
+  }
+}
 
 /**
  * Renderiza a seção principal de gerenciamento de notificações dentro de um container do DOM.
@@ -53,7 +98,6 @@ async function renderSecaoNotificacoes(container) {
   // ---------------------------------------------------------------------------
   // 2. SUB-ROTINA: MONTAGEM DO FORMULÁRIO
   // ---------------------------------------------------------------------------
-
   async function montarFormulario() {
     areaFormulario.innerHTML = '';
     
@@ -240,7 +284,7 @@ async function renderSecaoNotificacoes(container) {
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
     // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Submit (Persistência no Supabase via db.js)
+    // 2.4 Event Handler: Submit (Persistência + Webhook N8N)
     // -------------------------------------------------------------------------
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -258,7 +302,10 @@ async function renderSecaoNotificacoes(container) {
         return;
       }
 
-      // Obtém o ID de um coordenador válido
+      // Desativa o botão temporariamente para evitar duplo clique
+      botaoEnvio.disabled = true;
+      botaoEnvio.textContent = 'Enviando...';
+
       let coordenadorId = null;
       try {
         const coords = await dbListar('coordenadores');
@@ -276,20 +323,21 @@ async function renderSecaoNotificacoes(container) {
 
       try {
         if (idEmEdicao) {
+          // Atualiza registro existente
           await dbAtualizar('notificacoes', idEmEdicao, dadosNotificacao);
           mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
           idEmEdicao = null;
         } else {
-          // Insere a notificação na tabela 'notificacoes'
+          // 1. Insere a notificação na tabela 'notificacoes'
           const res = await dbInserir('notificacoes', dadosNotificacao);
           const notifId = res?.id || (Array.isArray(res) ? res[0]?.id : null);
 
-          // Cria os vínculos na tabela 'notificacao_professores'
-          if (notifId) {
-            let targetProfs = selecionados.includes('todos') 
-              ? listaProfessores.map(p => p.id) 
-              : selecionados;
+          // 2. Cria os vínculos na tabela 'notificacao_professores'
+          let targetProfs = selecionados.includes('todos') 
+            ? listaProfessores.map(p => p.id) 
+            : selecionados;
 
+          if (notifId) {
             for (const profId of targetProfs) {
               await dbInserir('notificacao_professores', {
                 notificacao_id: notifId,
@@ -299,11 +347,21 @@ async function renderSecaoNotificacoes(container) {
             }
           }
 
-          mostrarToast('Notificação enviada!', 'sucesso');
+          // 3. Integração n8n: Dispara o webhook após salvar no banco com sucesso
+          await dispararWebhookN8n({
+            titulo: titulo,
+            mensagem: mensagem,
+            destinatarios: selecionados.includes('todos') ? 'Todos os Professores' : targetProfs,
+            quantidade_professores: targetProfs.length
+          });
+
+          mostrarToast('Notificação enviada e processada!', 'sucesso');
         }
       } catch (err) {
         console.error('[notificacao.js] Erro ao salvar:', err);
         mostrarToast('Erro ao salvar notificação.', 'erro');
+      } finally {
+        botaoEnvio.disabled = false;
       }
 
       await montarFormulario();

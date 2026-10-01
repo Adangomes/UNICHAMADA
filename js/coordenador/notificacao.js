@@ -1,6 +1,8 @@
 /**
  * @fileoverview notificacao.js — Módulo de Gerenciamento de Avisos e Notificações (Painel do Coordenador)
  * 
+ // ADD ESTA LINHA AQUI (antes de async function dispararWebhookN8n):
+const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/SEU-UUID-DO-WEBHOOK';
  * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
  * exclusão e listagem de notificações enviadas pela coordenação para os professores,
  * integrando persistência no banco de dados e envio automatizado via webhook (n8n).

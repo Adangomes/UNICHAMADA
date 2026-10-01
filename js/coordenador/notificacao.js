@@ -1,8 +1,6 @@
 /**
  * @fileoverview notificacao.js — Módulo de Gerenciamento de Avisos e Notificações (Painel do Coordenador)
  * 
- // ADD ESTA LINHA AQUI (antes de async function dispararWebhookN8n):
-const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/SEU-UUID-DO-WEBHOOK';
  * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
  * exclusão e listagem de notificações enviadas pela coordenação para os professores,
  * integrando persistência no banco de dados e envio automatizado via webhook (n8n).
@@ -19,6 +17,9 @@ const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/SEU-UUID-D
  * @requires confirmarAcao
  */
 
+// URL do Webhook do n8n hospedado no Render
+const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/SEU-UUID-DO-WEBHOOK';
+
 /**
  * Dispara um webhook para o n8n contendo os dados da notificação.
  * Função isolada para manter a responsabilidade única e não bloquear o fluxo principal.
@@ -32,7 +33,7 @@ const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/SEU-UUID-D
  */
 async function dispararWebhookN8n(payload) {
   try {
-    // Verifica se a constante global do Webhook (definida em n8n.js) existe
+    // Verifica se a constante global do Webhook existe
     if (typeof N8N_WEBHOOK_URL === 'undefined' || !N8N_WEBHOOK_URL) {
       console.warn('[notificacao.js] N8N_WEBHOOK_URL não está definida. O disparo para o n8n foi ignorado.');
       return;
@@ -58,7 +59,7 @@ async function dispararWebhookN8n(payload) {
 
     console.log('[notificacao.js] Webhook n8n executado com sucesso!');
   } catch (erro) {
-    // Apenas logamos o erro para não quebrar a experiência do usuário caso o túnel caia
+    // Logamos o erro para não quebrar a experiência do usuário
     console.error('[notificacao.js] Falha ao comunicar com o n8n:', erro);
   }
 }
@@ -81,7 +82,7 @@ async function renderSecaoNotificacoes(container) {
   /** Cabeçalho da seção com título e descrição */
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
-      criarElemento('h2', {}, ['']),
+      criarElemento('h2', {}, ['Notificações']),
       criarElemento('p', {}, ['Notifique professores sobre atualizações e mudanças.'])
     ])
   ]);

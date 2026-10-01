@@ -1,1 +1,1 @@
-const N8N_WEBHOOK_URL = 'https://a50249f0d62086.lhr.life/webhook-test/787c3594-f407-40d8-bb35-41a1b7d9b9d4';
+const N8N_WEBHOOK_URL = 'https://adangomes.github.io/UNICHAMADA/';

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "UniChamada",
+  "description": "Sistema de gestão acadêmica e frequência inteligente: chamada por QR Code com token rotativo, face-id e geolocalização, em Vanilla JavaScript com Supabase (PostgreSQL).",
+  "folders": ["skills", "docs"],
+  "excludeFolders": ["node_modules", "dist"],
+  "excludeFiles": ["CHANGELOG.md", "CODE_OF_CONDUCT.md", "LICENSE", "SECURITY.md"],
+  "rules": [
+    "O front-end é Vanilla JS com módulos nativos, sem framework e sem etapa de build.",
+    "Todo acesso ao Supabase passa pela camada de abstração js/data/db.js; nunca chame o SDK direto nos módulos de tela.",
+    "Nunca versione chaves secretas (service_role, URLs de webhook, tokens); somente a chave pública (anon) pode ir ao front-end, protegida por RLS.",
+    "A presença do aluno só é válida se passar por todas as etapas: QR, RA + e-mail, face-id, geolocalização (até 100 m) e código rotativo do telão."
+  ]
+}

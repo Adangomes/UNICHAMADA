@@ -61,7 +61,7 @@ async function renderSecaoNotificacoes(container) {
     let notificacao = null;
     if (idEmEdicao) {
       try {
-        notificacao = await dbBuscarPorId('notificacoes', idEmEdicao);
+        notificacao = await dbBuscarPorId('notificacoes_coordenador', idEmEdicao);
       } catch (e) {
         console.warn('[notificacao.js] Erro ao buscar notificação por ID:', e);
       }
@@ -240,7 +240,7 @@ async function renderSecaoNotificacoes(container) {
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
     // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Submit (Persistência via Supabase)
+    // 2.4 Event Handler: Submit (Persistência no Supabase)
     // -------------------------------------------------------------------------
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -278,29 +278,13 @@ async function renderSecaoNotificacoes(container) {
 
       try {
         if (idEmEdicao) {
-          await dbAtualizar('notificacoes', idEmEdicao, dadosNotificacao);
+          await dbAtualizar('notificacoes_coordenador', idEmEdicao, dadosNotificacao);
           mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
           idEmEdicao = null;
         } else {
-          // 1. Insere na tabela 'notificacoes_coordenador' (que vai disparar a trigger do Supabase automaticamente)
-          const res = await dbInserir('notificacoes_coordenador', dadosNotificacao);
-          const notifId = res?.id || (Array.isArray(res) ? res[0]?.id : null);
-
-          // 2. Cria os vínculos na tabela 'notificacao_professores'
-          let targetProfs = selecionados.includes('todos') 
-            ? listaProfessores.map(p => p.id) 
-            : selecionados;
-
-          if (notifId) {
-            for (const profId of targetProfs) {
-              await dbInserir('notificacao_professores', {
-                notificacao_id: notifId,
-                professor_id: profId,
-                lida: false
-              });
-            }
-          }
-
+          // Insere apenas em 'notificacoes_coordenador'. 
+          // O Supabase (via Trigger) distribuirá para 'notificacao_professores' e enviará para o n8n!
+          await dbInserir('notificacoes_coordenador', dadosNotificacao);
           mostrarToast('Notificação enviada e salva no banco!', 'sucesso');
         }
       } catch (err) {

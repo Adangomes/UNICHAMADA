@@ -20,7 +20,7 @@
 let contadorAnteriorNotificacoes = 0;
 
 /**
- * Busca e cruza os registros das tabelas `notificacoes` e `notificacao_professores` 
+ * Busca e cruza os registros das tabelas `notificacoes_coordenador` e `notificacao_professores` 
  * para determinar quais avisos pertencem ao professor logado e qual o status de leitura.
  *
  * @async
@@ -30,7 +30,7 @@ let contadorAnteriorNotificacoes = 0;
 async function buscarNotificacoesProfessor(professorId) {
   try {
     const relacoes = await dbListar('notificacao_professores') || [];
-    const notificacoes = await dbListar('notificacoes') || [];
+    const notificacoes = await dbListar('notificacoes_coordenador') || [];
 
     // Mapeia os vínculos de leitura direcionados a este professor
     const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);

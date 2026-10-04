@@ -2,7 +2,7 @@
  * coordenadores.js
  * 
  * Painel do coordenador. Monta a tela com abas (Professores, Cursos, Alunos,
- * Disciplinas, Turmas, Matrículas) dentro de #tela-coordenador.
+ * Disciplinas, Turmas, Matrículas, Notificações, Chat) dentro de #tela-coordenador.
  */
 
 // Configuração das abas do painel. Cada aba tem uma chave (id interno),
@@ -15,7 +15,16 @@ const ABAS_COORDENADOR = [
   { chave: 'disciplinas', rotulo: 'Disciplinas', render: async () => await renderSecaoDisciplinas(elementoConteudoCoordenador) },
   { chave: 'turmas', rotulo: 'Turmas', render: async () => await renderSecaoTurmas(elementoConteudoCoordenador) },
   { chave: 'matriculas', rotulo: 'Matrículas', render: async () => await renderSecaoMatriculas(elementoConteudoCoordenador) },
-  { chave: 'notificacoes', rotulo: 'Notificações', render: async () => await renderSecaoNotificacoes(elementoConteudoCoordenador) }
+  { chave: 'notificacoes', rotulo: 'Notificações', render: async () => await renderSecaoNotificacoes(elementoConteudoCoordenador) },
+  {
+    // Chat com os professores (js/coordenador/chat/chat.js)
+    chave: 'chat',
+    rotulo: 'Chat',
+    render: async () => {
+      elementoConteudoCoordenador.innerHTML = '<div id="chat-coordenador-root"></div>';
+      await iniciarChatCoordenador('chat-coordenador-root');
+    }
+  }
 ];
 
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.
@@ -91,6 +100,9 @@ async function selecionarAbaCoordenador(chave, nav) {
  * Pega a aba ativa na lista ABAS_COORDENADOR e chama a função de render dela.
  */
 async function renderizarAbaAtivaCoordenador() {
+  // Desliga o tempo real do chat ao sair da aba Chat (evita conexão aberta à toa)
+  if (window.ChatDados) window.ChatDados.cancelar();
+
   // Procura na lista de abas qual delas corresponde à chave ativa no momento
   const aba = ABAS_COORDENADOR.find((a) => a.chave === abaAtivaCoordenador);
 

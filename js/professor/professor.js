@@ -4,11 +4,12 @@
  * Este módulo gerencia o ciclo de vida da interface gráfica e funcionalidades
  * do painel do professor, incluindo:
  *  - Montagem e inicialização do cabeçalho com indicador de notificações (sino/badge);
- *  - Roteamento interno entre abas ("Chamadas" e "Minhas turmas");
+ *  - Roteamento interno entre abas ("Chamadas", "Minhas turmas" e "Chat");
  *  - Geração e acompanhamento de chamadas em tempo real com barreira anti-duplicação;
  *  - Tabela de frequência mensal (aluno x data) por turma, no lugar de uma lista
  *    infinita de cartões — evita que o histórico cresça sem controle ao longo do tempo;
- *  - Visualização de turmas e listagem de alunos matriculados.
+ *  - Visualização de turmas e listagem de alunos matriculados;
+ *  - Chat em tempo real com os coordenadores (js/professor/chat/chat.js).
  * 
  * @module PainelProfessor
  * @requires dbListar
@@ -56,7 +57,18 @@ let professorLogado = null;
  */
 const ABAS_PROFESSOR = [
   { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
-  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) }
+  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
+  {
+    // Chat com os coordenadores (js/professor/chat/chat.js)
+    chave: 'chat',
+    rotulo: 'Chat',
+    render: async (container) => {
+      container.innerHTML = '<div id="chat-professor-root"></div>';
+      // Ao trocar de aba, renderizarAbaAtivaProfessor() chama esta função e desliga o tempo real
+      pararAssinaturaAbaProfessor = () => { if (window.ChatDados) window.ChatDados.cancelar(); };
+      await iniciarChatProfessor('chat-professor-root');
+    }
+  }
 ];
 
 /**

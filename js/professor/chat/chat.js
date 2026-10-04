@@ -1,6 +1,6 @@
 /* =========================================================
    UniChamada - Chat do Professor (interface)
-   Login: auth/chat_auth.js | Dados: data/chat.js
+   Login: o do sistema (auth.js) | Dados: data/chat.js
    Uso: iniciarChatProfessor('chat-professor-root')
    ========================================================= */
 (function () {
@@ -10,7 +10,6 @@
   const OUTRO = 'coordenador';
   const ROTULO_PLURAL = 'Coordenadores';
   const ROTULO_SING = 'Coordenador';
-  const Auth = window.ChatAuth;
   const Dados = window.ChatDados;
 
   let eu = null, raiz = null, contatos = [], ativo = null, idsRenderizados = new Set();
@@ -26,7 +25,7 @@
     raiz.classList.add('chat-app', 'chat-' + PAPEL);
     raiz.innerHTML = `
       <aside class="chat-lateral">
-        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><button class="chat-sair" type="button">Sair</button></div>
+        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2></div>
         <div class="chat-tabs"><button class="chat-tab ativo" type="button">${ROTULO_PLURAL}</button></div>
         <input class="chat-busca" type="search" placeholder="Pesquisar..." autocomplete="off">
         <ul class="chat-lista"></ul>
@@ -39,7 +38,6 @@
           <button class="chat-enviar" type="button" disabled>Enviar</button>
         </div>
       </section>`;
-    $('.chat-sair').addEventListener('click', sair);
     $('.chat-busca').addEventListener('input', renderLista);
     $('.chat-enviar').addEventListener('click', enviar);
     $('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
@@ -145,54 +143,34 @@
     renderLista();
   }
 
-  // ---------- LOGIN / SAÍDA ----------
+  // ---------- INÍCIO ----------
+  // Identidade = quem já entrou no sistema (RA + e-mail), guardado por auth/auth.js
+  function usuarioDaSessao() {
+    const sessao = typeof window.obterSessao === 'function' ? window.obterSessao() : null;
+    if (!sessao || sessao.tipo !== PAPEL || !sessao.dados) return null;
+    return { id: sessao.dados.id, nome: sessao.dados.nome, papel: PAPEL };
+  }
+
   async function abrirChat() {
     montarLayout();
     await carregarContatos();
     Dados.assinar(PAPEL, eu.id, receber);
   }
 
-  function renderLogin(msg) {
-    raiz.classList.add('chat-' + PAPEL);
-    raiz.innerHTML = `
-      <form class="chat-login">
-        <h2>Chat do Professor</h2>
-        <p>Entre com a conta do chat.</p>
-        <input class="chat-login-email" type="email" placeholder="E-mail" required autocomplete="username">
-        <input class="chat-login-senha" type="password" placeholder="Senha" required autocomplete="current-password">
-        <button class="chat-enviar" type="submit">Entrar</button>
-        <p class="chat-login-erro">${esc(msg || '')}</p>
-      </form>`;
-    raiz.querySelector('.chat-login').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = raiz.querySelector('.chat-enviar');
-      btn.disabled = true; btn.textContent = 'Entrando...';
-      const r = await Auth.entrar(raiz.querySelector('.chat-login-email').value,
-                                  raiz.querySelector('.chat-login-senha').value, PAPEL);
-      if (r.erro) { renderLogin(r.erro); return; }
-      eu = r.perfil;
-      await abrirChat();
-    });
-  }
-
-  async function sair() {
-    Dados.cancelar();
-    await Auth.sair();
-    eu = null; ativo = null; contatos = [];
-    renderLogin();
-  }
-
   // ---------- API PÚBLICA ----------
-  window.iniciarChatProfessor = async function (idContainer) {
+  window.iniciarChatProfessor = async function (idContainer, usuario) {
     raiz = document.getElementById(idContainer || 'chat-professor-root');
     if (!raiz) { console.error('Chat: container não encontrado'); return; }
-    if (!Auth || !Dados) {
-      raiz.innerHTML = '<p class="chat-vazio">Carregue auth/chat_auth.js e data/chat.js antes deste arquivo.</p>';
+    if (!Dados) {
+      raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
       return;
     }
-    const p = await Auth.perfil(PAPEL);
-    if (!p) { renderLogin(); return; }
-    eu = p;
+    eu = usuario || usuarioDaSessao();
+    if (!eu) {
+      raiz.innerHTML = '<p class="chat-vazio">Sessão não encontrada. Entre no sistema novamente.</p>';
+      return;
+    }
+    ativo = null; contatos = [];
     await abrirChat();
   };
 })();

@@ -1,0 +1,98 @@
+/* UniChamada - estilo do chat (professor) */
+.chat-professor {
+  --chat-azul: #1f4e8c;
+  --chat-azul-claro: #e8eefc;
+  --chat-cinza: #eceff3;
+  --chat-borda: #dde2ea;
+  --chat-texto: #1c2430;
+  display: flex; gap: 16px; height: calc(100vh - 140px); min-height: 460px;
+  font-family: inherit; color: var(--chat-texto);
+}
+.chat-professor * { box-sizing: border-box; }
+.chat-professor .chat-lateral,
+.chat-professor .chat-painel {
+  background: #fff; border: 1px solid var(--chat-borda); border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(20, 30, 60, .06);
+}
+.chat-professor .chat-lateral { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px; }
+.chat-professor .chat-titulo { margin: 0 0 12px; font-size: 1.5rem; }
+.chat-professor .chat-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.chat-professor .chat-tab {
+  flex: 1; padding: 8px 10px; border: 0; border-radius: 8px; cursor: default;
+  background: var(--chat-azul); color: #fff; font-weight: 600;
+}
+.chat-professor .chat-busca {
+  width: 100%; padding: 10px 12px; margin-bottom: 10px;
+  border: 1px solid var(--chat-borda); border-radius: 10px; background: #f8f9fb; font-size: .95rem;
+}
+.chat-professor .chat-lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+.chat-professor .chat-contato {
+  display: flex; align-items: center; gap: 12px; padding: 10px; margin-bottom: 6px;
+  border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: background .15s;
+}
+.chat-professor .chat-contato:hover { background: #f3f5f9; }
+.chat-professor .chat-contato.ativo { background: var(--chat-azul-claro); border-color: var(--chat-azul); }
+.chat-professor .chat-contato-info { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+.chat-professor .chat-contato-info small {
+  color: #6b7686; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-professor .chat-avatar {
+  width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%;
+  display: grid; place-items: center; background: var(--chat-azul); color: #fff; font-weight: 700;
+}
+.chat-professor .chat-badge {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+  display: grid; place-items: center; background: #e5484d; color: #fff; font-size: .75rem; font-weight: 700;
+}
+.chat-professor .chat-sem-contatos, .chat-professor .chat-vazio { color: #6b7686; text-align: center; padding: 20px; }
+
+.chat-professor .chat-painel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.chat-professor .chat-cabecalho {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--chat-borda);
+}
+.chat-professor .chat-cabecalho small { display: block; color: #6b7686; }
+.chat-professor .chat-vazio-titulo { color: #6b7686; }
+.chat-professor .chat-mensagens {
+  flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 10px; background: #fafbfd;
+}
+.chat-professor .chat-linha { display: flex; }
+.chat-professor .chat-linha.enviada { justify-content: flex-end; }
+.chat-professor .chat-balao {
+  max-width: 70%; padding: 10px 14px; border-radius: 14px; line-height: 1.4;
+  word-break: break-word; white-space: pre-wrap;
+}
+.chat-professor .enviada .chat-balao { background: var(--chat-azul); color: #fff; border-bottom-right-radius: 4px; }
+.chat-professor .recebida .chat-balao { background: var(--chat-cinza); border-bottom-left-radius: 4px; }
+.chat-professor .chat-hora { display: block; margin-top: 4px; font-size: .7rem; opacity: .7; text-align: right; }
+.chat-professor .chat-entrada { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--chat-borda); }
+.chat-professor .chat-input {
+  flex: 1; padding: 11px 14px; border: 1px solid var(--chat-borda); border-radius: 10px; font-size: .95rem;
+}
+.chat-professor .chat-input:focus, .chat-professor .chat-busca:focus { outline: 2px solid var(--chat-azul); outline-offset: -1px; }
+.chat-professor .chat-enviar {
+  padding: 0 22px; border: 0; border-radius: 10px; background: var(--chat-azul); color: #fff; font-weight: 700; cursor: pointer;
+}
+.chat-professor .chat-enviar:disabled, .chat-professor .chat-input:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 800px) {
+  .chat-professor { flex-direction: column; height: auto; }
+  .chat-professor .chat-lateral { width: 100%; max-height: 260px; }
+  .chat-professor .chat-painel { min-height: 420px; }
+}
+
+/* Login e topo */
+.chat-professor .chat-topo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chat-professor .chat-topo .chat-titulo { margin: 0; }
+.chat-professor .chat-sair {
+  padding: 6px 12px; border: 1px solid var(--chat-borda); border-radius: 8px; background: #fff; cursor: pointer; color: #6b7686;
+}
+.chat-professor .chat-sair:hover { color: #e5484d; border-color: #e5484d; }
+.chat-professor .chat-login {
+  margin: auto; width: min(360px, 100%); display: flex; flex-direction: column; gap: 10px; padding: 28px;
+  background: #fff; border: 1px solid var(--chat-borda); border-radius: 14px; box-shadow: 0 2px 8px rgba(20,30,60,.06);
+}
+.chat-professor .chat-login h2 { margin: 0; }
+.chat-professor .chat-login p { margin: 0; color: #6b7686; }
+.chat-professor .chat-login input { padding: 11px 14px; border: 1px solid var(--chat-borda); border-radius: 10px; font-size: .95rem; }
+.chat-professor .chat-login .chat-enviar { padding: 12px; }
+.chat-professor .chat-login-erro { color: #e5484d !important; min-height: 1.2em; }

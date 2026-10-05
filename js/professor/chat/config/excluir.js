@@ -44,30 +44,31 @@
     });
   }
 
-  function podeApagarMensagem(msg, papel) {
-    return !!msg && !msg.apagada && msg.remetente_tipo === papel;
+  // eu = { id, papel }
+  function podeApagarMensagem(msg, eu) {
+    return !!msg && !msg.apagada && window.ChatDados.ehMinha(msg, eu);
   }
 
-  function itemMenuMensagem(msg, papel, aoEscolher) {
-    return podeApagarMensagem(msg, papel)
-      ? { icone: '', rotulo: 'Excluir', perigo: true, acao: aoEscolher }
+  function itemMenuMensagem(msg, eu, aoEscolher) {
+    return podeApagarMensagem(msg, eu)
+      ? { icone: '🗑️', rotulo: 'Excluir', perigo: true, acao: aoEscolher }
       : null;
   }
 
   function itemMenuConversa(contato, aoEscolher) {
     return contato && contato.conversa
-      ? { icone: '', rotulo: 'Apagar conversa', perigo: true, acao: aoEscolher }
+      ? { icone: '🗑️', rotulo: 'Apagar conversa', perigo: true, acao: aoEscolher }
       : null;
   }
 
   // Pergunta e apaga. Resolve com a mensagem atualizada (apagada) ou null.
-  async function apagarMensagem(msg, papel) {
+  async function apagarMensagem(msg, eu) {
     const sim = await confirmar({
       titulo: 'Apagar mensagem?',
       texto: 'Ela será apagada para os dois. Não dá para desfazer.'
     });
     if (!sim) return null;
-    return window.ChatDados.apagarMensagem(msg, papel);
+    return window.ChatDados.apagarMensagem(msg, eu);
   }
 
   // Pergunta e apaga a conversa toda. Resolve com true/false.

@@ -226,7 +226,7 @@
     mensagens = new Map();
     const area = $('.chat-mensagens');
     area.innerHTML = '';
-    if (!lista.length) area.innerHTML = '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
+    if (!lista.length) area.innerHTML = '<p class="chat-vazio">Nenhuma mensagem ainda.</p>';
     lista.forEach(adicionarMensagem);
     rolarFim();
     await Dados.marcarComoLidas(contato.conversa.id, OUTRO);

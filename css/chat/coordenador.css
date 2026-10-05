@@ -96,3 +96,34 @@
 .chat-coordenador .chat-login input { padding: 11px 14px; border: 1px solid var(--chat-borda); border-radius: 10px; font-size: .95rem; }
 .chat-coordenador .chat-login .chat-enviar { padding: 12px; }
 .chat-coordenador .chat-login-erro { color: #e5484d !important; min-height: 1.2em; }
+
+/* ===== Parte 2: anexo, emoji, online/offline ===== */
+.chat-coordenador .chat-entrada { align-items: center; }
+.chat-coordenador .chat-icone-btn {
+  width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: 10px;
+  background: transparent; font-size: 1.25rem; cursor: pointer;
+}
+.chat-coordenador .chat-icone-btn:hover:not(:disabled) { background: #eef1f6; }
+.chat-coordenador .chat-icone-btn:disabled { opacity: .35; cursor: not-allowed; }
+.chat-coordenador .chat-avatar-wrap { position: relative; flex-shrink: 0; }
+.chat-coordenador .chat-ponto {
+  position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 50%;
+  background: #9aa4b2; border: 2px solid #fff;
+}
+.chat-coordenador .chat-ponto.online { background: #22c55e; }
+.chat-coordenador .chat-status-online { color: #16a34a; font-weight: 600; }
+.chat-coordenador .chat-linha.enviando .chat-balao { opacity: .6; }
+
+/* ===== Parte 3: abas Professores / Coordenadores ===== */
+.chat-coordenador .chat-tab { cursor: pointer; transition: background .15s; }
+.chat-coordenador .chat-tab:not(.ativo) { background: #eef1f6; color: #5b6676; }
+.chat-coordenador .chat-tab:not(.ativo):hover { background: #e2e7ef; }
+.chat-coordenador .chat-tab-badge {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px;
+  border-radius: 9px; background: #e5484d; color: #fff; font-size: .7rem; font-weight: 700; vertical-align: middle;
+}
+.chat-coordenador .chat-ver-outra {
+  margin-top: 8px; padding: 6px 12px; border: 1px solid var(--chat-azul); border-radius: 8px;
+  background: transparent; color: var(--chat-azul); font: inherit; font-size: .85rem; cursor: pointer;
+}
+.chat-coordenador .chat-ver-outra:hover { background: var(--chat-azul-claro); }

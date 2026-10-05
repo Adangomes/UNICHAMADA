@@ -1,6 +1,7 @@
 /* =========================================================
    UniChamada - Chat do Coordenador (interface)
    Identidade: login do sistema (auth.js) | Dados: js/data/chat.js
+   Conversa com professores E coordenadores (abas), com busca.
    Recursos (pasta config/): editar_msg, excluir, emojis, fotos-e-arquivos, menu-contexto
    Uso: iniciarChatCoordenador('chat-coordenador-root')
    ========================================================= */
@@ -8,9 +9,9 @@
   'use strict';
 
   const PAPEL = 'coordenador';
-  const OUTRO = 'professor';
-  const ROTULO_PLURAL = 'Professores';
-  const ROTULO_SING = 'Professor';
+  const ABAS = ['professor', 'coordenador'];                       // ordem das abas; a primeira abre por padrão
+  const ROTULO = { professor: 'Professores', coordenador: 'Coordenadores' };
+  const ROTULO_SING = { professor: 'Professor', coordenador: 'Coordenador' };
   const Dados = window.ChatDados;
 
   // Módulos de config/ (podem faltar: o chat de texto continua funcionando)
@@ -20,7 +21,7 @@
   const Emojis = () => window.ChatEmojis;
   const Anexos = () => window.ChatAnexos;
 
-  let eu = null, raiz = null, contatos = [], ativo = null;
+  let eu = null, raiz = null, contatos = [], ativo = null, abaAtiva = ABAS[0];
   let mensagens = new Map();        // id -> mensagem da conversa aberta
   let online = new Set();           // chaves "papel:id" de quem está online
   let timerRecarga = null;
@@ -30,7 +31,9 @@
   const iniciais = (n) => String(n || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const $ = (sel) => raiz.querySelector(sel);
-  const estaOnline = (c) => online.has(OUTRO + ':' + c.id);
+  const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const chave = (c) => c.aba + ':' + c.id;                 // identifica um contato (id sozinho pode repetir entre tabelas)
+  const estaOnline = (c) => online.has(chave(c));
 
   // Texto curto para a lista de contatos
   function previaDe(m) {
@@ -46,8 +49,8 @@
     raiz.innerHTML = `
       <aside class="chat-lateral">
         <div class="chat-topo"><h2 class="chat-titulo">Chat</h2></div>
-        <div class="chat-tabs"><button class="chat-tab ativo" type="button">${ROTULO_PLURAL}</button></div>
-        <input class="chat-busca" type="search" placeholder="Pesquisar..." autocomplete="off">
+        <div class="chat-tabs"></div>
+        <input class="chat-busca" type="search" autocomplete="off">
         <ul class="chat-lista"></ul>
       </aside>
       <section class="chat-painel">
@@ -60,6 +63,7 @@
           <button class="chat-enviar" type="button" disabled>Enviar</button>
         </div>
       </section>`;
+    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
     $('.chat-busca').addEventListener('input', renderLista);
     $('.chat-enviar').addEventListener('click', enviar);
     $('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
@@ -69,18 +73,52 @@
     });
   }
 
+  function trocarAba(aba) {
+    abaAtiva = aba;
+    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    renderLista();
+  }
+
+  function renderAbas() {
+    const caixa = $('.chat-tabs');
+    caixa.innerHTML = ABAS.map((a) => {
+      const n = contatos.filter((c) => c.aba === a).reduce((soma, c) => soma + c.naoLidas, 0);
+      return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}">` +
+             `${ROTULO[a]}${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
+    }).join('');
+    caixa.querySelectorAll('.chat-tab').forEach((b) => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+  }
+
   function avatarHtml(c) {
     return `<div class="chat-avatar-wrap"><div class="chat-avatar">${esc(iniciais(c.nome))}</div>` +
            `<span class="chat-ponto ${estaOnline(c) ? 'online' : ''}"></span></div>`;
   }
 
   function renderLista() {
-    const termo = $('.chat-busca').value.trim().toLowerCase();
+    renderAbas();
+    const termo = semAcento($('.chat-busca').value.trim());
     const ul = $('.chat-lista');
-    const lista = contatos.filter((c) => c.nome.toLowerCase().includes(termo));
-    if (!lista.length) { ul.innerHTML = '<li class="chat-sem-contatos">Nenhum contato encontrado</li>'; return; }
+    const daAba = contatos.filter((c) => c.aba === abaAtiva);
+    let lista = daAba;
+    if (termo) {
+      lista = daAba.filter((c) => semAcento(c.nome).includes(termo));
+      // quem começa com o que foi digitado vem primeiro ("Ma" -> Marcos antes de Emanuel)
+      const comeca = (c) => semAcento(c.nome).split(/\s+/).some((p) => p.startsWith(termo)) ? 0 : 1;
+      lista = lista.map((c, i) => ({ c, i })).sort((x, y) => comeca(x.c) - comeca(y.c) || x.i - y.i).map((x) => x.c);
+    }
+
+    if (!lista.length) {
+      const outra = ABAS.find((a) => a !== abaAtiva);
+      const naOutra = termo ? contatos.filter((c) => c.aba === outra && semAcento(c.nome).includes(termo)).length : 0;
+      ul.innerHTML = `<li class="chat-sem-contatos">Nenhum ${ROTULO_SING[abaAtiva].toLowerCase()} encontrado` +
+        (naOutra ? `<br><button class="chat-ver-outra" type="button">Ver em ${ROTULO[outra]} (${naOutra})</button>` : '') + '</li>';
+      const b = ul.querySelector('.chat-ver-outra');
+      if (b) b.addEventListener('click', () => trocarAba(outra));
+      return;
+    }
+
     ul.innerHTML = lista.map((c) => `
-      <li class="chat-contato ${ativo && String(ativo.id) === String(c.id) ? 'ativo' : ''}" data-id="${esc(c.id)}">
+      <li class="chat-contato ${ativo && chave(ativo) === chave(c) ? 'ativo' : ''}" data-chave="${esc(chave(c))}">
         ${avatarHtml(c)}
         <div class="chat-contato-info">
           <strong>${esc(c.nome)}</strong>
@@ -89,7 +127,7 @@
         ${c.naoLidas ? `<span class="chat-badge">${c.naoLidas}</span>` : ''}
       </li>`).join('');
     ul.querySelectorAll('.chat-contato').forEach((li) => {
-      const contato = contatos.find((c) => String(c.id) === li.dataset.id);
+      const contato = contatos.find((c) => chave(c) === li.dataset.chave);
       li.addEventListener('click', () => {
         if (Menu() && Menu().recemAberto()) return;      // soltou o dedo depois de segurar
         abrirConversa(contato);
@@ -106,19 +144,19 @@
     $('.chat-cabecalho').innerHTML = `
       ${avatarHtml(ativo)}
       <div><strong>${esc(ativo.nome)}</strong>
-      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'} · ${ROTULO_SING}</small></div>`;
+      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'} · ${ROTULO_SING[ativo.aba]}</small></div>`;
   }
 
   // ---------- MENSAGENS (balões) ----------
   function itensMenuMensagem(m, balao) {
     return [
-      Editar() && Editar().itemMenu(m, PAPEL, () => editar(m, balao)),
-      Excluir() && Excluir().itemMenuMensagem(m, PAPEL, () => apagarMensagem(m))
+      Editar() && Editar().itemMenu(m, eu, () => editar(m, balao)),
+      Excluir() && Excluir().itemMenuMensagem(m, eu, () => apagarMensagem(m))
     ].filter(Boolean);
   }
 
   function criarLinha(m) {
-    const meu = m.remetente_tipo === PAPEL;
+    const meu = Dados.ehMinha(m, eu);
     const linha = document.createElement('div');
     linha.className = 'chat-linha ' + (meu ? 'enviada' : 'recebida');
     linha.dataset.id = m.id;
@@ -128,10 +166,10 @@
 
     if (m.apagada) {
       balao.classList.add('apagada');
-      balao.textContent = '' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
+      balao.textContent = '🚫 ' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
     } else if (m.tipo !== 'texto' && Anexos()) {
       balao.classList.add('com-anexo');
-      balao.appendChild(Anexos().criarCorpo(m, PAPEL));
+      balao.appendChild(Anexos().criarCorpo(m, eu));
     } else {
       const texto = document.createElement('span');
       texto.className = 'chat-texto';
@@ -190,13 +228,13 @@
   // ---------- AÇÕES ----------
   async function carregarContatos() {
     try {
-      contatos = await Dados.listarContatos(PAPEL, eu.id);
+      contatos = await Dados.listarContatos(eu);
     } catch (e) { console.error('Chat: erro ao carregar contatos', e); return; }
     contatos.sort((a, b) =>
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
     if (ativo) {                                   // mantém a conversa aberta apontando para o contato novo
-      const atual = contatos.find((c) => String(c.id) === String(ativo.id));
+      const atual = contatos.find((c) => chave(c) === chave(ativo));
       if (atual && atual.conversa) ativo = atual;
       else if (ativo.conversa) limparPainel();     // a conversa foi apagada (pela outra pessoa)
       else if (atual) ativo = atual;
@@ -212,7 +250,7 @@
   async function abrirConversa(contato) {
     if (!contato) return;
     ativo = contato;
-    if (!contato.conversa) contato.conversa = await Dados.garantirConversa(PAPEL, eu.id, contato.id);
+    if (!contato.conversa) contato.conversa = await Dados.garantirConversa(eu, contato);
     if (!contato.conversa) return;
 
     atualizarCabecalho();
@@ -226,10 +264,10 @@
     mensagens = new Map();
     const area = $('.chat-mensagens');
     area.innerHTML = '';
-    if (!lista.length) area.innerHTML = '<p class="chat-vazio">Nenhuma mensagem ainda.</p>';
+    if (!lista.length) area.innerHTML = '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
     lista.forEach(adicionarMensagem);
     rolarFim();
-    await Dados.marcarComoLidas(contato.conversa.id, OUTRO);
+    await Dados.marcarComoLidas(contato.conversa.id, eu);
     contato.naoLidas = 0;
     renderLista();
   }
@@ -239,7 +277,7 @@
     const texto = input.value.trim();
     if (!texto || !ativo || !ativo.conversa) return;
     input.value = '';
-    const msg = await Dados.enviarMensagem(ativo.conversa.id, PAPEL, texto);
+    const msg = await Dados.enviarMensagem(ativo.conversa.id, eu, texto);
     if (!msg) { input.value = texto; return; }
     adicionarMensagem(msg);
     ativo.conversa.ultima_mensagem = previaDe(msg);
@@ -259,7 +297,7 @@
     area.appendChild(temp);
     rolarFim();
     try {
-      const msg = await Anexos().enviar(ativo.conversa.id, PAPEL, escolha);
+      const msg = await Anexos().enviar(ativo.conversa.id, eu, escolha);
       temp.remove();
       adicionarMensagem(msg);
       ativo.conversa.ultima_mensagem = previaDe(msg);
@@ -272,19 +310,19 @@
   }
 
   async function editar(m, balao) {
-    const nova = await Editar().iniciar(balao, m, PAPEL);
+    const nova = await Editar().iniciar(balao, m, eu);
     if (nova) { aplicarAtualizacao(nova); recarregarContatosDepois(); }
   }
 
   async function apagarMensagem(m) {
-    const nova = await Excluir().apagarMensagem(m, PAPEL);
+    const nova = await Excluir().apagarMensagem(m, eu);
     if (nova) { aplicarAtualizacao(nova); recarregarContatosDepois(); }
   }
 
   async function apagarConversa(contato) {
     const ok = await Excluir().apagarConversa(contato);
     if (!ok) return;
-    if (ativo && String(ativo.id) === String(contato.id)) limparPainel();
+    if (ativo && chave(ativo) === chave(contato)) limparPainel();
     await carregarContatos();
   }
 
@@ -294,14 +332,15 @@
     if (!contato) {                        // conversa nova iniciada pela outra pessoa
       await carregarContatos();
       contato = contatos.find((c) => c.conversa && c.conversa.id === m.conversa_id);
-      if (!contato) return;
+      if (!contato) return;                // não é uma conversa minha
     }
     contato.conversa.ultima_mensagem = previaDe(m);
     contato.conversa.ultima_mensagem_em = m.created_at;
+    const minha = Dados.ehMinha(m, eu);
     if (ativo && ativo.conversa && ativo.conversa.id === m.conversa_id) {
       adicionarMensagem(m);
-      if (m.remetente_tipo === OUTRO) Dados.marcarComoLidas(m.conversa_id, OUTRO);
-    } else if (m.remetente_tipo === OUTRO) {
+      if (!minha) Dados.marcarComoLidas(m.conversa_id, eu);
+    } else if (!minha) {
       contato.naoLidas += 1;
     }
     renderLista();
@@ -325,12 +364,12 @@
   async function abrirChat() {
     montarLayout();
     await carregarContatos();
-    Dados.assinar(PAPEL, eu.id, {
+    Dados.assinar(eu, {
       onInsert: receber,
       onUpdate: mensagemAtualizada,
       onConversaApagada: carregarContatos
     });
-    Dados.iniciarPresenca(PAPEL, eu.id, (conjunto) => {
+    Dados.iniciarPresenca(eu, (conjunto) => {
       online = conjunto;
       if (raiz && raiz.isConnected) { renderLista(); atualizarCabecalho(); }
     });
@@ -344,12 +383,12 @@
       raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
       return;
     }
-    eu = usuario || usuarioDaSessao();
+    eu = usuario ? { ...usuario, papel: PAPEL } : usuarioDaSessao();
     if (!eu) {
       raiz.innerHTML = '<p class="chat-vazio">Sessão não encontrada. Entre no sistema novamente.</p>';
       return;
     }
-    ativo = null; contatos = []; mensagens = new Map();
+    ativo = null; contatos = []; mensagens = new Map(); abaAtiva = ABAS[0];
     await abrirChat();
   };
 })();

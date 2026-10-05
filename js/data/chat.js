@@ -8,11 +8,6 @@
 
   const db = () => window.supabaseClient;
   const BUCKET = 'chat-arquivos';
-  const CFG = {
-    coordenador: { eu: 'coordenador_id', outro: 'professor_id',   tabelaOutro: 'professores',   tipoOutro: 'professor' },
-    professor:   { eu: 'professor_id',   outro: 'coordenador_id', tabelaOutro: 'coordenadores', tipoOutro: 'coordenador' }
-  };
-
   let canal = null;                         // mensagens em tempo real
   let canalPresenca = null;                 // quem está online
   let chavePresenca = null;
@@ -20,41 +15,97 @@
   const cacheUrls = new Map();              // path -> { url, expira }
 
   // ---------------------------------------------------------
-  // CONTATOS E CONVERSAS
+  // IDENTIDADE
   // ---------------------------------------------------------
 
-  // Contatos (o "outro lado") + conversa existente + contagem de não lidas
-  async function listarContatos(papel, euId) {
-    const c = CFG[papel];
-    const [lista, convs] = await Promise.all([
-      db().from(c.tabelaOutro).select('id, nome').order('nome'),
-      db().from('chat_conversas').select('*').eq(c.eu, euId)
+  // eu = { id, papel: 'coordenador' | 'professor' }
+  // A mensagem é minha se o tipo E o id do remetente batem (dois professores têm o mesmo tipo).
+  function ehMinha(msg, eu) {
+    if (msg.remetente_tipo !== eu.papel) return false;
+    return msg.remetente_id == null || String(msg.remetente_id) === String(eu.id);
+  }
+
+  // Condição PostgREST "NÃO é minha" (para marcar como lida / abrir foto única)
+  const naoMinha = (eu) => `remetente_tipo.neq.${eu.papel},remetente_id.neq.${eu.id}`;
+
+  // ---------------------------------------------------------
+  // CONTATOS E CONVERSAS
+  // Tipos de conversa: 'misto' (coordenador x professor), 'prof_prof' e 'coord_coord'
+  // ---------------------------------------------------------
+
+  // Quem é "o outro" numa conversa vista por mim: { aba: 'professor'|'coordenador', id }
+  function outroDaConversa(cv, eu) {
+    const meuId = String(eu.id);
+    const tipo = cv.tipo || 'misto';
+    if (tipo === 'prof_prof') {
+      if (eu.papel !== 'professor') return null;
+      return { aba: 'professor', id: String(cv.professor_id) === meuId ? cv.professor2_id : cv.professor_id };
+    }
+    if (tipo === 'coord_coord') {
+      if (eu.papel !== 'coordenador') return null;
+      return { aba: 'coordenador', id: String(cv.coordenador_id) === meuId ? cv.coordenador2_id : cv.coordenador_id };
+    }
+    if (eu.papel === 'coordenador') {
+      return String(cv.coordenador_id) === meuId ? { aba: 'professor', id: cv.professor_id } : null;
+    }
+    return String(cv.professor_id) === meuId ? { aba: 'coordenador', id: cv.coordenador_id } : null;
+  }
+
+  // Todos os professores e coordenadores (menos eu) + conversa existente + não lidas
+  async function listarContatos(eu) {
+    const colunas = eu.papel === 'coordenador' ? ['coordenador_id', 'coordenador2_id'] : ['professor_id', 'professor2_id'];
+    const [profs, coords, convs] = await Promise.all([
+      db().from('professores').select('id, nome').order('nome'),
+      db().from('coordenadores').select('id, nome').order('nome'),
+      db().from('chat_conversas').select('*').or(`${colunas[0]}.eq.${eu.id},${colunas[1]}.eq.${eu.id}`)
     ]);
-    if (lista.error || convs.error) throw (lista.error || convs.error);
+    if (profs.error || coords.error || convs.error) throw (profs.error || coords.error || convs.error);
 
     const conversas = convs.data || [];
+    const porContato = new Map();                       // "aba:id" -> conversa
+    conversas.forEach((cv) => {
+      const o = outroDaConversa(cv, eu);
+      if (o) porContato.set(o.aba + ':' + o.id, cv);
+    });
+
     const ids = conversas.map((x) => x.id);
     const naoLidas = {};
     if (ids.length) {
-      const { data } = await db().from('chat_mensagens').select('conversa_id')
-        .in('conversa_id', ids).eq('lida', false).eq('remetente_tipo', c.tipoOutro);
-      (data || []).forEach((m) => { naoLidas[m.conversa_id] = (naoLidas[m.conversa_id] || 0) + 1; });
+      const { data } = await db().from('chat_mensagens').select('conversa_id, remetente_tipo, remetente_id')
+        .in('conversa_id', ids).eq('lida', false);
+      (data || []).forEach((m) => {
+        if (!ehMinha(m, eu)) naoLidas[m.conversa_id] = (naoLidas[m.conversa_id] || 0) + 1;
+      });
     }
 
-    return (lista.data || []).map((p) => {
-      const conversa = conversas.find((x) => String(x[c.outro]) === String(p.id)) || null;
-      return { id: p.id, nome: p.nome || 'Sem nome', conversa, naoLidas: conversa ? (naoLidas[conversa.id] || 0) : 0 };
-    });
+    const montar = (lista, aba) => (lista || [])
+      .filter((p) => !(aba === eu.papel && String(p.id) === String(eu.id)))     // não aparece conversando comigo mesmo
+      .map((p) => {
+        const conversa = porContato.get(aba + ':' + p.id) || null;
+        return { id: p.id, aba, nome: p.nome || 'Sem nome', conversa, naoLidas: conversa ? (naoLidas[conversa.id] || 0) : 0 };
+      });
+    return [...montar(profs.data, 'professor'), ...montar(coords.data, 'coordenador')];
   }
 
-  // Cria a conversa do par (ou devolve a existente)
-  async function garantirConversa(papel, euId, contatoId) {
-    const c = CFG[papel];
-    const par = { [c.eu]: euId, [c.outro]: contatoId };
+  function montarPar(eu, contato) {
+    if (eu.papel === 'coordenador' && contato.aba === 'professor') return { tipo: 'misto', coordenador_id: eu.id, professor_id: contato.id };
+    if (eu.papel === 'professor' && contato.aba === 'coordenador') return { tipo: 'misto', coordenador_id: contato.id, professor_id: eu.id };
+    if (eu.papel === 'professor') return { tipo: 'prof_prof', professor_id: eu.id, professor2_id: contato.id };
+    return { tipo: 'coord_coord', coordenador_id: eu.id, coordenador2_id: contato.id };
+  }
+
+  function buscarConversa(par) {
+    let q = db().from('chat_conversas').select('*').eq('tipo', par.tipo);
+    if (par.tipo === 'misto') return q.eq('coordenador_id', par.coordenador_id).eq('professor_id', par.professor_id).single();
+    const [c1, c2] = par.tipo === 'prof_prof' ? ['professor_id', 'professor2_id'] : ['coordenador_id', 'coordenador2_id'];
+    return q.or(`and(${c1}.eq.${par[c1]},${c2}.eq.${par[c2]}),and(${c1}.eq.${par[c2]},${c2}.eq.${par[c1]})`).single();
+  }
+
+  // Cria a conversa do par (ou devolve a existente). O banco guarda o par em ordem fixa.
+  async function garantirConversa(eu, contato) {
+    const par = montarPar(eu, contato);
     let { data, error } = await db().from('chat_conversas').insert(par).select().single();
-    if (error && error.code === '23505') {   // já existia
-      ({ data, error } = await db().from('chat_conversas').select('*').match(par).single());
-    }
+    if (error && error.code === '23505') ({ data, error } = await buscarConversa(par));   // já existia
     if (error) { console.error('ChatDados: erro na conversa', error); return null; }
     return data;
   }
@@ -83,23 +134,25 @@
     return data || [];
   }
 
-  async function enviarMensagem(conversaId, papel, texto) {
+  async function enviarMensagem(conversaId, eu, texto) {
     const { data, error } = await db().from('chat_mensagens')
-      .insert({ conversa_id: conversaId, remetente_tipo: papel, conteudo: texto }).select().single();
+      .insert({ conversa_id: conversaId, remetente_tipo: eu.papel, remetente_id: String(eu.id), conteudo: texto })
+      .select().single();
     if (error) { console.error('ChatDados: erro ao enviar', error); return null; }
     return data;
   }
 
-  async function marcarComoLidas(conversaId, tipoRemetenteOutro) {
+  // Marca como lidas as mensagens da conversa que NÃO são minhas
+  async function marcarComoLidas(conversaId, eu) {
     await db().from('chat_mensagens').update({ lida: true })
-      .eq('conversa_id', conversaId).eq('remetente_tipo', tipoRemetenteOutro).eq('lida', false);
+      .eq('conversa_id', conversaId).eq('lida', false).or(naoMinha(eu));
   }
 
   // Edita o texto (só o autor, só texto, só se não foi apagada)
-  async function editarMensagem(id, papel, texto) {
+  async function editarMensagem(id, eu, texto) {
     const { data, error } = await db().from('chat_mensagens')
       .update({ conteudo: texto, editada_em: new Date().toISOString() })
-      .eq('id', id).eq('remetente_tipo', papel).eq('apagada', false).eq('tipo', 'texto')
+      .eq('id', id).eq('remetente_tipo', eu.papel).eq('remetente_id', String(eu.id)).eq('apagada', false).eq('tipo', 'texto')
       .select().single();
     if (error) { console.error('ChatDados: erro ao editar', error); return null; }
     return data;
@@ -107,14 +160,14 @@
 
   // Apaga a mensagem: limpa o conteúdo no banco, remove o arquivo do Storage e deixa
   // só o marcador "Mensagem apagada" (a linha fica para o outro lado ver o aviso)
-  async function apagarMensagem(msg, papel) {
+  async function apagarMensagem(msg, eu) {
     if (msg.arquivo_path) await db().storage.from(BUCKET).remove([msg.arquivo_path]);
     const { data, error } = await db().from('chat_mensagens')
       .update({
         apagada: true, conteudo: '', arquivo_path: null, arquivo_nome: null,
         arquivo_mime: null, arquivo_tamanho: null, visualizacao_unica: false
       })
-      .eq('id', msg.id).eq('remetente_tipo', papel)
+      .eq('id', msg.id).eq('remetente_tipo', eu.papel).eq('remetente_id', String(eu.id))
       .select().single();
     if (error) { console.error('ChatDados: erro ao apagar mensagem', error); return null; }
     return data;
@@ -132,7 +185,7 @@
   }
 
   // dados: { blob, nome, mime, tamanho, tipo: 'imagem'|'arquivo', unica }
-  async function enviarAnexo(conversaId, papel, dados) {
+  async function enviarAnexo(conversaId, eu, dados) {
     const caminho = `${conversaId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${nomeSeguro(dados.nome)}`;
     const up = await db().storage.from(BUCKET).upload(caminho, dados.blob, { contentType: dados.mime, upsert: false });
     if (up.error) {
@@ -140,7 +193,7 @@
       throw new Error('Não foi possível enviar o arquivo.');
     }
     const { data, error } = await db().from('chat_mensagens').insert({
-      conversa_id: conversaId, remetente_tipo: papel, tipo: dados.tipo, conteudo: '',
+      conversa_id: conversaId, remetente_tipo: eu.papel, remetente_id: String(eu.id), tipo: dados.tipo, conteudo: '',
       arquivo_path: caminho, arquivo_nome: dados.nome, arquivo_mime: dados.mime,
       arquivo_tamanho: dados.tamanho, visualizacao_unica: !!dados.unica
     }).select().single();
@@ -167,12 +220,12 @@
 
   // Foto de visualização única: só o destinatário, só uma vez.
   // Baixa o arquivo, apaga do Storage na hora e devolve o Blob (ou null se já foi vista).
-  async function abrirVisualizacaoUnica(msg, papel) {
+  async function abrirVisualizacaoUnica(msg, eu) {
     const agora = new Date().toISOString();
     const { data, error } = await db().from('chat_mensagens')
       .update({ visualizada_em: agora })
       .eq('id', msg.id).eq('visualizacao_unica', true).is('visualizada_em', null)
-      .neq('remetente_tipo', papel)
+      .or(naoMinha(eu))
       .select().single();
     if (error || !data || !data.arquivo_path) return null;
 
@@ -193,11 +246,11 @@
   // TEMPO REAL
   // ---------------------------------------------------------
 
-  // handlers: { onInsert(msg), onUpdate(msg), onConversaApagada(old) }
-  function assinar(papel, euId, handlers) {
+  // eu = { id, papel }; handlers: { onInsert(msg), onUpdate(msg), onConversaApagada(old) }
+  function assinar(eu, handlers) {
     cancelar();
     const h = handlers || {};
-    canal = db().channel('chat-' + papel + '-' + euId)
+    canal = db().channel('chat-' + eu.papel + '-' + eu.id)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
         (p) => h.onInsert && h.onInsert(p.new))
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_mensagens' },
@@ -216,8 +269,8 @@
   // ---------------------------------------------------------
 
   // aoMudar(setDeChaves): chaves no formato "professor:ID" / "coordenador:ID"
-  function iniciarPresenca(papel, euId, aoMudar) {
-    const chave = papel + ':' + euId;
+  function iniciarPresenca(eu, aoMudar) {
+    const chave = eu.papel + ':' + eu.id;
     aoMudarPresenca = aoMudar;
     if (canalPresenca && chavePresenca === chave) {            // já estou online: só avisa o estado atual
       if (aoMudar) aoMudar(new Set(Object.keys(canalPresenca.presenceState())));
@@ -231,7 +284,7 @@
         if (aoMudarPresenca) aoMudarPresenca(new Set(Object.keys(canalPresenca.presenceState())));
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') await canalPresenca.track({ papel, id: euId, em: new Date().toISOString() });
+        if (status === 'SUBSCRIBED') await canalPresenca.track({ papel: eu.papel, id: eu.id, em: new Date().toISOString() });
       });
   }
 
@@ -241,7 +294,7 @@
   }
 
   window.ChatDados = {
-    listarContatos, garantirConversa, apagarConversa,
+    ehMinha, listarContatos, garantirConversa, apagarConversa,
     listarMensagens, enviarMensagem, marcarComoLidas, editarMensagem, apagarMensagem,
     enviarAnexo, urlAssinada, abrirVisualizacaoUnica,
     assinar, cancelar, iniciarPresenca, pararPresenca

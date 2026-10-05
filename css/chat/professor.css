@@ -66,12 +66,14 @@
 .chat-professor .chat-hora { display: block; margin-top: 4px; font-size: .7rem; opacity: .7; text-align: right; }
 .chat-professor .chat-entrada { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--chat-borda); }
 .chat-professor .chat-input {
-  flex: 1; padding: 11px 14px; border: 1px solid var(--chat-borda); border-radius: 10px; font-size: .95rem;
+  flex: 1; height: 44px; padding: 0 14px; border: 1px solid var(--chat-borda); border-radius: 10px; font-size: .95rem;
 }
 .chat-professor .chat-input:focus, .chat-professor .chat-busca:focus { outline: 2px solid var(--chat-azul); outline-offset: -1px; }
 .chat-professor .chat-enviar {
-  padding: 0 22px; border: 0; border-radius: 10px; background: var(--chat-azul); color: #fff; font-weight: 700; cursor: pointer;
+  flex-shrink: 0; height: 44px; min-width: 92px; padding: 0 22px; border: 0; border-radius: 10px;
+  background: var(--chat-azul); color: #fff; font: inherit; font-size: .95rem; font-weight: 700; cursor: pointer;
 }
+.chat-professor .chat-enviar:hover:not(:disabled) { filter: brightness(1.1); }
 .chat-professor .chat-enviar:disabled, .chat-professor .chat-input:disabled { opacity: .5; cursor: not-allowed; }
 
 @media (max-width: 800px) {
@@ -100,7 +102,7 @@
 /* ===== Parte 2: anexo, emoji, online/offline ===== */
 .chat-professor .chat-entrada { align-items: center; }
 .chat-professor .chat-icone-btn {
-  width: 40px; height: 40px; flex-shrink: 0; border: 0; border-radius: 10px;
+  width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 10px;
   background: transparent; font-size: 1.25rem; cursor: pointer;
 }
 .chat-professor .chat-icone-btn:hover:not(:disabled) { background: #eef1f6; }

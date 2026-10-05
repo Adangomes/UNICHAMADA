@@ -168,7 +168,7 @@
 
     if (m.apagada) {
       balao.classList.add('apagada');
-      balao.textContent = '🚫 ' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
+      balao.textContent = '' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
     } else if (m.tipo !== 'texto' && Anexos()) {
       balao.classList.add('com-anexo');
       balao.appendChild(Anexos().criarCorpo(m, eu));

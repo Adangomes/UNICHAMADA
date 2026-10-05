@@ -173,8 +173,9 @@
   }
 
   // Sobe o arquivo e cria a mensagem. Lança Error com texto amigável se falhar.
-  function enviar(conversaId, papel, escolha) {
-    return Dados().enviarAnexo(conversaId, papel, { ...escolha.preparado, unica: escolha.unica });
+  // eu = { id, papel }
+  function enviar(conversaId, eu, escolha) {
+    return Dados().enviarAnexo(conversaId, eu, { ...escolha.preparado, unica: escolha.unica });
   }
 
   // ---------------------------------------------------------
@@ -217,7 +218,7 @@
     return raiz;
   }
 
-  function corpoFotoUnica(msg, meu, papel, raiz) {
+  function corpoFotoUnica(msg, meu, eu, raiz) {
     const aberta = !!msg.visualizada_em;
     const cartao = criar('button', 'chat-anexo-cartao unica' + (aberta ? ' aberta' : ''));
     cartao.type = 'button';
@@ -246,7 +247,7 @@
       sub.textContent = 'Visualização única';
       cartao.addEventListener('click', async () => {
         cartao.disabled = true;
-        const blob = await Dados().abrirVisualizacaoUnica(msg, papel);
+        const blob = await Dados().abrirVisualizacaoUnica(msg, eu);
         if (!blob) { avisar('Esta foto não está mais disponível.'); marcarAberta(); return; }
         const url = URL.createObjectURL(blob);
         abrirImagem(url, { unica: true, aoFechar: () => { URL.revokeObjectURL(url); marcarAberta(); } });
@@ -286,10 +287,10 @@
   }
 
   // Monta o conteúdo do balão para mensagens de tipo 'imagem' ou 'arquivo'
-  function criarCorpo(msg, papel) {
-    const meu = msg.remetente_tipo === papel;
+  function criarCorpo(msg, eu) {
+    const meu = Dados().ehMinha(msg, eu);
     const raiz = criar('div', 'chat-anexo');
-    if (msg.tipo === 'imagem' && msg.visualizacao_unica) return corpoFotoUnica(msg, meu, papel, raiz);
+    if (msg.tipo === 'imagem' && msg.visualizacao_unica) return corpoFotoUnica(msg, meu, eu, raiz);
     if (msg.tipo === 'imagem') return corpoImagem(msg, raiz);
     return corpoArquivo(msg, raiz);
   }

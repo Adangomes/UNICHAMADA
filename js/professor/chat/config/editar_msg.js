@@ -14,8 +14,9 @@
     LIMITE_MINUTOS: 0            // 0 = pode editar a qualquer momento; ex.: 15 = só até 15 min depois
   };
 
-  function podeEditar(msg, papel) {
-    if (!msg || msg.apagada || msg.tipo !== 'texto' || msg.remetente_tipo !== papel) return false;
+  // eu = { id, papel }
+  function podeEditar(msg, eu) {
+    if (!msg || msg.apagada || msg.tipo !== 'texto' || !window.ChatDados.ehMinha(msg, eu)) return false;
     if (CFG.LIMITE_MINUTOS > 0) {
       const minutos = (Date.now() - new Date(msg.created_at).getTime()) / 60000;
       if (minutos > CFG.LIMITE_MINUTOS) return false;
@@ -24,12 +25,12 @@
   }
 
   // Item para o menu de contexto (ou null se não puder editar)
-  function itemMenu(msg, papel, aoEscolher) {
-    return podeEditar(msg, papel) ? { icone: '', rotulo: 'Editar', acao: aoEscolher } : null;
+  function itemMenu(msg, eu, aoEscolher) {
+    return podeEditar(msg, eu) ? { icone: '✏️', rotulo: 'Editar', acao: aoEscolher } : null;
   }
 
   // Abre a edição dentro do balão. Resolve com a mensagem atualizada, ou null se cancelou.
-  function iniciar(balao, msg, papel) {
+  function iniciar(balao, msg, eu) {
     return new Promise((resolve) => {
       const guardado = document.createDocumentFragment();
       while (balao.firstChild) guardado.appendChild(balao.firstChild);
@@ -74,7 +75,7 @@
         if (!novo) { erro.textContent = 'A mensagem não pode ficar vazia.'; campo.focus(); return; }
         if (novo === msg.conteudo) return sair(null);
         salvar.disabled = true; cancelar.disabled = true; salvar.textContent = 'Salvando...';
-        const atualizada = await window.ChatDados.editarMensagem(msg.id, papel, novo);
+        const atualizada = await window.ChatDados.editarMensagem(msg.id, eu, novo);
         if (!atualizada) {
           salvar.disabled = false; cancelar.disabled = false; salvar.textContent = 'Salvar';
           erro.textContent = 'Não foi possível salvar. Tente de novo.';

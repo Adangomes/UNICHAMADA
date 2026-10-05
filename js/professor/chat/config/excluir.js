@@ -50,13 +50,13 @@
 
   function itemMenuMensagem(msg, papel, aoEscolher) {
     return podeApagarMensagem(msg, papel)
-      ? { icone: '🗑️', rotulo: 'Excluir', perigo: true, acao: aoEscolher }
+      ? { icone: '', rotulo: 'Excluir', perigo: true, acao: aoEscolher }
       : null;
   }
 
   function itemMenuConversa(contato, aoEscolher) {
     return contato && contato.conversa
-      ? { icone: '🗑️', rotulo: 'Apagar conversa', perigo: true, acao: aoEscolher }
+      ? { icone: '', rotulo: 'Apagar conversa', perigo: true, acao: aoEscolher }
       : null;
   }
 

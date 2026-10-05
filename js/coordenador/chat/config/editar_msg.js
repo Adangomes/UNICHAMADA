@@ -25,7 +25,7 @@
 
   // Item para o menu de contexto (ou null se não puder editar)
   function itemMenu(msg, papel, aoEscolher) {
-    return podeEditar(msg, papel) ? { icone: '✏️', rotulo: 'Editar', acao: aoEscolher } : null;
+    return podeEditar(msg, papel) ? { icone: '', rotulo: 'Editar', acao: aoEscolher } : null;
   }
 
   // Abre a edição dentro do balão. Resolve com a mensagem atualizada, ou null se cancelou.

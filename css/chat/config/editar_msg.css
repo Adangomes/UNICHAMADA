@@ -1,0 +1,21 @@
+/* Chat: edição de mensagem dentro do balão */
+.chat-linha .chat-balao.editando { min-width: min(320px, 78vw); }
+.chat-editar-campo {
+  display: block; width: 100%; min-height: 40px; max-height: 180px; resize: none;
+  padding: 8px 10px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 8px;
+  font: inherit; font-size: .95rem; line-height: 1.35; color: #1c2430; background: #fff;
+}
+.chat-editar-campo:focus { outline: 2px solid #fff; outline-offset: 0; }
+.chat-editar-erro { min-height: 1em; margin-top: 4px; font-size: .8rem; color: #ffd5d8; }
+.chat-editar-acoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+.chat-editar-acoes button {
+  padding: 6px 14px; border: 0; border-radius: 8px; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+}
+.chat-editar-cancelar { background: rgba(255, 255, 255, .22); color: #fff; }
+.chat-editar-salvar { background: #fff; color: #1e3a8a; }
+.chat-editar-acoes button:disabled { opacity: .6; cursor: wait; }
+/* "editada" ao lado da hora */
+.chat-editada { margin-right: 6px; font-style: italic; opacity: .85; }
+
+/* iOS: mantém o campo de edição digitável mesmo com seleção desligada no balão */
+.chat-balao.editando, .chat-editar-campo { -webkit-user-select: text; user-select: text; }

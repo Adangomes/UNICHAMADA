@@ -1,0 +1,24 @@
+/* Chat: mensagem apagada + janela de confirmação */
+.chat-linha .chat-balao.apagada {
+  background: transparent !important; color: #8a94a3 !important;
+  border: 1px dashed #c9d0db; font-style: italic;
+}
+.chat-linha .chat-balao.apagada .chat-hora { color: #8a94a3; }
+
+.chat-confirm-fundo {
+  position: fixed; inset: 0; z-index: 10001; display: grid; place-items: center; padding: 16px;
+  background: rgba(15, 23, 42, .5);
+}
+.chat-confirm-caixa {
+  width: min(380px, 100%); padding: 22px; background: #fff; border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, .3); color: #1c2430;
+}
+.chat-confirm-caixa h3 { margin: 0 0 8px; font-size: 1.15rem; }
+.chat-confirm-caixa p { margin: 0 0 18px; color: #5b6676; line-height: 1.4; }
+.chat-confirm-acoes { display: flex; justify-content: flex-end; gap: 10px; }
+.chat-confirm-acoes button {
+  padding: 10px 18px; border: 0; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.chat-confirm-nao { background: #eef1f6; color: #1c2430; }
+.chat-confirm-sim { background: #d92d3a; color: #fff; }
+.chat-confirm-sim:hover { background: #b9212d; }

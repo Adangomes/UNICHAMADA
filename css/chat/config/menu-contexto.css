@@ -1,0 +1,23 @@
+/* Chat: menu de contexto (botão direito / segurar) */
+.chat-menu-ctx {
+  position: fixed; z-index: 10000; min-width: 170px; padding: 6px;
+  background: #fff; border: 1px solid #dde2ea; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(20, 30, 60, .18);
+  display: flex; flex-direction: column; gap: 2px;
+  animation: chat-menu-entra .12s ease-out;
+}
+.chat-menu-item {
+  display: block; width: 100%; text-align: left; padding: 10px 12px;
+  border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+  font: inherit; font-size: .95rem; color: #1c2430; white-space: nowrap;
+}
+.chat-menu-item:hover, .chat-menu-item:focus-visible { background: #f0f3f9; outline: none; }
+.chat-menu-item.perigo { color: #d92d3a; }
+.chat-menu-item.perigo:hover { background: #fdecee; }
+@keyframes chat-menu-entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+
+/* evita o menu nativo/seleção de texto ao segurar o dedo em tablet e celular */
+.chat-balao, .chat-contato { -webkit-touch-callout: none; }
+@media (hover: none) {
+  .chat-balao, .chat-contato { -webkit-user-select: none; user-select: none; }
+}

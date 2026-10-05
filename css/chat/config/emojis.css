@@ -1,0 +1,21 @@
+/* Chat: seletor de emojis */
+.chat-emoji-popup {
+  position: fixed; z-index: 10000; width: min(320px, calc(100vw - 16px));
+  background: #fff; border: 1px solid #dde2ea; border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(20, 30, 60, .2); overflow: hidden;
+}
+.chat-emoji-abas { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid #e8ecf2; overflow-x: auto; }
+.chat-emoji-aba {
+  flex: 0 0 auto; width: 38px; height: 36px; border: 0; border-radius: 8px;
+  background: transparent; font-size: 1.2rem; cursor: pointer; opacity: .6;
+}
+.chat-emoji-aba:hover { background: #f0f3f9; opacity: 1; }
+.chat-emoji-aba.ativa { background: #e8eefc; opacity: 1; }
+.chat-emoji-grade {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+  padding: 8px; max-height: 210px; overflow-y: auto;
+}
+.chat-emoji-item {
+  height: 34px; border: 0; border-radius: 8px; background: transparent; font-size: 1.35rem; cursor: pointer;
+}
+.chat-emoji-item:hover { background: #f0f3f9; }

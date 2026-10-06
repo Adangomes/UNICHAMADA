@@ -26,7 +26,7 @@
 
   // Item para o menu de contexto (ou null se não puder editar)
   function itemMenu(msg, eu, aoEscolher) {
-    return podeEditar(msg, eu) ? { icone: '', rotulo: 'Editar', acao: aoEscolher } : null;
+    return podeEditar(msg, eu) ? { icone: '✏️', rotulo: 'Editar', acao: aoEscolher } : null;
   }
 
   // Abre a edição dentro do balão. Resolve com a mensagem atualizada, ou null se cancelou.
@@ -75,7 +75,7 @@
         if (!novo) { erro.textContent = 'A mensagem não pode ficar vazia.'; campo.focus(); return; }
         if (novo === msg.conteudo) return sair(null);
         salvar.disabled = true; cancelar.disabled = true; salvar.textContent = 'Salvando...';
-        const atualizada = await window.ChatDados.editarMensagem(msg.id, eu, novo);
+        const atualizada = await window.ChatDados.editarMensagem(msg, eu, novo);
         if (!atualizada) {
           salvar.disabled = false; cancelar.disabled = false; salvar.textContent = 'Salvar';
           erro.textContent = 'Não foi possível salvar. Tente de novo.';

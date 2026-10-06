@@ -796,3 +796,12 @@ Todas as mudanças relevantes do UniChamada (Sistema Acadêmico).
 
 - Documentar as tabelas `chat_conversas` e `chat_mensagens` no `banco-de-dados/DOC_BANCO.md`.
 - Migrar o login do sistema para o Supabase Auth e restringir as policies por usuário.
+
+
+
+## [Unreleased] - 2026-10-06
+
+### Added / Fixed
+- **Padronização Visual de Botões e Cores:** 
+  - Ajustado o botão primário do módulo de **Notificações** (`notificacao.js` e `notificacao.css`) para herdar o tom de azul oficial do design system (`#1F2D50`), alinhando-se perfeitamente com a tela de Matrículas.
+  - Atualizadas as variáveis de cor e hovers dos chats de **Coordenador** (`coordenador.css`) e de **Professor** (`professor.css`) para utilizarem a mesma paleta oficial do sistema.

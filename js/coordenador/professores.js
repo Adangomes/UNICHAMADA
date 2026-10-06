@@ -10,7 +10,7 @@ async function renderSecaoProfessores(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Professores']),
-      criarElemento('p', {}, ['Cadastre os professores. Eles acessam o próprio painel com RA + e-mail.'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

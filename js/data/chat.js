@@ -14,6 +14,41 @@
   let chavePresenca = null;
   let aoMudarPresenca = null;
   const cacheUrls = new Map();              // path -> { url, expira }
+  const cacheArquivos = new Map();          // path -> URL local do arquivo já decifrado
+  let fila = Promise.resolve();             // processa os eventos do tempo real em ordem
+
+  // ---------------------------------------------------------
+  // CRIPTOGRAFIA (js/chat/cripto/criptografia.js)
+  // Tudo que sai deste arquivo para a tela já vem decifrado; tudo que vai para o banco vai cifrado.
+  // ---------------------------------------------------------
+  const cripto = () => (window.ChatCripto && window.ChatCripto.ativa() ? window.ChatCripto : null);
+  const criptografiaAtiva = () => !!cripto();
+
+  async function protegerTexto(texto, conversaId) {
+    const c = cripto();
+    return c ? c.cifrar(texto, conversaId) : texto;
+  }
+
+  // Decifra o texto e o nome do arquivo de uma mensagem vinda do banco
+  async function prepararMensagem(m) {
+    if (!m) return m;
+    const r = { ...m };
+    const c = window.ChatCripto;
+    if (c) {
+      if (c.ehCifrado(r.conteudo)) r.conteudo = await c.decifrar(r.conteudo, r.conversa_id);
+      r.arquivo_cifrado = c.ehCifrado(r.arquivo_nome);       // arquivos antigos (sem cifra) continuam abrindo
+      if (r.arquivo_cifrado) r.arquivo_nome = await c.decifrar(r.arquivo_nome, r.conversa_id);
+    }
+    return r;
+  }
+
+  // Texto curto para a lista de contatos
+  function previaDe(m) {
+    if (m.apagada) return 'Mensagem apagada';
+    if (m.tipo === 'imagem') return '📷 Foto';
+    if (m.tipo === 'arquivo') return '📎 ' + (m.arquivo_nome || 'Arquivo');
+    return m.conteudo;
+  }
 
   // ---------------------------------------------------------
   // IDENTIDADE
@@ -89,6 +124,19 @@
       });
     }
 
+    // Última mensagem de cada conversa (view chat_ultimas_mensagens): decifra e vira a prévia da lista
+    if (ids.length) {
+      const ult = await db().from('chat_ultimas_mensagens').select('*').in('conversa_id', ids);
+      if (ult.error) {
+        console.warn('ChatDados: rode o chat-cripto.sql no Supabase (view das últimas mensagens).', ult.error.message);
+      } else {
+        for (const linha of ult.data || []) {
+          const conv = conversas.find((x) => x.id === linha.conversa_id);
+          if (conv) conv.ultima_mensagem = previaDe(await prepararMensagem(linha));
+        }
+      }
+    }
+
     const montar = (lista, aba) => (lista || [])
       .filter((p) => !(aba === eu.papel && String(p.id) === String(eu.id)))     // não aparece conversando comigo mesmo
       .map((p) => {
@@ -142,15 +190,18 @@
     const { data, error } = await db().from('chat_mensagens').select('*')
       .eq('conversa_id', conversaId).order('created_at', { ascending: true }).limit(300);
     if (error) { console.error('ChatDados: erro ao listar mensagens', error); return []; }
-    return data || [];
+    return Promise.all((data || []).map(prepararMensagem));
   }
 
   async function enviarMensagem(conversaId, eu, texto) {
+    let conteudo;
+    try { conteudo = await protegerTexto(texto, conversaId); }
+    catch (e) { console.error('ChatDados: erro ao cifrar', e); return null; }
     const { data, error } = await db().from('chat_mensagens')
-      .insert({ conversa_id: conversaId, remetente_tipo: eu.papel, remetente_id: String(eu.id), conteudo: texto })
+      .insert({ conversa_id: conversaId, remetente_tipo: eu.papel, remetente_id: String(eu.id), conteudo })
       .select().single();
     if (error) { console.error('ChatDados: erro ao enviar', error); return null; }
-    return data;
+    return prepararMensagem(data);
   }
 
   // Marca como lidas as mensagens da conversa que NÃO são minhas
@@ -160,13 +211,16 @@
   }
 
   // Edita o texto (só o autor, só texto, só se não foi apagada)
-  async function editarMensagem(id, eu, texto) {
+  async function editarMensagem(msg, eu, texto) {
+    let conteudo;
+    try { conteudo = await protegerTexto(texto, msg.conversa_id); }
+    catch (e) { console.error('ChatDados: erro ao cifrar', e); return null; }
     const { data, error } = await db().from('chat_mensagens')
-      .update({ conteudo: texto, editada_em: new Date().toISOString() })
-      .eq('id', id).eq('remetente_tipo', eu.papel).eq('remetente_id', String(eu.id)).eq('apagada', false).eq('tipo', 'texto')
+      .update({ conteudo, editada_em: new Date().toISOString() })
+      .eq('id', msg.id).eq('remetente_tipo', eu.papel).eq('remetente_id', String(eu.id)).eq('apagada', false).eq('tipo', 'texto')
       .select().single();
     if (error) { console.error('ChatDados: erro ao editar', error); return null; }
-    return data;
+    return prepararMensagem(data);
   }
 
   // Apaga a mensagem: limpa o conteúdo no banco, remove o arquivo do Storage e deixa
@@ -181,7 +235,7 @@
       .eq('id', msg.id).eq('remetente_tipo', eu.papel).eq('remetente_id', String(eu.id))
       .select().single();
     if (error) { console.error('ChatDados: erro ao apagar mensagem', error); return null; }
-    return data;
+    return prepararMensagem(data);
   }
 
   // ---------------------------------------------------------
@@ -197,15 +251,29 @@
 
   // dados: { blob, nome, mime, tamanho, tipo: 'imagem'|'arquivo', unica }
   async function enviarAnexo(conversaId, eu, dados) {
-    const caminho = `${conversaId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${nomeSeguro(dados.nome)}`;
-    const up = await db().storage.from(BUCKET).upload(caminho, dados.blob, { contentType: dados.mime, upsert: false });
+    const c = cripto();
+    let corpo = dados.blob, tipoEnvio = dados.mime, nomeGravado = dados.nome;
+    // Cifrado: o arquivo vira bytes embaralhados, o nome também, e o caminho não revela o nome
+    if (c) {
+      try {
+        corpo = new Blob([await c.cifrarBytes(await dados.blob.arrayBuffer(), conversaId)], { type: 'application/octet-stream' });
+        tipoEnvio = 'application/octet-stream';
+        nomeGravado = await c.cifrar(dados.nome, conversaId);
+      } catch (e) {
+        console.error('ChatDados: erro ao cifrar arquivo', e);
+        throw new Error('Não foi possível proteger o arquivo.');
+      }
+    }
+    const sufixo = c ? '.bin' : '-' + nomeSeguro(dados.nome);
+    const caminho = `${conversaId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${sufixo}`;
+    const up = await db().storage.from(BUCKET).upload(caminho, corpo, { contentType: tipoEnvio, upsert: false });
     if (up.error) {
       console.error('ChatDados: erro no upload', up.error);
       throw new Error('Não foi possível enviar o arquivo.');
     }
     const { data, error } = await db().from('chat_mensagens').insert({
       conversa_id: conversaId, remetente_tipo: eu.papel, remetente_id: String(eu.id), tipo: dados.tipo, conteudo: '',
-      arquivo_path: caminho, arquivo_nome: dados.nome, arquivo_mime: dados.mime,
+      arquivo_path: caminho, arquivo_nome: nomeGravado, arquivo_mime: dados.mime,
       arquivo_tamanho: dados.tamanho, visualizacao_unica: !!dados.unica
     }).select().single();
     if (error) {
@@ -213,7 +281,7 @@
       await db().storage.from(BUCKET).remove([caminho]);
       throw new Error('Não foi possível enviar o arquivo.');
     }
-    return data;
+    return prepararMensagem(data);
   }
 
   // URL temporária (1 h) para exibir/baixar um anexo
@@ -229,6 +297,25 @@
     return data.signedUrl;
   }
 
+  // Endereço para exibir/baixar um anexo. Arquivo cifrado: baixa, decifra aqui no navegador e
+  // devolve um endereço local (blob:). Arquivo antigo (sem cifra): link temporário do Storage.
+  async function urlDoArquivo(msg, paraBaixar) {
+    if (!msg.arquivo_path) return null;
+    if (!msg.arquivo_cifrado) return urlAssinada(msg.arquivo_path, paraBaixar ? msg.arquivo_nome : undefined);
+    if (cacheArquivos.has(msg.arquivo_path)) return cacheArquivos.get(msg.arquivo_path);
+    try {
+      const baixado = await db().storage.from(BUCKET).download(msg.arquivo_path);
+      if (baixado.error || !baixado.data) throw baixado.error || new Error('arquivo não encontrado');
+      const claro = await window.ChatCripto.decifrarBytes(await baixado.data.arrayBuffer(), msg.conversa_id);
+      const url = URL.createObjectURL(new Blob([claro], { type: msg.arquivo_mime || 'application/octet-stream' }));
+      cacheArquivos.set(msg.arquivo_path, url);
+      return url;
+    } catch (e) {
+      console.error('ChatDados: erro ao abrir arquivo', e);
+      return null;
+    }
+  }
+
   // Foto de visualização única: só o destinatário, só uma vez.
   // Baixa o arquivo, apaga do Storage na hora e devolve o Blob (ou null se já foi vista).
   async function abrirVisualizacaoUnica(msg, eu) {
@@ -240,17 +327,30 @@
       .select().single();
     if (error || !data || !data.arquivo_path) return null;
 
+    const desfazer = () => db().from('chat_mensagens').update({ visualizada_em: null }).eq('id', msg.id);
     const caminho = data.arquivo_path;
     const baixado = await db().storage.from(BUCKET).download(caminho);
     if (baixado.error || !baixado.data) {
-      await db().from('chat_mensagens').update({ visualizada_em: null }).eq('id', msg.id);   // devolve a chance
+      await desfazer();                                             // devolve a chance de abrir
       console.error('ChatDados: erro ao baixar foto', baixado.error);
       return null;
     }
-    await db().storage.from(BUCKET).remove([caminho]);
+
+    let blob = baixado.data;
+    const c = window.ChatCripto;
+    if (c && c.ehCifrado(data.arquivo_nome)) {
+      try {
+        const claro = await c.decifrarBytes(await blob.arrayBuffer(), data.conversa_id);
+        blob = new Blob([claro], { type: data.arquivo_mime || 'image/jpeg' });
+      } catch (e) {
+        await desfazer();
+        console.error('ChatDados: erro ao decifrar foto', e);
+        return null;
+      }
+    }
+    await db().storage.from(BUCKET).remove([caminho]);              // some do servidor na hora
     await db().from('chat_mensagens').update({ arquivo_path: null }).eq('id', msg.id);
-    cacheUrls.forEach((_, k) => { if (k.startsWith(caminho + '|')) cacheUrls.delete(k); });
-    return baixado.data;
+    return blob;
   }
 
   // ---------------------------------------------------------
@@ -261,13 +361,14 @@
   function assinar(eu, handlers) {
     cancelar();
     const h = handlers || {};
+    const rodar = (fn) => { fila = fila.then(fn).catch((e) => console.error('ChatDados:', e)); };
     canal = db().channel('chat-' + eu.papel + '-' + eu.id)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_mensagens' },
-        (p) => h.onInsert && h.onInsert(p.new))
+        (p) => rodar(async () => { if (h.onInsert) await h.onInsert(await prepararMensagem(p.new)); }))
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'chat_mensagens' },
-        (p) => h.onUpdate && h.onUpdate(p.new))
+        (p) => rodar(async () => { if (h.onUpdate) await h.onUpdate(await prepararMensagem(p.new)); }))
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'chat_conversas' },
-        (p) => h.onConversaApagada && h.onConversaApagada(p.old))
+        (p) => rodar(async () => { if (h.onConversaApagada) await h.onConversaApagada(p.old); }))
       .subscribe();
   }
 
@@ -304,10 +405,32 @@
     chavePresenca = null;
   }
 
+  // Cifra as mensagens de TEXTO antigas que ainda estão em texto puro no banco.
+  // Rode UMA vez, no console do navegador, logado:  await ChatDados.migrarMensagensAntigas()
+  // (arquivos antigos continuam como estão; só as novas fotos/arquivos saem cifradas)
+  async function migrarMensagensAntigas() {
+    const c = cripto();
+    if (!c) throw new Error('Criptografia inativa: carregue js/chat/cripto/criptografia.js (precisa de https).');
+    let total = 0;
+    for (;;) {
+      const { data, error } = await db().from('chat_mensagens').select('id, conversa_id, conteudo')
+        .eq('tipo', 'texto').eq('apagada', false).neq('conteudo', '').not('conteudo', 'like', 'enc:%').limit(100);
+      if (error) throw error;
+      if (!data || !data.length) break;
+      for (const m of data) {
+        const novo = await c.cifrar(m.conteudo, m.conversa_id);
+        const r = await db().from('chat_mensagens').update({ conteudo: novo }).eq('id', m.id);
+        if (r.error) throw r.error;
+        total++;
+      }
+    }
+    return total;
+  }
+
   window.ChatDados = {
     ehMinha, avisoBanco: () => avisoBanco, listarContatos, garantirConversa, apagarConversa,
     listarMensagens, enviarMensagem, marcarComoLidas, editarMensagem, apagarMensagem,
-    enviarAnexo, urlAssinada, abrirVisualizacaoUnica,
+    enviarAnexo, urlAssinada, urlDoArquivo, abrirVisualizacaoUnica, migrarMensagensAntigas, criptografiaAtiva,
     assinar, cancelar, iniciarPresenca, pararPresenca
   };
 })();

@@ -43,3 +43,9 @@ Supabase ── PostgreSQL (tabelas + RLS) ── Realtime (lista de presença a
 - **n8n para e-mail:** o front-end não envia e-mail; apenas grava a notificação, e a automação cuida do envio.
 
 Detalhes do fluxo em `skills/unichamada/references/`.
+
+
+
+
+### Padrões de Interface (UI/UX)
+- **Cores Oficiais:** O sistema utiliza o tom principal de azul escuro (`#1F2D50`) padronizado em botões primários e elementos de destaque (como chats e painéis de notificação) para manter a consistência visual em todos os módulos (Matrículas, Notificações, Chat Coordenador e Chat Professor).

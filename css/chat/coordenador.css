@@ -139,3 +139,10 @@
   padding: 3px 9px; border-radius: 999px; background: #e8f7ee; color: #15803d;
   font-size: .72rem; font-weight: 600; white-space: nowrap;
 }
+
+
+/* Padronização de hover e botões do chat */
+.chat-coordenador .chat-enviar:hover:not(:disabled) {
+  background-color: var(--tinta-clara, #3b4d7c) !important;
+  filter: none;
+}

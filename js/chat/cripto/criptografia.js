@@ -102,7 +102,7 @@
       return td.decode(await decifrarBytes(deBase64(valor.slice(PREFIXO.length)), conversaId));
     } catch (e) {
       console.warn('ChatCripto: não foi possível decifrar uma mensagem', e);
-      return '🔒 Mensagem que não pôde ser aberta';
+      return 'Mensagem que não pôde ser aberta';
     }
   }
 

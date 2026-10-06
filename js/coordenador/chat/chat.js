@@ -1,7 +1,7 @@
 /* =========================================================
    UniChamada - Chat do Coordenador (interface)
    Identidade: login do sistema (auth.js) | Dados: js/data/chat.js
-   Conversa com professores E coordenadores (abas), com busca e fechar chat.
+   Conversa com professores E coordenadores (abas), com seleção de contatos e lista separada de conversas.
    Uso: iniciarChatCoordenador('chat-coordenador-root')
    ========================================================= */
 (function () {
@@ -23,6 +23,12 @@
   let mensagens = new Map();
   let online = new Set();
   let timerRecarga = null;
+  let seletorAberto = false;
+  let selecionados = new Set();
+  let ocultos = new Set();
+  let primeiraCarga = true;
+  let versaoAbertura = 0;
+  const podeRemover = () => window.ChatCoordenadorConfig?.permitirRemoverDaLista !== false;
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -50,13 +56,15 @@
           <h2 class="chat-titulo">Chat</h2>
           <div style="display: flex; gap: 6px; align-items: center;">
             <span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span>
-            <button class="chat-sair chat-btn-fechar-painel" type="button" title="Fechar chat">✕ Fechar</button>
+
           </div>
         </div>
         <div class="chat-tabs"></div>
-        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-          <input class="chat-busca" type="search" autocomplete="off" style="flex: 1; margin-bottom: 0;">
+        <div class="chat-seletor-opcoes" hidden>
+          <input class="chat-busca" type="search" autocomplete="off" aria-label="Pesquisar contatos">
+          <ul class="chat-lista-opcoes"></ul>
         </div>
+        <p class="chat-rotulo-conversas">Conversas</p>
         <ul class="chat-lista"></ul>
       </aside>
       <section class="chat-painel">
@@ -75,10 +83,16 @@
     inputBusca.placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
     inputBusca.addEventListener('input', renderLista);
 
-    // Botão para fechar/esconder o chat inteiro da tela
-    $('.chat-btn-fechar-painel').addEventListener('click', () => {
-      raiz.style.display = 'none';
-    });
+    instalarEstilos();
+    raiz.onclick = (e) => {
+      if (!e.target.closest('.chat-tabs, .chat-seletor-opcoes') && seletorAberto) {
+        seletorAberto = false;
+        renderAbas();
+      }
+    };
+    raiz.onkeydown = (e) => {
+      if (e.key === 'Escape') { seletorAberto = false; renderAbas(); }
+    };
 
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
     $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
@@ -86,20 +100,67 @@
     });
   }
 
+  function instalarEstilos() {
+    if (document.getElementById('chat-seletores-estilo')) return;
+    const estilo = document.createElement('style');
+    estilo.id = 'chat-seletores-estilo';
+    estilo.textContent = `
+      .chat-coordenador { --chat-fundo: #fff; --chat-texto: #25334b;
+        --chat-borda: #dce1e7; --chat-selecao: #e8f1fa; }
+      .chat-coordenador [hidden] { display:none !important; }
+      .chat-coordenador .chat-seletor-opcoes { padding:8px; margin-top:8px;
+        border:1px solid var(--chat-borda); border-radius:8px;
+        background:var(--chat-fundo); }
+      .chat-coordenador .chat-busca { width:100%; box-sizing:border-box; }
+      .chat-coordenador .chat-lista-opcoes { list-style:none; padding:0;
+        margin:0; max-height:240px; overflow-y:auto; }
+      .chat-coordenador .chat-opcao, .chat-coordenador .chat-abrir-contato {
+        display:flex; align-items:center; gap:10px; width:100%; padding:10px;
+        border:0; background:transparent; color:inherit; font:inherit;
+        cursor:pointer; text-align:left; min-width:0; }
+      .chat-coordenador .chat-opcao:hover,
+      .chat-coordenador .chat-opcao.selecionado { background:var(--chat-selecao); }
+      .chat-coordenador .chat-opcao-nome { flex:1; overflow-wrap:anywhere; }
+      .chat-coordenador .chat-rotulo-conversas { margin:16px 0 8px; font-size:12px; }
+      .chat-coordenador .chat-contato { display:flex; align-items:center; }
+      .chat-coordenador .chat-abrir-contato { flex:1; }
+      .chat-coordenador .chat-contato-info { flex:1; min-width:0; }
+      .chat-coordenador .chat-contato-info strong,
+      .chat-coordenador .chat-contato-info small { display:block; overflow-wrap:anywhere; }
+      .chat-coordenador .chat-acoes { position:relative; flex-shrink:0; }
+      .chat-coordenador .chat-mais { padding:6px 9px; cursor:pointer;
+        border:1px solid var(--chat-borda); border-radius:5px;
+        background:var(--chat-fundo); color:var(--chat-texto); }
+      .chat-coordenador .chat-menu-local { position:absolute; right:0; top:100%;
+        z-index:5; min-width:155px; padding:4px; border-radius:6px;
+        background:var(--chat-fundo); border:1px solid var(--chat-borda); }
+      .chat-coordenador .chat-remover { width:100%; padding:9px; cursor:pointer;
+        border:0; background:transparent; color:var(--chat-texto); font:inherit; }
+      .chat-coordenador button:focus-visible { outline:2px solid var(--chat-texto); outline-offset:2px; }
+    `;
+    document.head.appendChild(estilo);
+  }
+
   function trocarAba(aba) {
+    if (!ABAS.includes(aba)) return;
+    seletorAberto = abaAtiva === aba ? !seletorAberto : true;
     abaAtiva = aba;
-    $('.chat-busca').value = ''; // Limpa a busca ao trocar de aba para mostrar todos da lista$('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    $('.chat-busca').value = '';
+    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
     renderLista();
+    if (seletorAberto) $('.chat-busca').focus();
   }
 
   function renderAbas() {
     const caixa = $('.chat-tabs');
     caixa.innerHTML = ABAS.map((a) => {
       const n = contatos.filter((c) => c.aba === a).reduce((soma, c) => soma + (c.naoLidas || 0), 0);
-      return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}">` +
-             `${ROTULO[a]}${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
+      return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}"
+        aria-expanded="${a === abaAtiva && seletorAberto}">${ROTULO[a]} ⌄
+        ${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
     }).join('');
-    caixa.querySelectorAll('.chat-tab').forEach((b) => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+    caixa.querySelectorAll('.chat-tab').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); trocarAba(b.dataset.aba); }));
+    $('.chat-seletor-opcoes').hidden = !seletorAberto;
   }
 
   function avatarHtml(c) {
@@ -110,49 +171,67 @@
   function renderLista() {
     renderAbas();
     const termo = semAcento($('.chat-busca').value.trim());
+    const lista = contatos.filter((c) => c.aba === abaAtiva && semAcento(c.nome).includes(termo))
+      .sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const opcoes = $('.chat-lista-opcoes');
+    opcoes.innerHTML = lista.length ? lista.map((c) => `<li>
+      <button class="chat-opcao ${selecionados.has(chave(c)) ? 'selecionado' : ''}" type="button"
+        data-chave="${esc(chave(c))}" aria-label="Selecionar ${esc(c.nome)}">
+        ${avatarHtml(c)}<span class="chat-opcao-nome">${esc(c.nome)}</span>
+        ${selecionados.has(chave(c)) ? '<span aria-hidden="true">✓</span>' : ''}</button></li>`).join('')
+      : '<li class="chat-sem-contatos">Nenhum contato encontrado</li>';
+    opcoes.querySelectorAll('.chat-opcao').forEach((b) => b.addEventListener('click', () => {
+      const c = contatos.find((c) => chave(c) === b.dataset.chave);
+      if (!c) return;
+      selecionados.add(chave(c)); ocultos.delete(chave(c)); seletorAberto = false;
+      renderLista(); abrirConversa(c).catch(mostrarErro);
+    }));
     const ul = $('.chat-lista');
+    const conversas = contatos.filter((c) => selecionados.has(chave(c)) && !ocultos.has(chave(c)));
     const aviso = Dados.avisoBanco ? Dados.avisoBanco() : '';
-    const avisoHtml = aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '';
-    
-    const daAba = contatos.filter((c) => c.aba === abaAtiva);
-    let lista = daAba;
-    
-    if (termo) {
-      lista = daAba.filter((c) => semAcento(c.nome).includes(termo));
-      const comeca = (c) => semAcento(c.nome).split(/\s+/).some((p) => p.startsWith(termo)) ? 0 : 1;
-      lista = lista.map((c, i) => ({ c, i })).sort((x, y) => comeca(x.c) - comeca(y.c) || x.i - y.i).map((x) => x.c);
-    }
-
-    if (!lista.length) {
-      const outra = ABAS.find((a) => a !== abaAtiva);
-      const naOutra = termo ? contatos.filter((c) => c.aba === outra && semAcento(c.nome).includes(termo)).length : 0;
-      ul.innerHTML = avisoHtml + `<li class="chat-sem-contatos">Nenhum ${ROTULO_SING[abaAtiva].toLowerCase()} encontrado` +
-        (naOutra ? `<br><button class="chat-ver-outra" type="button">Ver em ${ROTULO[outra]} (${naOutra})</button>` : '') + '</li>';
-      const b = ul.querySelector('.chat-ver-outra');
-      if (b) b.addEventListener('click', () => trocarAba(outra));
-      return;
-    }
-
-    ul.innerHTML = avisoHtml + lista.map((c) => `
-      <li class="chat-contato ${ativo && chave(ativo) === chave(c) ? 'ativo' : ''}" data-chave="${esc(chave(c))}">
-        ${avatarHtml(c)}
-        <div class="chat-contato-info">
-          <strong>${esc(c.nome)}</strong>
-          <small>${esc(c.conversa?.ultima_mensagem || 'Nenhuma mensagem ainda')}</small>
-        </div>
-        ${c.naoLidas ? `<span class="chat-badge">${c.naoLidas}</span>` : ''}
-      </li>`).join('');
-    
+    ul.innerHTML = (aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '') +
+      (conversas.length ? conversas.map((c) => `
+        <li class="chat-contato ${ativo && chave(ativo) === chave(c) ? 'ativo' : ''}" data-chave="${esc(chave(c))}">
+          <button class="chat-abrir-contato" type="button" aria-label="Conversar com ${esc(c.nome)}">
+            ${avatarHtml(c)}<span class="chat-contato-info"><strong>${esc(c.nome)}</strong>
+              <small>${esc(c.conversa?.ultima_mensagem || 'Nenhuma mensagem ainda')}</small></span>
+            ${c.naoLidas ? `<span class="chat-badge">${c.naoLidas}</span>` : ''}</button>
+          ${podeRemover() ? `<div class="chat-acoes">
+            <button class="chat-mais" type="button" aria-label="Opções de ${esc(c.nome)}" aria-expanded="false">⋯</button>
+            <div class="chat-menu-local" hidden><button class="chat-remover" type="button">Remover da lista</button></div>
+          </div>` : ''}</li>`).join('')
+        : '<li class="chat-sem-contatos">Nenhuma conversa selecionada</li>');
     ul.querySelectorAll('.chat-contato').forEach((li) => {
-      const contato = contatos.find((c) => chave(c) === li.dataset.chave);
-      li.addEventListener('click', () => {
+      const c = contatos.find((c) => chave(c) === li.dataset.chave);
+      if (!c) return;
+      li.querySelector('.chat-abrir-contato').addEventListener('click', () => {
         if (Menu() && Menu().recemAberto()) return;
-        abrirConversa(contato);
+        abrirConversa(c).catch(mostrarErro);
       });
-      if (Menu() && Excluir()) {
-        Menu().vincular(li, () => [Excluir().itemMenuConversa(contato, () => apagarConversa(contato))]);
-      }
+      li.querySelector('.chat-mais')?.addEventListener('click', () => {
+        const menu = li.querySelector('.chat-menu-local');
+        const abrir = menu.hidden;
+        ul.querySelectorAll('.chat-menu-local').forEach((m) => m.hidden = true);
+        ul.querySelectorAll('.chat-mais').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+        menu.hidden = !abrir;
+        li.querySelector('.chat-mais').setAttribute('aria-expanded', String(abrir));
+      });
+      li.querySelector('.chat-remover')?.addEventListener('click', () => removerDaLista(c));
+      // O menu de contexto original continua disponível para apagar o histórico.
+      if (Menu() && Excluir()) Menu().vincular(li, () => [Excluir().itemMenuConversa(c, () => apagarConversa(c))]);
     });
+  }
+
+  function removerDaLista(c) {
+    if (!c) return;
+    selecionados.delete(chave(c)); ocultos.add(chave(c));
+    if (ativo && chave(ativo) === chave(c)) limparPainel();
+    renderLista();
+  }
+
+  function mostrarErro(e) {
+    console.error('Chat: erro ao abrir conversa', e);
+    $('.chat-mensagens').innerHTML = '<p class="chat-aviso">Não foi possível carregar a conversa. Selecione o contato para tentar novamente.</p>';
   }
 
   function atualizarCabecalho() {
@@ -230,6 +309,7 @@
   }
 
   function limparPainel() {
+    versaoAbertura += 1;
     ativo = null;
     mensagens = new Map();
     $('.chat-cabecalho').innerHTML = '<span class="chat-vazio-titulo">Selecione uma conversa</span>';
@@ -248,6 +328,10 @@
     contatos.sort((a, b) =>
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
+    if (primeiraCarga) {
+      contatos.filter((c) => c.conversa).forEach((c) => selecionados.add(chave(c)));
+      primeiraCarga = false;
+    }
     if (ativo) {
       const atual = contatos.find((c) => chave(c) === chave(ativo));
       if (atual && atual.conversa) ativo = atual;
@@ -264,26 +348,28 @@
 
   async function abrirConversa(contato) {
     if (!contato) return;
+    limparPainel();
+    const versao = versaoAbertura;
     ativo = contato;
-    if (!contato.conversa) contato.conversa = await Dados.garantirConversa(eu, contato);
-    if (!contato.conversa) return;
-
-    atualizarCabecalho();
-    $('.chat-input').disabled = false;
-    $('.chat-enviar').disabled = false;
-    $('.chat-btn-anexo').disabled = !Anexos();
-    $('.chat-btn-emoji').disabled = !Emojis();$('.chat-input').focus();
-
-    const lista = await Dados.listarMensagens(contato.conversa.id);
-    mensagens = new Map();
-    const area = $('.chat-mensagens');
-    area.innerHTML = '';
-    if (!lista.length) area.innerHTML = '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
-    lista.forEach(adicionarMensagem);
-    rolarFim();
-    await Dados.marcarComoLidas(contato.conversa.id, eu);
-    contato.naoLidas = 0;
-    renderLista();
+    selecionados.add(chave(contato)); ocultos.delete(chave(contato));
+    atualizarCabecalho(); renderLista();
+    $('.chat-mensagens').innerHTML = '<p class="chat-vazio">Carregando...</p>';
+    try {
+      if (!contato.conversa) contato.conversa = await Dados.garantirConversa(eu, contato);
+      if (versao !== versaoAbertura) return;
+      if (!contato.conversa) throw new Error('Conversa não disponível');
+      const lista = await Dados.listarMensagens(contato.conversa.id);
+      if (versao !== versaoAbertura) return;
+      mensagens = new Map();
+      $('.chat-mensagens').innerHTML = lista.length ? '' : '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
+      lista.forEach(adicionarMensagem); rolarFim();
+      $('.chat-input').disabled = false; $('.chat-enviar').disabled = false;
+      $('.chat-btn-anexo').disabled = !Anexos(); $('.chat-btn-emoji').disabled = !Emojis();
+      $('.chat-input').focus();
+      await Dados.marcarComoLidas(contato.conversa.id, eu);
+      if (versao !== versaoAbertura) return;
+      contato.naoLidas = 0; renderLista();
+    } catch (e) { if (versao === versaoAbertura) mostrarErro(e); }
   }
 
   async function enviar() {
@@ -336,6 +422,7 @@
   async function apagarConversa(contato) {
     const ok = await Excluir().apagarConversa(contato);
     if (!ok) return;
+    selecionados.delete(chave(contato)); ocultos.add(chave(contato));
     if (ativo && chave(ativo) === chave(contato)) limparPainel();
     await carregarContatos();
   }
@@ -386,6 +473,25 @@
     });
   }
 
+  // API: altera somente a lista local; não apaga mensagens no banco.
+  window.ChatCoordenador = {
+    removerDaLista(id, aba = 'professor') {
+      if (!raiz || !$('.chat-lista')) return;
+      removerDaLista(contatos.find((c) => String(c.id) === String(id) && c.aba === aba));
+    },
+    async selecionarContato(id, aba = 'professor') {
+      if (!raiz || !$('.chat-lista')) return;
+      const c = contatos.find((c) => String(c.id) === String(id) && c.aba === aba);
+      if (!c) return;
+      seletorAberto = false;
+      await abrirConversa(c);
+    },
+    listarSelecionados() {
+      return contatos.filter((c) => selecionados.has(chave(c)) && !ocultos.has(chave(c)))
+        .map((c) => ({ id:c.id, nome:c.nome, aba:c.aba }));
+    }
+  };
+
   window.iniciarChatCoordenador = async function (idContainer, usuario) {
     raiz = document.getElementById(idContainer || 'chat-coordenador-root');
     if (!raiz) { console.error('Chat: container não encontrado'); return; }
@@ -398,7 +504,10 @@
       raiz.innerHTML = '<p class="chat-vazio">Sessão não encontrada. Entre no sistema novamente.</p>';
       return;
     }
+    clearTimeout(timerRecarga);
     ativo = null; contatos = []; mensagens = new Map(); abaAtiva = ABAS[0];
+    selecionados = new Set(); ocultos = new Set(); primeiraCarga = true;
+    seletorAberto = false; versaoAbertura += 1;
     await abrirChat();
   };
 })();

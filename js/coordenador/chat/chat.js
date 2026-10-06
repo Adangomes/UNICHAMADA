@@ -48,7 +48,7 @@
     raiz.classList.add('chat-app', 'chat-' + PAPEL);
     raiz.innerHTML = `
       <aside class="chat-lateral">
-        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2></div>
+        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco">🔒 Criptografado</span></div>
         <div class="chat-tabs"></div>
         <input class="chat-busca" type="search" autocomplete="off">
         <ul class="chat-lista"></ul>
@@ -59,10 +59,11 @@
         <div class="chat-entrada">
           <button class="chat-icone-btn chat-btn-anexo" type="button" title="Enviar foto ou arquivo" disabled>📎</button>
           <button class="chat-icone-btn chat-btn-emoji" type="button" title="Emojis" disabled>😊</button>
-          <input class="chat-input" type="text" placeholder="Digite sua mensagem..." autocomplete="off" disabled>
+          <input class="chat-input" type="text" maxlength="2000" placeholder="Digite sua mensagem..." autocomplete="off" disabled>
           <button class="chat-enviar" type="button" disabled>Enviar</button>
         </div>
       </section>`;
+    if (!Dados.criptografiaAtiva()) $('.chat-selo').remove();            // só mostra o cadeado se estiver mesmo cifrando
     $('.chat-busca').placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
     $('.chat-busca').addEventListener('input', renderLista);
     $('.chat-enviar').addEventListener('click', enviar);
@@ -168,7 +169,7 @@
 
     if (m.apagada) {
       balao.classList.add('apagada');
-      balao.textContent = '' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
+      balao.textContent = '🚫 ' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
     } else if (m.tipo !== 'texto' && Anexos()) {
       balao.classList.add('com-anexo');
       balao.appendChild(Anexos().criarCorpo(m, eu));

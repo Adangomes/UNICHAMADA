@@ -218,10 +218,12 @@ async function renderSecaoNotificacoes(container) {
     // -------------------------------------------------------------------------
     // 2.3 Botões de Ação
     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 2.3 Botões de Ação
+    // -------------------------------------------------------------------------
     const botaoEnvio = criarElemento('button', {
       type: 'submit',
-      class: 'btn-primario',
-      style: 'background-color: var(--tinta); color: white; border: none; padding: 11px 20px; font-weight: 500; border-radius: var(--raio-pequeno); cursor: pointer; font-size: 0.95em;'
+      class: 'btn-primario'
     }, [idEmEdicao ? 'Salvar Alterações' : 'Enviar notificação']);
 
     const botoes = criarElemento('div', { style: 'display: flex; gap: 0.6em; align-items: center;' }, [botaoEnvio]);
@@ -230,7 +232,6 @@ async function renderSecaoNotificacoes(container) {
       botoes.appendChild(criarElemento('button', {
         type: 'button',
         class: 'btn-secundario',
-        style: 'border: 1.5px solid var(--linha); background: transparent; color: var(--grafite); padding: 10px 16px; border-radius: var(--raio-pequeno); cursor: pointer;',
         onClick: async () => { 
           idEmEdicao = null; 
           await montarFormulario(); 

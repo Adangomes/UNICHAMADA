@@ -242,3 +242,28 @@ tbody td .btn-perigo:hover {
   background-color: var(--coral);
   color: #ffffff;
 }
+
+
+
+/* ==========================================================================
+   Correção de Cores e Hover para Botões e Itens de Ação
+   ========================================================================== */
+
+/* Cor normal padrão (Flecha Azul) */
+.btn-primario,
+button[type="submit"],
+.menu-lateral-item,
+.sidebar-item {
+  background-color: var(--tinta);
+  color: #ffffff;
+  transition: background-color 0.2s ease, transform 0.12s ease;
+}
+
+/* Efeito ao passar o mouse (Flecha Vermelha / Hover) */
+.btn-primario:hover,
+button[type="submit"]:hover,
+.menu-lateral-item:hover,
+.sidebar-item:hover {
+  background-color: var(--tinta-clara);
+  color: #ffffff;
+}

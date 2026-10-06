@@ -261,7 +261,7 @@ async function renderSecaoNotificacoes(container) {
       botaoEnvio.disabled = true;
       botaoEnvio.textContent = 'Enviando...';
 
-     let coordenadorId = null;
+      let coordenadorId = null;
       try {
         const coords = await dbListar('coordenadores');
         if (coords && coords.length > 0) coordenadorId = coords[0].id;
@@ -292,10 +292,14 @@ async function renderSecaoNotificacoes(container) {
         mostrarToast('Erro ao salvar notificação.', 'erro');
       } finally {
         botaoEnvio.disabled = false;
+        botaoEnvio.textContent = idEmEdicao ? 'Salvar Alterações' : 'Enviar notificação';
       }
 
       await montarFormulario();
       await montarLista();
+    });
+  } // <--- Faltava fechar esta chave da função montarFormulario()!
+
   // ---------------------------------------------------------------------------
   // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM
   // ---------------------------------------------------------------------------

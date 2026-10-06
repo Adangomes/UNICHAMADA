@@ -394,4 +394,4 @@
     ativo = null; contatos = []; mensagens = new Map(); abaAtiva = ABAS[0];
     await abrirChat();
   };
-})();
+})(); 

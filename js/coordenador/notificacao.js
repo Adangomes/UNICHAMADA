@@ -70,7 +70,7 @@ async function renderSecaoNotificacoes(container) {
     const form = criarElemento('form', { style: 'display: flex; flex-direction: column; gap: 1em;' });
     
     form.appendChild(
-      criarElemento('h3', { style: 'margin-bottom: 0.5em; font-size: 1.1em; color: #333;' }, [
+      criarElemento('h3', { style: 'margin-bottom: 0.5em; font-size: 1.1em; color: var(--tinta);' }, [
         idEmEdicao ? 'Editar notificação' : 'Nova notificação'
       ])
     );
@@ -81,7 +81,7 @@ async function renderSecaoNotificacoes(container) {
     const divProfessor = criarElemento('div', { class: 'campo seletor-professor-container' });
     divProfessor.appendChild(
       criarElemento('label', { 
-        style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' 
+        style: 'font-size: 0.75em; font-weight: bold; color: var(--grafite-suave); text-transform: uppercase; margin-bottom: 4px; display: block;' 
       }, ['PROFESSOR'])
     );
 
@@ -182,37 +182,37 @@ async function renderSecaoNotificacoes(container) {
     // 2.2 Campos do Formulário
     // -------------------------------------------------------------------------
     const campoTitulo = criarElemento('div', { class: 'campo' }, [
-      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['TÍTULO']),
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: var(--grafite-suave); text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['TÍTULO']),
       criarElemento('input', {
         type: 'text',
         name: 'titulo',
         placeholder: 'Digite o título da notificação',
         required: 'true',
         value: notificacao?.titulo || '',
-        style: 'width: 100%; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #fff;'
+        style: 'width: 100%; border: 1.5px solid var(--linha); padding: 10px; border-radius: var(--raio-pequeno); background: var(--papel-cartao); color: var(--grafite);'
       })
     ]);
 
     const campoMensagem = criarElemento('div', { class: 'campo' }, [
-      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['MENSAGEM']),
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: var(--grafite-suave); text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['MENSAGEM']),
       criarElemento('textarea', {
         name: 'mensagem',
         placeholder: 'Digite a mensagem da notificação',
         required: 'true',
         rows: '4',
-        style: 'width: 100%; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #fff; resize: vertical;'
+        style: 'width: 100%; border: 1.5px solid var(--linha); padding: 10px; border-radius: var(--raio-pequeno); background: var(--papel-cartao); color: var(--grafite); resize: vertical;'
       }, [notificacao?.mensagem || ''])
     ]);
 
     const campoAnexo = criarElemento('div', { class: 'campo' }, [
-      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #6d7b8d; text-transform: uppercase; margin-bottom: 2px; display: block;' }, ['ANEXAR FOTO OU VÍDEO']),
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: var(--grafite-suave); text-transform: uppercase; margin-bottom: 2px; display: block;' }, ['ANEXAR FOTO OU VÍDEO']),
       criarElemento('input', {
         type: 'file',
         name: 'anexo',
         accept: 'image/*,video/*',
-        style: 'font-size: 0.9em; margin-bottom: 2px;'
+        style: 'font-size: 0.9em; margin-bottom: 2px; color: var(--grafite);'
       }),
-      criarElemento('p', { style: 'font-size: 0.72em; color: #888; margin: 0;' }, [''])
+      criarElemento('p', { style: 'font-size: 0.72em; color: var(--grafite-suave); margin: 0;' }, [''])
     ]);
 
     // -------------------------------------------------------------------------
@@ -221,7 +221,7 @@ async function renderSecaoNotificacoes(container) {
     const botaoEnvio = criarElemento('button', {
       type: 'submit',
       class: 'btn-primario',
-      style: 'background-color: #3b5998; color: white; border: none; padding: 11px 20px; font-weight: 500; border-radius: 6px; cursor: pointer; font-size: 0.95em;'
+      style: 'background-color: var(--tinta); color: white; border: none; padding: 11px 20px; font-weight: 500; border-radius: var(--raio-pequeno); cursor: pointer; font-size: 0.95em;'
     }, [idEmEdicao ? 'Salvar Alterações' : 'Enviar notificação']);
 
     const botoes = criarElemento('div', { style: 'display: flex; gap: 0.6em; align-items: center;' }, [botaoEnvio]);
@@ -230,6 +230,7 @@ async function renderSecaoNotificacoes(container) {
       botoes.appendChild(criarElemento('button', {
         type: 'button',
         class: 'btn-secundario',
+        style: 'border: 1.5px solid var(--linha); background: transparent; color: var(--grafite); padding: 10px 16px; border-radius: var(--raio-pequeno); cursor: pointer;',
         onClick: async () => { 
           idEmEdicao = null; 
           await montarFormulario(); 
@@ -318,7 +319,7 @@ async function renderSecaoNotificacoes(container) {
     if (!notificacoes || notificacoes.length === 0) {
       areaLista.appendChild(
         criarElemento('div', {
-          style: 'border: 1px solid #e0e0e0; background-color: #fcfcfc; border-radius: 8px; padding: 2.5em; text-align: center; color: #888; font-size: 0.95em;'
+          style: 'border: 1px solid var(--linha); background-color: var(--papel-cartao); border-radius: var(--raio-pequeno); padding: 2.5em; text-align: center; color: var(--grafite-suave); font-size: 0.95em;'
         }, ['Nenhuma notificação enviada ainda.'])
       );
       return;
@@ -344,10 +345,10 @@ async function renderSecaoNotificacoes(container) {
     tabela.appendChild(
       criarElemento('thead', {}, [
         criarElemento('tr', {}, [
-          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Data']),
-          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Destinatários']),
-          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Título']),
-          criarElemento('th', { style: 'text-align: right; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Ações'])
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid var(--linha); color: var(--grafite);' }, ['Data']),
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid var(--linha); color: var(--grafite);' }, ['Destinatários']),
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid var(--linha); color: var(--grafite);' }, ['Título']),
+          criarElemento('th', { style: 'text-align: right; padding: 10px; border-bottom: 2px solid var(--linha); color: var(--grafite);' }, ['Ações'])
         ])
       ])
     );
@@ -378,9 +379,9 @@ async function renderSecaoNotificacoes(container) {
         : formatarDataBR(notif.data);
 
       corpo.appendChild(
-        criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
+        criarElemento('tr', { style: 'border-bottom: 1px solid var(--linha); color: var(--grafite);' }, [
           criarElemento('td', { style: 'padding: 10px;' }, [dataExibicao]),
-          criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
+          criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: var(--grafite-suave);' }, [txtDestinatarios]),
           criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]),
           criarElemento('td', { class: 'celula-acoes' }, [
             criarElemento('button', {

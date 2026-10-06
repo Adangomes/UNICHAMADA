@@ -1,6 +1,6 @@
 /* UniChamada - estilo do chat (coordenador) */
 .chat-coordenador {
-  --chat-azul: #1e3a8a;
+  --chat-azul: #1F2D50; /* Atualizado para o tom correto do design system */
   --chat-azul-claro: #e8eefc;
   --chat-cinza: #eceff3;
   --chat-borda: #dde2ea;

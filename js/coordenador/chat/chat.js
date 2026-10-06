@@ -37,6 +37,7 @@
 
   // Texto curto para a lista de contatos
   function previaDe(m) {
+    if (!m) return 'Nenhuma mensagem ainda';
     if (m.apagada) return 'Mensagem apagada';
     if (m.tipo === 'imagem') return '📷 Foto';
     if (m.tipo === 'arquivo') return '📎 ' + (m.arquivo_nome || 'Arquivo');
@@ -48,7 +49,7 @@
     raiz.classList.add('chat-app', 'chat-' + PAPEL);
     raiz.innerHTML = `
       <aside class="chat-lateral">
-        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title=""></span></div>
+        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span></div>
         <div class="chat-tabs"></div>
         <input class="chat-busca" type="search" autocomplete="off">
         <ul class="chat-lista"></ul>
@@ -68,7 +69,7 @@
     $('.chat-busca').addEventListener('input', renderLista);
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
     $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
-      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'], emoji));
+      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
     });
   }
 
@@ -81,7 +82,7 @@
   function renderAbas() {
     const caixa = $('.chat-tabs');
     caixa.innerHTML = ABAS.map((a) => {
-      const n = contatos.filter((c) => c.aba === a && c.conversa).reduce((soma, c) => soma + c.naoLidas, 0);
+      const n = contatos.filter((c) => c.aba === a).reduce((soma, c) => soma + (c.naoLidas || 0), 0);
       return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}">` +
              `${ROTULO[a]}${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
     }).join('');
@@ -100,8 +101,8 @@
     const aviso = Dados.avisoBanco ? Dados.avisoBanco() : '';
     const avisoHtml = aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '';
     
-    // Filtra apenas contatos que possuem conversa ativa na aba (estilo WhatsApp)
-    const daAba = contatos.filter((c) => c.aba === abaAtiva && c.conversa);
+    // Lista todos os contatos da aba (com ou sem conversa prévia)
+    const daAba = contatos.filter((c) => c.aba === abaAtiva);
     let lista = daAba;
     
     if (termo) {
@@ -112,8 +113,8 @@
 
     if (!lista.length) {
       const outra = ABAS.find((a) => a !== abaAtiva);
-      const naOutra = termo ? contatos.filter((c) => c.aba === outra && c.conversa && semAcento(c.nome).includes(termo)).length : 0;
-      ul.innerHTML = avisoHtml + `<li class="chat-sem-contatos">Nenhuma conversa em ${ROTULO[abaAtiva].toLowerCase()}` +
+      const naOutra = termo ? contatos.filter((c) => c.aba === outra && semAcento(c.nome).includes(termo)).length : 0;
+      ul.innerHTML = avisoHtml + `<li class="chat-sem-contatos">Nenhum ${ROTULO_SING[abaAtiva].toLowerCase()} encontrado` +
         (naOutra ? `<br><button class="chat-ver-outra" type="button">Ver em ${ROTULO[outra]} (${naOutra})</button>` : '') + '</li>';
       const b = ul.querySelector('.chat-ver-outra');
       if (b) b.addEventListener('click', () => trocarAba(outra));
@@ -145,7 +146,6 @@
   function atualizarCabecalho() {
     if (!ativo) return;
     const on = estaOnline(ativo);
-    // REMOVIDO O RÓTULO DO PAPEL AQUI: exibe apenas Online ou Offline
     $('.chat-cabecalho').innerHTML = `
       ${avatarHtml(ativo)}
       <div><strong>${esc(ativo.nome)}</strong>
@@ -340,10 +340,10 @@
     contato.conversa.ultima_mensagem_em = m.created_at;
     const minha = Dados.ehMinha(m, eu);
     if (ativo && ativo.conversa && ativo.conversa.id === m.conversa_id) {
-      adicionarMensagem(m);
+      passarMensagem: adicionarMensagem(m);
       if (!minha) Dados.marcarComoLidas(m.conversa_id, eu);
     } else if (!minha) {
-      contato.naoLidas += 1;
+      contato.naoLidas = (contato.naoLidas || 0) + 1;
     }
     renderLista();
   }
@@ -381,7 +381,7 @@
     raiz = document.getElementById(idContainer || 'chat-coordenador-root');
     if (!raiz) { console.error('Chat: container não encontrado'); return; }
     if (!Dados) {
-      raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
+      .raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
       return;
     }
     eu = usuario ? { ...usuario, papel: PAPEL } : usuarioDaSessao();

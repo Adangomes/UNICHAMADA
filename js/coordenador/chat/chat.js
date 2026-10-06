@@ -9,7 +9,7 @@
   'use strict';
 
   const PAPEL = 'coordenador';
-  const ABAS = ['professor', 'coordenador'];                        // ordem das abas; a primeira abre por padrão
+  const ABAS = ['professor', 'coordenador'];                     // ordem das abas; a primeira abre por padrão
   const ROTULO = { professor: 'Professores', coordenador: 'Coordenadores' };
   const ROTULO_SING = { professor: 'Professor', coordenador: 'Coordenador' };
   const Dados = window.ChatDados;
@@ -23,7 +23,7 @@
 
   let eu = null, raiz = null, contatos = [], ativo = null, abaAtiva = ABAS[0];
   let mensagens = new Map();        // id -> mensagem da conversa aberta
-  let online = new Set();           // chaves "papel:id" de quem está online
+  let online = new Set();            // chaves "papel:id" de quem está online
   let timerRecarga = null;
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -32,12 +32,11 @@
   const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const $ = (sel) => raiz.querySelector(sel);
   const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const chave = (c) => c.aba + ':' + c.id;                  // identifica um contato (id sozinho pode repetir entre tabelas)
+  const chave = (c) => c.aba + ':' + c.id;                           // identifica um contato (id sozinho pode repetir entre tabelas)
   const estaOnline = (c) => online.has(chave(c));
 
   // Texto curto para a lista de contatos
   function previaDe(m) {
-    if (!m) return 'Nenhuma mensagem ainda';
     if (m.apagada) return 'Mensagem apagada';
     if (m.tipo === 'imagem') return '📷 Foto';
     if (m.tipo === 'arquivo') return '📎 ' + (m.arquivo_nome || 'Arquivo');
@@ -82,7 +81,8 @@
   function renderAbas() {
     const caixa = $('.chat-tabs');
     caixa.innerHTML = ABAS.map((a) => {
-      const n = contatos.filter((c) => c.aba === a).reduce((soma, c) => soma + (c.naoLidas || 0), 0);
+      // Filtra apenas quem tem conversa ativa ou mensagens para mostrar nas abas principais, ou exibe o total dependendo da regra
+      const n = contatos.filter((c) => c.aba === a && c.conversa).reduce((soma, c) => soma + c.naoLidas, 0);
       return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}">` +
              `${ROTULO[a]}${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
     }).join('');
@@ -101,12 +101,12 @@
     const aviso = Dados.avisoBanco ? Dados.avisoBanco() : '';
     const avisoHtml = aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '';
     
-    // Lista todos os contatos da aba (com ou sem conversa prévia)
-    const daAba = contatos.filter((c) => c.aba === abaAtiva);
+    // Mostra na lista lateral apenas os contatos que possuem conversa iniciada, OU todos se houver termo de busca ativo
+    const daAba = contatos.filter((c) => c.aba === abaAtiva && (c.conversa || termo));
     let lista = daAba;
     
     if (termo) {
-      lista = daAba.filter((c) => semAcento(c.nome).includes(termo));
+      lista = contatos.filter((c) => c.aba === abaAtiva && semAcento(c.nome).includes(termo));
       const comeca = (c) => semAcento(c.nome).split(/\s+/).some((p) => p.startsWith(termo)) ? 0 : 1;
       lista = lista.map((c, i) => ({ c, i })).sort((x, y) => comeca(x.c) - comeca(y.c) || x.i - y.i).map((x) => x.c);
     }
@@ -126,11 +126,11 @@
         ${avatarHtml(c)}
         <div class="chat-contato-info">
           <strong>${esc(c.nome)}</strong>
-          <small>${esc(c.conversa?.ultima_mensagem || 'Nenhuma mensagem ainda')}</small>
+          <small>${esc(c.conversa?.ultima_mensagem || 'Clique para iniciar conversa')}</small>
         </div>
         ${c.naoLidas ? `<span class="chat-badge">${c.naoLidas}</span>` : ''}
       </li>`).join('');
-    
+
     ul.querySelectorAll('.chat-contato').forEach((li) => {
       const contato = contatos.find((c) => chave(c) === li.dataset.chave);
       li.addEventListener('click', () => {
@@ -343,7 +343,7 @@
       adicionarMensagem(m);
       if (!minha) Dados.marcarComoLidas(m.conversa_id, eu);
     } else if (!minha) {
-      contato.naoLidas = (contato.naoLidas || 0) + 1;
+      contato.naoLidas += 1;
     }
     renderLista();
   }
@@ -355,7 +355,6 @@
     recarregarContatosDepois();
   }
 
-  // ---------- INÍCIO ----------
   function usuarioDaSessao() {
     const sessao = typeof window.obterSessao === 'function' ? window.obterSessao() : null;
     if (!sessao || sessao.tipo !== PAPEL || !sessao.dados) return null;
@@ -376,7 +375,6 @@
     });
   }
 
-  // ---------- API PÚBLICA ----------
   window.iniciarChatCoordenador = async function (idContainer, usuario) {
     raiz = document.getElementById(idContainer || 'chat-coordenador-root');
     if (!raiz) { console.error('Chat: container não encontrado'); return; }

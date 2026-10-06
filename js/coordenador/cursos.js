@@ -16,7 +16,7 @@ async function renderSecaoCursos(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Cursos']),
-      criarElemento('p', {}, ['Cadastre os cursos oferecidos pela instituição.'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

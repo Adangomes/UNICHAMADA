@@ -36,7 +36,7 @@ async function renderSecaoNotificacoes(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Notificações']),
-      criarElemento('p', {}, ['Notifique professores sobre atualizações e mudanças.'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

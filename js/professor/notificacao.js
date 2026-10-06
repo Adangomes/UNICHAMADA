@@ -1,307 +1,445 @@
 /**
- * @fileoverview js/professor/notificacao.js — Módulo de Notificações do Professor
+ * @fileoverview notificacao.js — Módulo de Gerenciamento de Avisos e Notificações (Painel do Coordenador)
  * 
- * Este módulo provê as rotinas de busca, cálculo de pendências, notificação sonora,
- * injeção resiliente do componente visual do sino no cabeçalho e exibição da janela
- * modal com atualização automática de estado no PostgreSQL/Supabase.
+ * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
+ * exclusão e listagem de notificações enviadas pela coordenação para os professores,
+ * integrando persistência no banco de dados do Supabase.
  * 
- * @module NotificacoesProfessor
+ * @module SeçãoNotificacoes
+ * @requires dbBuscarPorId
  * @requires dbListar
  * @requires dbInserir
  * @requires dbAtualizar
- * @requires dbAoAtualizar
+ * @requires dbRemover
  * @requires criarElemento
+ * @requires mostrarToast
+ * @requires campoObrigatorioPreenchido
+ * @requires confirmarAcao
  */
 
-/**
- * Guarda o quantitativo da leitura anterior para validar o disparo de sinal sonoro.
- * @type {number}
- */
-let contadorAnteriorNotificacoes = 0;
+async function renderSecaoNotificacoes(container) {
+  container.innerHTML = '';
 
-/**
- * Busca e cruza os registros das tabelas `notificacoes_coordenador` e `notificacao_professores` 
- * para determinar quais avisos pertencem ao professor logado e qual o status de leitura.
- *
- * @async
- * @param {string} professorId - UUID do professor autenticado.
- * @returns {Promise<{pendentes: Array<Object>, todas: Array<Object>}>} Coleções filtradas.
- */
-async function buscarNotificacoesProfessor(professorId) {
-  try {
-    const relacoes = await dbListar('notificacao_professores') || [];
-    const notificacoes = await dbListar('notificacoes_coordenador') || [];
+  const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
+    criarElemento('div', {}, [
+      criarElemento('h2', {}, ['Notificações']),
+      criarElemento('p', {}, ['Notifique professores sobre atualizações e mudanças.'])
+    ])
+  ]);
 
-    // Mapeia os vínculos de leitura direcionados a este professor
-    const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
-    const relacoesMap = new Map(minhasRelacoes.map(r => [r.notificacao_id || r.notificacaoId, r]));
+  const grade = criarElemento('div', { class: 'grade-secao' });
+  const areaFormulario = criarElemento('div', { class: 'cartao' });
+  const areaLista = criarElemento('div', { style: 'flex: 1;' });
+  
+  grade.append(areaFormulario, areaLista);
+  container.append(cabecalho, grade);
 
-    // Filtra avisos destinados a "todos" ou especificamente ao professor
-    const minhasNotificacoes = notificacoes.filter(n => {
-      // 1. Se já existe relação criada para esta notificação no banco
-      if (relacoesMap.has(n.id)) return true;
+  let idEmEdicao = null;
 
-      // 2. Trata e normaliza os destinatários
-      let dests = n.destinatarios;
-      if (typeof dests === 'string') {
-        try { 
-          dests = JSON.parse(dests); 
-        } catch (e) { 
-          dests = [dests]; 
+  async function montarFormulario() {
+    areaFormulario.innerHTML = '';
+    
+    let notificacao = null;
+    if (idEmEdicao) {
+      try {
+        notificacao = await dbBuscarPorId('notificacoes_coordenador', idEmEdicao);
+      } catch (e) {
+        console.warn('[notificacao.js] Erro ao buscar notificação por ID:', e);
+      }
+    }
+
+    const form = criarElemento('form', { style: 'display: flex; flex-direction: column; gap: 1em;' });
+    
+    form.appendChild(
+      criarElemento('h3', { style: 'margin-bottom: 0.5em; font-size: 1.1em; color: #333;' }, [
+        idEmEdicao ? 'Editar notificação' : 'Nova notificação'
+      ])
+    );
+
+    const divProfessor = criarElemento('div', { class: 'campo seletor-professor-container' });
+    divProfessor.appendChild(
+      criarElemento('label', { 
+        style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' 
+      }, ['PROFESSOR'])
+    );
+
+    const caixaSeletor = criarElemento('div', { class: 'seletor-professor-box' });
+    const textoSeletor = criarElemento('span', {}, ['Carregando professores...']);
+    const iconeSeta = criarElemento('span', { class: 'seta' }, ['▼']);
+    caixaSeletor.append(textoSeletor, iconeSeta);
+    divProfessor.appendChild(caixaSeletor);
+
+    const dropdownOpcoes = criarElemento('div', {
+      class: 'seletor-professor-dropdown',
+      style: 'display: none;'
+    });
+    divProfessor.appendChild(dropdownOpcoes);
+
+    caixaSeletor.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownOpcoes.style.display = dropdownOpcoes.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    document.addEventListener('click', () => dropdownOpcoes.style.display = 'none');
+    dropdownOpcoes.addEventListener('click', (e) => e.stopPropagation());
+
+    let listaProfessores = [];
+    try {
+      listaProfessores = await dbListar('professores') || [];
+    } catch (err) {
+      console.warn('[notificacao.js] Falha ao carregar professores.', err);
+    }
+
+    let selecionados = ['todos'];
+    if (notificacao?.destinatarios) {
+      selecionados = Array.isArray(notificacao.destinatarios) ? notificacao.destinatarios : [notificacao.destinatarios];
+    }
+
+    function atualizarTextoSeletor() {
+      if (selecionados.includes('todos')) {
+        textoSeletor.textContent = 'Todos os Professores';
+      } else if (selecionados.length === 0) {
+        textoSeletor.textContent = 'Selecione o professor';
+      } else if (selecionados.length === 1) {
+        const prof = listaProfessores.find(p => p.id === selecionados[0]);
+        textoSeletor.textContent = prof ? prof.nome : '1 professor selecionado';
+      } else {
+        textoSeletor.textContent = `${selecionados.length} professores selecionados`;
+      }
+    }
+
+    const divTodos = criarElemento('div', { class: 'seletor-opcao-item todos' });
+    const checkTodos = criarElemento('input', { type: 'checkbox' });
+    checkTodos.checked = selecionados.includes('todos');
+    
+    divTodos.append(checkTodos, criarElemento('span', {}, ['Todos os Professores']));
+    dropdownOpcoes.appendChild(divTodos);
+
+    const checkboxesProf = [];
+
+    listaProfessores.forEach(prof => {
+      const divProf = criarElemento('div', { class: 'seletor-opcao-item' });
+      const checkProf = criarElemento('input', { type: 'checkbox', value: prof.id });
+      
+      checkProf.checked = selecionados.includes(prof.id) && !selecionados.includes('todos');
+      
+      divProf.append(checkProf, criarElemento('span', {}, [prof.nome]));
+      dropdownOpcoes.appendChild(divProf);
+      
+      checkboxesProf.push({ id: prof.id, checkbox: checkProf });
+
+      divProf.addEventListener('click', (e) => {
+        if (e.target !== checkProf) checkProf.checked = !checkProf.checked;
+        checkTodos.checked = false;
+
+        if (checkProf.checked) {
+          selecionados = selecionados.filter(s => s !== 'todos');
+          if (!selecionados.includes(prof.id)) selecionados.push(prof.id);
+        } else {
+          selecionados = selecionados.filter(id => id !== prof.id);
+        }
+        atualizarTextoSeletor();
+      });
+    });
+
+    divTodos.addEventListener('click', (e) => {
+      if (e.target !== checkTodos) checkTodos.checked = !checkTodos.checked;
+      
+      if (checkTodos.checked) {
+        selecionados = ['todos'];
+        checkboxesProf.forEach(item => item.checkbox.checked = false);
+      } else {
+        selecionados = [];
+      }
+      atualizarTextoSeletor();
+    });
+
+    atualizarTextoSeletor();
+
+    const campoTitulo = criarElemento('div', { class: 'campo' }, [
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['TÍTULO']),
+      criarElemento('input', {
+        type: 'text',
+        name: 'titulo',
+        placeholder: 'Digite o título da notificação',
+        required: 'true',
+        value: notificacao?.titulo || '',
+        style: 'width: 100%; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #fff;'
+      })
+    ]);
+
+    const campoMensagem = criarElemento('div', { class: 'campo' }, [
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block;' }, ['MENSAGEM']),
+      criarElemento('textarea', {
+        name: 'mensagem',
+        placeholder: 'Digite a mensagem da notificação',
+        required: 'true',
+        rows: '4',
+        style: 'width: 100%; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #fff; resize: vertical;'
+      }, [notificacao?.mensagem || ''])
+    ]);
+
+    const campoAnexo = criarElemento('div', { class: 'campo' }, [
+      criarElemento('label', { style: 'font-size: 0.75em; font-weight: bold; color: #6d7b8d; text-transform: uppercase; margin-bottom: 2px; display: block;' }, ['ANEXAR FOTO OU VÍDEO']),
+      criarElemento('input', {
+        type: 'file',
+        name: 'anexo',
+        accept: 'image/*,video/*',
+        style: 'font-size: 0.9em; margin-bottom: 2px;'
+      })
+    ]);
+
+    if (notificacao?.anexo_url || notificacao?.anexoUrl) {
+      const urlAtual = notificacao.anexo_url || notificacao.anexoUrl;
+      campoAnexo.appendChild(
+        criarElemento('div', { style: 'font-size: 0.85em; margin-top: 4px; color: #666;' }, [
+          'Anexo atual: ',
+          criarElemento('a', { href: urlAtual, target: '_blank', style: 'color: #007bff;' }, ['Ver ficheiro'])
+        ])
+      );
+    }
+
+    const botaoEnvio = criarElemento('button', {
+      type: 'submit',
+      class: 'btn-primario',
+      style: 'background-color: #3b5998; color: white; border: none; padding: 11px 20px; font-weight: 500; border-radius: 6px; cursor: pointer; font-size: 0.95em;'
+    }, [idEmEdicao ? 'Salvar Alterações' : 'Enviar notificação']);
+
+    const botoes = criarElemento('div', { style: 'display: flex; gap: 0.6em; align-items: center;' }, [botaoEnvio]);
+
+    if (idEmEdicao) {
+      botoes.appendChild(criarElemento('button', {
+        type: 'button',
+        class: 'btn-secundario',
+        onClick: async () => { 
+          idEmEdicao = null; 
+          await montarFormulario(); 
+        }
+      }, ['Cancelar']));
+    }
+
+    form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
+
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      
+      const titulo = form.titulo.value.trim();
+      const mensagem = form.mensagem.value.trim();
+      const arquivoInput = form.querySelector('input[name="anexo"]');
+
+      if (selecionados.length === 0) {
+        mostrarToast('Por favor, selecione pelo menos um professor ou "Todos".', 'erro');
+        return;
+      }
+
+      if (!campoObrigatorioPreenchido(titulo) || !campoObrigatorioPreenchido(mensagem)) {
+        mostrarToast('Preencha o título e a mensagem.', 'erro');
+        return;
+      }
+
+      botaoEnvio.disabled = true;
+      botaoEnvio.textContent = 'Enviando...';
+
+      let coordenadorId = null;
+      try {
+        const coords = await dbListar('coordenadores');
+        if (coords && coords.length > 0) coordenadorId = coords[0].id;
+      } catch (e) {
+        console.warn(e);
+      }
+      if (!coordenadorId) coordenadorId = '10000000-0000-0000-0000-000000000001';
+
+      let anexoUrl = notificacao?.anexo_url || notificacao?.anexoUrl || null;
+      
+      // Se enviou um novo arquivo, faz o upload (se houver helper global de upload ou storage)
+      if (arquivoInput && arquivoInput.files && arquivoInput.files[0]) {
+        const file = arquivoInput.files[0];
+        try {
+          if (typeof window.dbUploadStorage === 'function') {
+            anexoUrl = await window.dbUploadStorage('anexos_notificacoes', file);
+          } else if (typeof window.uploadArquivo === 'function') {
+            anexoUrl = await window.uploadArquivo(file);
+          } else {
+            // Fallback simulado se não houver função dedicada de storage exposta
+            anexoUrl = URL.createObjectURL(file);
+          }
+        } catch (uploadErr) {
+          console.warn('[notificacao.js] Erro ao enviar anexo:', uploadErr);
         }
       }
 
-      // Se destinatários estiver vazio/nulo, assume como notificação pública/global
-      if (!dests) return true;
+      const dadosNotificacao = {
+        coordenador_id: coordenadorId,
+        titulo: titulo,
+        mensagem: mensagem,
+        destinatarios: selecionados,
+        anexo_url: anexoUrl
+      };
 
-      if (Array.isArray(dests)) {
-        return dests.includes('todos') || dests.includes(professorId);
+      try {
+        if (idEmEdicao) {
+          await dbAtualizar('notificacoes_coordenador', idEmEdicao, dadosNotificacao);
+          mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
+          idEmEdicao = null;
+        } else {
+          // Insere a notificação principal
+          const novaNotif = await dbInserir('notificacoes_coordenador', dadosNotificacao);
+          
+          let idFinal = novaNotif?.id || (Array.isArray(novaNotif) ? novaNotif[0]?.id : null);
+          if (!idFinal) {
+            const todas = await dbListar('notificacoes_coordenador');
+            todas.sort((a, b) => new Date(b.criado_em || 0) - new Date(a.criado_em || 0));
+            idFinal = todas[0]?.id;
+          }
+
+          // Insere estritamente para quem foi selecionado (controlado pelo JS)
+          if (idFinal) {
+            let alvos = selecionados.includes('todos') ? listaProfessores.map(p => p.id) : selecionados;
+
+            for (const profId of alvos) {
+              await dbInserir('notificacao_professores', {
+                notificacao_id: idFinal,
+                professor_id: profId,
+                lida: false
+              });
+            }
+          }
+
+          mostrarToast('Notificação enviada e salva no banco!', 'sucesso');
+        }
+      } catch (err) {
+        console.error('[notificacao.js] Erro ao salvar:', err);
+        mostrarToast('Erro ao salvar notificação.', 'erro');
+      } finally {
+        botaoEnvio.disabled = false;
+        botaoEnvio.textContent = idEmEdicao ? 'Salvar Alterações' : 'Enviar notificação';
       }
 
-      return dests === 'todos' || dests === professorId;
-    }).map(n => {
-      const rel = relacoesMap.get(n.id);
-      return {
-        ...n,
-        relacaoId: rel ? rel.id : null,
-        lida: rel ? Boolean(rel.lida) : false
-      };
+      await montarFormulario();
+      await montarLista();
     });
 
-    // Ordenação decrescente por data de criação (mais recentes primeiro)
-    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data) - new Date(a.criado_em || a.criadoEm || a.data));
-
-    const pendentes = minhasNotificacoes.filter(n => !n.lida);
-
-    return { pendentes, todas: minhasNotificacoes };
-  } catch (err) {
-    console.warn('[professor/notificacao.js] Erro na resolução de notificações:', err);
-    return { pendentes: [], todas: [] };
-  }
-}
-
-/**
- * Injeta o componente do sino no cabeçalho do painel do professor.
- *
- * @async
- * @param {HTMLElement} cabecalhoElemento - Contêiner pai do cabeçalho retornado por `montarCabecalhoPainel`.
- * @param {Object} professor - Objeto de dados do professor autenticado.
- * @returns {Promise<void>}
- */
-async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
-  if (!professor?.id) {
-    console.warn('[notificacao.js] Dados do professor ausentes. Abortando inicialização do sino.');
-    return;
+    areaFormulario.appendChild(form);
   }
 
-  // Prevenção de duplicidade em re-renderizações de abas
-  const antigo = document.querySelector('.container-sino-notificacao');
-  if (antigo) antigo.remove();
-
-  // Container principal do Sino
-  const containerSino = criarElemento('div', { 
-    class: 'container-sino-notificacao',
-    style: 'position: relative; cursor: pointer; display: inline-flex; align-items: center; margin-right: 15px; vertical-align: middle; z-index: 100;' 
-  });
-
-  // Ícone SVG vetorizado com badge numérico
-  containerSino.innerHTML = `
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block;">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-    </svg>
-    <span class="badge-notificacao" style="display: none; position: absolute; top: -5px; right: -6px; background-color: #ff3b30; color: white; border-radius: 50%; font-size: 0.72em; font-weight: bold; min-width: 18px; height: 18px; text-align: center; line-height: 18px; padding: 0 4px; box-shadow: 0 2px 5px rgba(255, 59, 48, 0.4);">0</span>
-  `;
-
-  const badge = containerSino.querySelector('.badge-notificacao');
-
-  /**
-   * Recalcula os pendentes e atualiza a visibilidade e o valor numérico do badge.
-   * @async
-   */
-  async function atualizarContador() {
-    const { pendentes, todas } = await buscarNotificacoesProfessor(professor.id);
-    const qtd = pendentes.length;
-
-    if (qtd > 0) {
-      badge.textContent = qtd > 99 ? '99+' : String(qtd);
-      badge.style.display = 'block';
-
-      // Dispara efeito sonoro caso haja acréscimo de novas notificações
-      if (qtd > contadorAnteriorNotificacoes) {
-        tocarSomNotificacao();
-      }
-    } else {
-      badge.style.display = 'none';
+  async function montarLista() {
+    areaLista.innerHTML = '';
+    
+    let notificacoes = [];
+    try {
+      notificacoes = await dbListar('notificacoes_coordenador') || [];
+    } catch (err) {
+      console.warn('[notificacao.js] Erro ao listar notificações:', err);
     }
 
-    contadorAnteriorNotificacoes = qtd;
-    return { pendentes, todas };
-  }
+    if (!notificacoes || notificacoes.length === 0) {
+      areaLista.appendChild(
+        criarElemento('div', {
+          style: 'border: 1px solid #e0e0e0; background-color: #fcfcfc; border-radius: 8px; padding: 2.5em; text-align: center; color: #888; font-size: 0.95em;'
+        }, ['Nenhuma notificação enviada ainda.'])
+      );
+      return;
+    }
 
-  await atualizarContador();
+    let vinculosProfessores = [];
+    try {
+      vinculosProfessores = await dbListar('notificacao_professores') || [];
+    } catch (e) {
+      console.warn(e);
+    }
 
-  // Evento de clique para abertura do modal
-  containerSino.addEventListener('click', async () => {
-    const { todas } = await buscarNotificacoesProfessor(professor.id);
-    abrirModalNotificacoesProfessor(todas, professor, atualizarContador);
-  });
+    let listaProfs = [];
+    try { 
+      listaProfs = await dbListar('professores') || []; 
+    } catch (e) {
+      console.warn(e);
+    }
 
-  // Ancoragem resiliente no DOM (ao lado do botão "Sair" ou dentro da div do usuário)
-  const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button'));
-  const btnSair = todosBotoes.find(btn => btn.textContent.trim().toLowerCase().includes('sair') || btn.classList.contains('btn-sair'));
+    notificacoes.sort((a, b) => new Date(b.criado_em || b.data || 0) - new Date(a.criado_em || a.data || 0));
 
-  if (btnSair && btnSair.parentNode) {
-    btnSair.parentNode.style.display = 'flex';
-    btnSair.parentNode.style.alignItems = 'center';
-    btnSair.parentNode.insertBefore(containerSino, btnSair);
-  } else if (cabecalhoElemento) {
-    const localInsercao = cabecalhoElemento.querySelector('.cabecalho-usuario, .usuario-info, div:last-child') || cabecalhoElemento;
-    localInsercao.appendChild(containerSino);
-  }
-
-  // Assinatura reativa no banco para atualizar o sino sem dar refresh
-  if (typeof dbAoAtualizar === 'function') {
-    dbAoAtualizar(async () => {
-      await atualizarContador();
-    });
-  }
-}
-
-/**
- * Sintetiza um aviso sonoro via Web Audio API.
- *
- * @function tocarSomNotificacao
- */
-function tocarSomNotificacao() {
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15); // A5
-
-    gain.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-
-    osc.start();
-    osc.stop(audioContext.currentTime + 0.3);
-  } catch (e) {
-    console.log('[notificacao.js] Áudio automático bloqueado pela política do navegador.');
-  }
-}
-
-/**
- * Constrói e exibe a janela modal com a listagem de avisos e 
- * executa a persistência de leitura (`lida = true`) no Supabase.
- *
- * @param {Array<Object>} listaNotificacoes - Coleção completa de notificações do professor.
- * @param {Object} professor - Dados do professor autenticado.
- * @param {Function} callbackAtualizar - Função para acionar a atualização do badge após leitura.
- */
-function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackAtualizar) {
-  const overlay = criarElemento('div', {
-    class: 'modal-overlay',
-    style: 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;'
-  });
-
-  const modal = criarElemento('div', {
-    class: 'modal-cartao',
-    style: 'background: #fff; width: 90%; max-width: 550px; max-height: 80vh; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.2);'
-  });
-
-  const cabecalhoModal = criarElemento('div', {
-    style: 'display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;'
-  }, [
-    criarElemento('h3', { style: 'margin: 0; font-size: 1.2em; color: #333;' }, ['Notificações da Coordenação']),
-    criarElemento('button', {
-      style: 'background: none; border: none; font-size: 1.2em; cursor: pointer; color: #888;',
-      onClick: () => overlay.remove()
-    }, ['✕'])
-  ]);
-
-  const corpoModal = criarElemento('div', { style: 'overflow-y: auto; flex: 1; padding-right: 5px;' });
-
-  if (!listaNotificacoes || listaNotificacoes.length === 0) {
-    corpoModal.appendChild(
-      criarElemento('div', { style: 'text-align: center; color: #888; padding: 20px;' }, ['Nenhuma notificação recebida.'])
+    const tabela = criarElemento('table', { style: 'width: 100%; border-collapse: collapse;' });
+    tabela.appendChild(
+      criarElemento('thead', {}, [
+        criarElemento('tr', {}, [
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Data']),
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Destinatários']),
+          criarElemento('th', { style: 'text-align: left; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Título']),
+          criarElemento('th', { style: 'text-align: right; padding: 10px; border-bottom: 2px solid #ddd;' }, ['Ações'])
+        ])
+      ])
     );
-  } else {
-    listaNotificacoes.forEach(notif => {
-      const item = criarElemento('div', {
-        class: `modal-notificacao-item ${notif.lida ? 'lida' : ''}`,
-        style: `padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid ${notif.lida ? '#ccc' : '#007bff'}; background: ${notif.lida ? '#f9f9f9' : '#eef5ff'}; transition: background 0.2s;`
-      });
 
-      const titulo = criarElemento('h4', { style: 'margin: 0 0 5px 0; font-size: 1em; color: #222;' }, [notif.titulo]);
-      const mensagem = criarElemento('p', { style: 'margin: 0 0 8px 0; font-size: 0.9em; color: #555; white-space: pre-wrap;' }, [notif.mensagem]);
+    const corpo = criarElemento('tbody', {});
+
+    for (const notif of notificacoes) {
+      let txtDestinatarios = '—';
+      const vinculos = vinculosProfessores.filter(v => v.notificacao_id === notif.id);
       
-      const rawData = notif.criado_em || notif.criadoEm || notif.data;
-      const dataFormatada = rawData ? new Date(rawData).toLocaleDateString('pt-BR') : '';
-      const rodape = criarElemento('small', { style: 'color: #999; font-size: 0.75em;' }, [dataFormatada]);
+      if (vinculos.length > 0) {
+        if (listaProfs.length > 0 && vinculos.length >= listaProfs.length) {
+          txtDestinatarios = 'Todos';
+        } else {
+          const nomes = vinculos.map(v => {
+            const p = listaProfs.find(prof => prof.id === v.professor_id);
+            return p ? p.nome.split(' ')[0] : 'Prof.';
+          });
+          txtDestinatarios = nomes.join(', ');
+        }
+      }
 
-      item.append(titulo, mensagem, rodape);
+      const dataExibicao = notif.criado_em 
+        ? new Date(notif.criado_em).toLocaleDateString('pt-BR') 
+        : formatarDataBR(notif.data);
 
+      const tdTitulo = criarElemento('td', { style: 'padding: 10px;' }, [notif.titulo]);
       if (notif.anexo_url || notif.anexoUrl) {
-        const linkAnexo = criarElemento('a', {
-          href: notif.anexo_url || notif.anexoUrl,
-          target: '_blank',
-          style: 'display: block; margin-top: 5px; font-size: 0.8em; color: #007bff; text-decoration: underline;'
-        }, ['Ver Anexo']);
-        item.appendChild(linkAnexo);
+        tdTitulo.appendChild(criarElemento('span', { style: 'display: block; font-size: 0.75em;' }, [
+          criarElemento('a', { href: notif.anexo_url || notif.anexoUrl, target: '_blank', style: 'color: #007bff;' }, ['📎 Ver Anexo'])
+        ]));
       }
 
-      // Ao interagir com o item, efetua o UPDATE/INSERT no banco de dados e zera o badge
-      if (!notif.lida) {
-        const marcarComoLida = async () => {
-          if (notif.lida) return;
-          notif.lida = true;
-          item.style.borderLeftColor = '#ccc';
-          item.style.background = '#f9f9f9';
+      corpo.appendChild(
+        criarElemento('tr', { style: 'border-bottom: 1px solid #eee;' }, [
+          criarElemento('td', { style: 'padding: 10px;' }, [dataExibicao]),
+          criarElemento('td', { style: 'padding: 10px; font-weight: 500; font-size: 0.95em; color: #555;' }, [txtDestinatarios]),
+          tdTitulo,
+          criarElemento('td', { class: 'celula-acoes' }, [
+            criarElemento('button', {
+              class: 'btn-icone',
+              onClick: async () => {
+                idEmEdicao = notif.id;
+                await montarFormulario();
+                areaFormulario.scrollIntoView({ behavior: 'smooth' });
+              }
+            }, ['Editar']),
 
-          try {
-            if (notif.relacaoId) {
-              await dbAtualizar('notificacao_professores', notif.relacaoId, {
-                lida: true,
-                lida_em: new Date().toISOString()
-              });
-            } else {
-              const res = await dbInserir('notificacao_professores', {
-                notificacao_id: notif.id,
-                professor_id: professor.id,
-                lida: true,
-                lida_em: new Date().toISOString()
-              });
-              if (res && res.id) notif.relacaoId = res.id;
-            }
-            await callbackAtualizar();
-          } catch (e) {
-            console.warn('[notificacao.js] Falha ao registrar confirmação de leitura:', e);
-          }
-        };
+            criarElemento('button', {
+              class: 'btn-perigo',
+              onClick: async () => {
+                if (!confirmarAcao(`Excluir a notificação "${notif.titulo}"?`)) return;
+                await dbRemover('notificacoes_coordenador', notif.id);
+                mostrarToast('Notificação excluída.', 'sucesso');
+                await montarLista();
+              }
+            }, ['Excluir'])
+          ])
+        ])
+      );
+    }
 
-        item.addEventListener('mouseenter', marcarComoLida, { once: true });
-        item.addEventListener('click', marcarComoLida, { once: true });
-      }
-
-      corpoModal.appendChild(item);
-    });
+    tabela.appendChild(corpo);
+    areaLista.appendChild(criarElemento('div', { class: 'tabela-wrap' }, [tabela]));
   }
 
-  modal.append(cabecalhoModal, corpoModal);
-  overlay.appendChild(modal);
-
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.remove();
-  });
-
-  document.body.appendChild(overlay);
+  await montarFormulario();
+  await montarLista();
 }
 
-// Exposição no escopo global
-window.inicializarSinoNotificacoes = inicializarSinoNotificacoes;
+function formatarDataBR(dataISO) {
+  if (!dataISO) return '—';
+  const parts = dataISO.split('-');
+  if (parts.length < 3) return dataISO;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+window.renderSecaoNotificacoes = renderSecaoNotificacoes;

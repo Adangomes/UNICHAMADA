@@ -208,7 +208,7 @@
     img.alt = msg.arquivo_nome || 'Foto';
     raiz.append(aviso, img);
     if (!msg.arquivo_path) { aviso.textContent = 'Foto indisponível'; return raiz; }
-    Dados().urlAssinada(msg.arquivo_path).then((url) => {
+    Dados().urlDoArquivo(msg).then((url) => {
       if (!url) { aviso.textContent = 'Foto indisponível'; return; }
       img.onload = () => { aviso.remove(); img.classList.add('pronta'); };
       img.onerror = () => { aviso.textContent = 'Foto indisponível'; };
@@ -276,7 +276,7 @@
       return raiz;
     }
     cartao.addEventListener('click', async () => {
-      const url = await Dados().urlAssinada(msg.arquivo_path, msg.arquivo_nome || 'arquivo');
+      const url = await Dados().urlDoArquivo(msg, true);      // cifrado: decifra aqui no navegador
       if (!url) { avisar('Não foi possível baixar o arquivo.'); return; }
       const a = document.createElement('a');
       a.href = url; a.download = msg.arquivo_nome || 'arquivo'; a.rel = 'noopener';

@@ -14,7 +14,7 @@ async function renderSecaoDisciplinas(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Disciplinas']),
-      criarElemento('p', {}, ['Vincule cada disciplina a um curso, turno e professor responsável.'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

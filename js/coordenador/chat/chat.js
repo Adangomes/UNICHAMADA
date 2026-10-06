@@ -9,12 +9,11 @@
   'use strict';
 
   const PAPEL = 'coordenador';
-  const ABAS = ['professor', 'coordenador'];                     // ordem das abas; a primeira abre por padrão
+  const ABAS = ['professor', 'coordenador'];
   const ROTULO = { professor: 'Professores', coordenador: 'Coordenadores' };
   const ROTULO_SING = { professor: 'Professor', coordenador: 'Coordenador' };
   const Dados = window.ChatDados;
 
-  // Módulos de config/ (podem faltar: o chat de texto continua funcionando)
   const Menu = () => window.ChatMenu;
   const Editar = () => window.ChatEditar;
   const Excluir = () => window.ChatExcluir;
@@ -22,8 +21,8 @@
   const Anexos = () => window.ChatAnexos;
 
   let eu = null, raiz = null, contatos = [], ativo = null, abaAtiva = ABAS[0];
-  let mensagens = new Map();        // id -> mensagem da conversa aberta
-  let online = new Set();            // chaves "papel:id" de quem está online
+  let mensagens = new Map();
+  let online = new Set();
   let timerRecarga = null;
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -32,11 +31,11 @@
   const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const $ = (sel) => raiz.querySelector(sel);
   const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const chave = (c) => c.aba + ':' + c.id;                           // identifica um contato (id sozinho pode repetir entre tabelas)
+  const chave = (c) => c.aba + ':' + c.id;
   const estaOnline = (c) => online.has(chave(c));
 
-  // Texto curto para a lista de contatos
   function previaDe(m) {
+    if (!m) return 'Nenhuma mensagem ainda';
     if (m.apagada) return 'Mensagem apagada';
     if (m.tipo === 'imagem') return '📷 Foto';
     if (m.tipo === 'arquivo') return '📎 ' + (m.arquivo_nome || 'Arquivo');
@@ -48,9 +47,15 @@
     raiz.classList.add('chat-app', 'chat-' + PAPEL);
     raiz.innerHTML = `
       <aside class="chat-lateral">
-        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span></div>
+        <div class="chat-topo">
+          <h2 class="chat-titulo">Chat</h2>
+          <span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span>
+        </div>
         <div class="chat-tabs"></div>
-        <input class="chat-busca" type="search" autocomplete="off">
+        <div class="chat-busca-wrap" style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <input class="chat-busca" type="search" autocomplete="off" style="flex: 1; margin-bottom: 0;">
+          <button class="chat-icone-btn chat-btn-fechar-busca" type="button" title="Limpar / Fechar lista" style="width: 42px; height: 42px; border: 1px solid var(--chat-borda); border-radius: 10px; background: #f8f9fb; cursor: pointer;">✕</button>
+        </div>
         <ul class="chat-lista"></ul>
       </aside>
       <section class="chat-painel">
@@ -63,9 +68,17 @@
           <button class="chat-enviar" type="button" disabled>Enviar</button>
         </div>
       </section>`;
-    if (!Dados.criptografiaAtiva()) $('.chat-selo').remove();            // só mostra o cadeado se estiver mesmo cifrando
-    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
-    $('.chat-busca').addEventListener('input', renderLista);
+    if (!Dados.criptografiaAtiva()) $('.chat-selo').remove();
+    
+    const inputBusca = $('.chat-busca');
+    inputBusca.placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
+    inputBusca.addEventListener('input', renderLista);
+
+    $('.chat-btn-fechar-busca').addEventListener('click', () => {
+      inputBusca.value = '';
+      renderLista();
+    });
+
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
     $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
       if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
@@ -81,8 +94,7 @@
   function renderAbas() {
     const caixa = $('.chat-tabs');
     caixa.innerHTML = ABAS.map((a) => {
-      // Filtra apenas quem tem conversa ativa ou mensagens para mostrar nas abas principais, ou exibe o total dependendo da regra
-      const n = contatos.filter((c) => c.aba === a && c.conversa).reduce((soma, c) => soma + c.naoLidas, 0);
+      const n = contatos.filter((c) => c.aba === a).reduce((soma, c) => soma + (c.naoLidas || 0), 0);
       return `<button class="chat-tab ${a === abaAtiva ? 'ativo' : ''}" type="button" data-aba="${a}">` +
              `${ROTULO[a]}${n ? `<span class="chat-tab-badge">${n}</span>` : ''}</button>`;
     }).join('');
@@ -101,12 +113,12 @@
     const aviso = Dados.avisoBanco ? Dados.avisoBanco() : '';
     const avisoHtml = aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '';
     
-    // Mostra na lista lateral apenas os contatos que possuem conversa iniciada, OU todos se houver termo de busca ativo
-    const daAba = contatos.filter((c) => c.aba === abaAtiva && (c.conversa || termo));
+    // Pega todos os contatos da aba ativa imediatamente
+    const daAba = contatos.filter((c) => c.aba === abaAtiva);
     let lista = daAba;
     
     if (termo) {
-      lista = contatos.filter((c) => c.aba === abaAtiva && semAcento(c.nome).includes(termo));
+      lista = daAba.filter((c) => semAcento(c.nome).includes(termo));
       const comeca = (c) => semAcento(c.nome).split(/\s+/).some((p) => p.startsWith(termo)) ? 0 : 1;
       lista = lista.map((c, i) => ({ c, i })).sort((x, y) => comeca(x.c) - comeca(y.c) || x.i - y.i).map((x) => x.c);
     }
@@ -126,11 +138,11 @@
         ${avatarHtml(c)}
         <div class="chat-contato-info">
           <strong>${esc(c.nome)}</strong>
-          <small>${esc(c.conversa?.ultima_mensagem || 'Clique para iniciar conversa')}</small>
+          <small>${esc(c.conversa?.ultima_mensagem || 'Nenhuma mensagem ainda')}</small>
         </div>
         ${c.naoLidas ? `<span class="chat-badge">${c.naoLidas}</span>` : ''}
       </li>`).join('');
-
+    
     ul.querySelectorAll('.chat-contato').forEach((li) => {
       const contato = contatos.find((c) => chave(c) === li.dataset.chave);
       li.addEventListener('click', () => {
@@ -152,7 +164,6 @@
       <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'}</small></div>`;
   }
 
-  // ---------- MENSAGENS (balões) ----------
   function itensMenuMensagem(m, balao) {
     return [
       Editar() && Editar().itemMenu(m, eu, () => editar(m, balao)),
@@ -228,7 +239,6 @@
     $('.chat-btn-emoji').disabled = true;
   }
 
-  // ---------- AÇÕES ----------
   async function carregarContatos() {
     try {
       contatos = await Dados.listarContatos(eu);
@@ -328,7 +338,6 @@
     await carregarContatos();
   }
 
-  // ---------- TEMPO REAL ----------
   async function receber(m) {
     let contato = contatos.find((c) => c.conversa && c.conversa.id === m.conversa_id);
     if (!contato) {
@@ -343,7 +352,7 @@
       adicionarMensagem(m);
       if (!minha) Dados.marcarComoLidas(m.conversa_id, eu);
     } else if (!minha) {
-      contato.naoLidas += 1;
+      contato.naoLidas = (contato.naoLidas || 0) + 1;
     }
     renderLista();
   }

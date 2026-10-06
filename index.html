@@ -26,13 +26,19 @@
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
+  <!-- ================= SEÇÕES DAS TELAS (SPA) ================= -->
+  <!-- A tela de login agora é injetada dinamicamente via js/login/login.js -->
   <section id="tela-login"></section>
+  <!-- ================= TELA DO COORDENADOR ================= -->
   <section id="tela-coordenador" class="painel oculto"></section>
+  <!-- ================= TELA DO PROFESSOR ================= -->
   <section id="tela-professor" class="painel oculto"></section>
+  <!-- ================= TELA DE CONFIRMAÇÃO DE PRESENÇA (aluno via QR Code) ================= -->
   <section id="tela-confirmar-presenca" class="oculto"></section>
+  <!-- ================= TELÃO (janela separada, para projetar) ================= -->
   <section id="tela-telao" class="oculto"></section>
 
-  <!-- ================= SCRIPTS ================= -->
+  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth/login > chat > telas > main) ================= -->
   <!-- Camada de Dados -->
   <script src="js/data/db.js"></script>
 
@@ -48,23 +54,27 @@
   <script src="js/login/login.js"></script>
   <script src="js/auth/auth.js"></script>
 
-  <!-- Base do Chat (Dados & Autenticação) -->
-  <script src="js/auth/chat_auth.js"></script>
+  <!-- Chat: criptografia (antes do data/chat.js) -->
+  <script src="js/chat/cripto/criptografia.js"></script>
+
+  <!-- Chat: camada de dados (depende do db.js) -->
   <script src="js/data/chat.js"></script>
 
-  <!-- Configurações do Chat (Coordenador) -->
+  <!-- Chat: recursos extras (config/) -->
   <script src="js/coordenador/chat/config/menu-contexto.js"></script>
   <script src="js/coordenador/chat/config/editar_msg.js"></script>
   <script src="js/coordenador/chat/config/excluir.js"></script>
   <script src="js/coordenador/chat/config/emojis.js"></script>
   <script src="js/coordenador/chat/config/fotos-e-arquivos.js"></script>
-
-  <!-- Configurações do Chat (Professor) -->
   <script src="js/professor/chat/config/menu-contexto.js"></script>
   <script src="js/professor/chat/config/editar_msg.js"></script>
   <script src="js/professor/chat/config/excluir.js"></script>
   <script src="js/professor/chat/config/emojis.js"></script>
   <script src="js/professor/chat/config/fotos-e-arquivos.js"></script>
+
+  <!-- Chat: telas (precisam vir depois do data/chat.js e do config/) -->
+  <script src="js/coordenador/chat/chat.js"></script>
+  <script src="js/professor/chat/chat.js"></script>
 
   <!-- Módulos do Coordenador -->
   <script src="js/coordenador/cursos.js"></script>
@@ -73,7 +83,6 @@
   <script src="js/coordenador/disciplinas.js"></script>
   <script src="js/coordenador/turmas.js"></script>
   <script src="js/coordenador/matriculas.js"></script>
-  <script src="js/coordenador/chat/chat.js"></script>
   <script src="js/coordenador/coordenador.js"></script>
   <script src="js/coordenador/notificacao.js"></script>
 
@@ -81,7 +90,6 @@
   <script src="js/professor/chamada.js"></script>
   <script src="js/professor/historico.js"></script>
   <script src="js/professor/telao.js"></script>
-  <script src="js/professor/chat/chat.js"></script>
   <script src="js/professor/professor.js"></script>
   <script src="js/professor/notificacao.js"></script>
 

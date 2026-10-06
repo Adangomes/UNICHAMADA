@@ -1,4 +1,4 @@
-=========================================================
+/* =========================================================
    UniChamada - Chat do Professor (interface)
    Identidade: login do sistema (auth.js) | Dados: js/data/chat.js
    Conversa com professores E coordenadores (abas), com seletores pesquisáveis e lista separada de conversas.

@@ -270,12 +270,12 @@ async function renderSecaoNotificacoes(container) {
       }
       if (!coordenadorId) coordenadorId = '10000000-0000-0000-0000-000000000001';
 
-      // Inclui a propriedade destinatarios com o que foi selecionado no multi-select!
+      // AGORA SIM: Inclui o coordenador, os dados e o array de destinatários selecionados!
       const dadosNotificacao = {
         coordenador_id: coordenadorId,
         titulo: titulo,
         mensagem: mensagem,
-        destinatarios: selecionados 
+        destinatarios: selecionados
       };
 
       try {
@@ -298,7 +298,9 @@ async function renderSecaoNotificacoes(container) {
       await montarFormulario();
       await montarLista();
     });
-  } // <--- Faltava fechar esta chave da função montarFormulario()!
+
+    areaFormulario.appendChild(form);
+  }
 
   // ---------------------------------------------------------------------------
   // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM

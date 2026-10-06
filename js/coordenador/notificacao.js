@@ -261,7 +261,7 @@ async function renderSecaoNotificacoes(container) {
       botaoEnvio.disabled = true;
       botaoEnvio.textContent = 'Enviando...';
 
-      let coordenadorId = null;
+     let coordenadorId = null;
       try {
         const coords = await dbListar('coordenadores');
         if (coords && coords.length > 0) coordenadorId = coords[0].id;
@@ -270,10 +270,12 @@ async function renderSecaoNotificacoes(container) {
       }
       if (!coordenadorId) coordenadorId = '10000000-0000-0000-0000-000000000001';
 
+      // Inclui a propriedade destinatarios com o que foi selecionado no multi-select!
       const dadosNotificacao = {
         coordenador_id: coordenadorId,
         titulo: titulo,
-        mensagem: mensagem
+        mensagem: mensagem,
+        destinatarios: selecionados 
       };
 
       try {
@@ -282,8 +284,6 @@ async function renderSecaoNotificacoes(container) {
           mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
           idEmEdicao = null;
         } else {
-          // Insere apenas em 'notificacoes_coordenador'. 
-          // O Supabase (via Trigger) distribuirá para 'notificacao_professores' e enviará para o n8n!
           await dbInserir('notificacoes_coordenador', dadosNotificacao);
           mostrarToast('Notificação enviada e salva no banco!', 'sucesso');
         }
@@ -296,11 +296,6 @@ async function renderSecaoNotificacoes(container) {
 
       await montarFormulario();
       await montarLista();
-    });
-
-    areaFormulario.appendChild(form);
-  }
-
   // ---------------------------------------------------------------------------
   // 3. SUB-ROTINA: MONTAGEM DA LISTAGEM
   // ---------------------------------------------------------------------------

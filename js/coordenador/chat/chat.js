@@ -147,7 +147,7 @@
     $('.chat-cabecalho').innerHTML = `
       ${avatarHtml(ativo)}
       <div><strong>${esc(ativo.nome)}</strong>
-      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'} · ${ROTULO_SING[ativo.aba]}</small></div>`;
+      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'}</small></div>`;
   }
 
   // ---------- MENSAGENS (balões) ----------

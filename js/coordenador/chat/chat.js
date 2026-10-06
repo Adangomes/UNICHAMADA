@@ -340,7 +340,7 @@
     contato.conversa.ultima_mensagem_em = m.created_at;
     const minha = Dados.ehMinha(m, eu);
     if (ativo && ativo.conversa && ativo.conversa.id === m.conversa_id) {
-      passarMensagem: adicionarMensagem(m);
+      adicionarMensagem(m);
       if (!minha) Dados.marcarComoLidas(m.conversa_id, eu);
     } else if (!minha) {
       contato.naoLidas = (contato.naoLidas || 0) + 1;
@@ -381,7 +381,7 @@
     raiz = document.getElementById(idContainer || 'chat-coordenador-root');
     if (!raiz) { console.error('Chat: container não encontrado'); return; }
     if (!Dados) {
-      .raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
+      raiz.innerHTML = '<p class="chat-vazio">Carregue js/data/chat.js antes deste arquivo.</p>';
       return;
     }
     eu = usuario ? { ...usuario, papel: PAPEL } : usuarioDaSessao();

@@ -1,8 +1,7 @@
 /* =========================================================
    UniChamada - Chat do Coordenador (interface)
    Identidade: login do sistema (auth.js) | Dados: js/data/chat.js
-   Conversa com professores E coordenadores (abas), com busca.
-   Recursos (pasta config/): editar_msg, excluir, emojis, fotos-e-arquivos, menu-contexto
+   Conversa com professores E coordenadores (abas), com busca e fechar chat.
    Uso: iniciarChatCoordenador('chat-coordenador-root')
    ========================================================= */
 (function () {
@@ -49,12 +48,14 @@
       <aside class="chat-lateral">
         <div class="chat-topo">
           <h2 class="chat-titulo">Chat</h2>
-          <span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span>
+            <button class="chat-sair chat-btn-fechar-painel" type="button" title="Fechar chat">✕ Fechar</button>
+          </div>
         </div>
         <div class="chat-tabs"></div>
-        <div class="chat-busca-wrap" style="display: flex; gap: 6px; margin-bottom: 10px;">
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
           <input class="chat-busca" type="search" autocomplete="off" style="flex: 1; margin-bottom: 0;">
-          <button class="chat-icone-btn chat-btn-fechar-busca" type="button" title="Limpar / Fechar lista" style="width: 42px; height: 42px; border: 1px solid var(--chat-borda); border-radius: 10px; background: #f8f9fb; cursor: pointer;">✕</button>
         </div>
         <ul class="chat-lista"></ul>
       </aside>
@@ -74,9 +75,9 @@
     inputBusca.placeholder = `Pesquisar ${ROTULO[abaAtiva].toLowerCase()}...`;
     inputBusca.addEventListener('input', renderLista);
 
-    $('.chat-btn-fechar-busca').addEventListener('click', () => {
-      inputBusca.value = '';
-      renderLista();
+    // Botão para fechar/esconder o chat inteiro da tela
+    $('.chat-btn-fechar-painel').addEventListener('click', () => {
+      raiz.style.display = 'none';
     });
 
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
@@ -87,7 +88,7 @@
 
   function trocarAba(aba) {
     abaAtiva = aba;
-    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    $('.chat-busca').value = ''; // Limpa a busca ao trocar de aba para mostrar todos da lista$('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
     renderLista();
   }
 
@@ -113,7 +114,6 @@
     const aviso = Dados.avisoBanco ? Dados.avisoBanco() : '';
     const avisoHtml = aviso ? `<li class="chat-aviso">${esc(aviso)}</li>` : '';
     
-    // Pega todos os contatos da aba ativa imediatamente
     const daAba = contatos.filter((c) => c.aba === abaAtiva);
     let lista = daAba;
     
@@ -243,6 +243,8 @@
     try {
       contatos = await Dados.listarContatos(eu);
     } catch (e) { console.error('Chat: erro ao carregar contatos', e); return; }
+    
+    // Mantém ordenado por última mensagem ou por nome alfabético se não houver conversa
     contatos.sort((a, b) =>
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 

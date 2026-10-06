@@ -48,7 +48,7 @@
     raiz.classList.add('chat-app', 'chat-' + PAPEL);
     raiz.innerHTML = `
       <aside class="chat-lateral">
-        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco">🔒 Criptografado</span></div>
+        <div class="chat-topo"><h2 class="chat-titulo">Chat</h2><span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span></div>
         <div class="chat-tabs"></div>
         <input class="chat-busca" type="search" autocomplete="off">
         <ul class="chat-lista"></ul>
@@ -169,7 +169,7 @@
 
     if (m.apagada) {
       balao.classList.add('apagada');
-      balao.textContent = '🚫 ' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
+      balao.textContent = '' + (Excluir() ? Excluir().TEXTO_APAGADA : 'Mensagem apagada');
     } else if (m.tipo !== 'texto' && Anexos()) {
       balao.classList.add('com-anexo');
       balao.appendChild(Anexos().criarCorpo(m, eu));

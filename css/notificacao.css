@@ -267,3 +267,17 @@ button[type="submit"]:hover,
   background-color: var(--tinta-clara);
   color: #ffffff;
 }
+
+
+
+/* Força o botão primário de Notificações a usar exatamente o mesmo tom de Matrículas (#1F2D50) */
+.cartao form button.btn-primario,
+.cartao form .btn-primario {
+  background-color: #1F2D50 !important;
+  color: #FFFFFF !important;
+}
+
+.cartao form button.btn-primario:hover,
+.cartao form .btn-primario:hover {
+  background-color: var(--tinta-clara) !important;
+}

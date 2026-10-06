@@ -1,6 +1,6 @@
 /* UniChamada - estilo do chat (professor) */
 .chat-professor {
-  --chat-azul: #1f4e8c;
+  --chat-azul: #1F2D50; /* Atualizado para o tom oficial do sistema */
   --chat-azul-claro: #e8eefc;
   --chat-cinza: #eceff3;
   --chat-borda: #dde2ea;
@@ -138,4 +138,13 @@
 .chat-professor .chat-selo {
   padding: 3px 9px; border-radius: 999px; background: #e8f7ee; color: #15803d;
   font-size: .72rem; font-weight: 600; white-space: nowrap;
+}
+
+
+
+
+/* Padronização de hover do botão enviar no chat do professor */
+.chat-professor .chat-enviar:hover:not(:disabled) {
+  background-color: var(--tinta-clara, #3b4d7c) !important;
+  filter: none;
 }

@@ -309,7 +309,7 @@ function abrirModalDetalheNotificacao(notif, professor, callbackMarcadoLido) {
     style: 'background: #fff; width: 92%; max-width: 650px; max-height: 85vh; border-radius: 10px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.3);'
   });
 
-  // Cabeçalho limpo apenas com o Título (sem o botão X)
+  // Cabeçalho limpo apenas com o Título
   const cabecalhoDetalhe = criarElemento('div', {
     style: 'border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 20px;'
   }, [
@@ -318,13 +318,10 @@ function abrirModalDetalheNotificacao(notif, professor, callbackMarcadoLido) {
 
   const corpoDetalhe = criarElemento('div', { style: 'overflow-y: auto; flex: 1; padding-right: 5px; line-height: 1.6;' });
 
-  const rawData = notif.criado_em || notif.criadoEm || notif.data;
-  const dataFormatada = rawData ? new Date(rawData).toLocaleString('pt-BR') : '';
-  
-  const infoData = criarElemento('p', { style: 'margin: 0 0 15px 0; color: #888; font-size: 0.85em;' }, [`Recebido em: ${dataFormatada}`]);
+  // Exibição apenas da mensagem (informação de data removida)
   const textoMensagem = criarElemento('div', { style: 'margin: 0 0 20px 0; font-size: 1em; color: #333; white-space: pre-wrap; word-break: break-word;' }, [notif.mensagem || '']);
 
-  corpoDetalhe.append(infoData, textoMensagem);
+  corpoDetalhe.append(textoMensagem);
 
   if (notif.anexo_url || notif.anexoUrl) {
     const containerAnexo = criarElemento('div', { style: 'margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd;' }, [
@@ -383,4 +380,4 @@ function abrirModalDetalheNotificacao(notif, professor, callbackMarcadoLido) {
 }
 
 // Exposição no escopo global
-window.inicializarSinoNotificacoes = inicializarSinoNotificacoes;
+window.inicializarSinoNotificacoes = inicializarSinoNotificacoes; 

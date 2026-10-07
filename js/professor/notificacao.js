@@ -20,7 +20,7 @@
 let contadorAnteriorNotificacoes = 0;
 
 /**
- * Busca e cruza os registros das tabelas `notificacoes` e `notificacao_professores` 
+ * Busca e cruza os registros das tabelas `notificacoes_coordenador` e `notificacao_professores` 
  * para determinar quais avisos pertencem ao professor logado e qual o status de leitura.
  *
  * @async
@@ -30,7 +30,7 @@ let contadorAnteriorNotificacoes = 0;
 async function buscarNotificacoesProfessor(professorId) {
   try {
     const relacoes = await dbListar('notificacao_professores') || [];
-    const notificacoes = await dbListar('notificacoes') || [];
+    const notificacoes = await dbListar('notificacoes_coordenador') || [];
 
     // Mapeia os vínculos de leitura direcionados a este professor
     const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
@@ -38,8 +38,10 @@ async function buscarNotificacoesProfessor(professorId) {
 
     // Filtra avisos destinados a "todos" ou especificamente ao professor
     const minhasNotificacoes = notificacoes.filter(n => {
+      // 1. Se já existe relação criada para esta notificação no banco
       if (relacoesMap.has(n.id)) return true;
 
+      // 2. Trata e normaliza os destinatários
       let dests = n.destinatarios;
       if (typeof dests === 'string') {
         try { 
@@ -49,6 +51,7 @@ async function buscarNotificacoesProfessor(professorId) {
         }
       }
 
+      // Se destinatários estiver vazio/nulo, assume como notificação pública/global
       if (!dests) return true;
 
       if (Array.isArray(dests)) {
@@ -65,6 +68,7 @@ async function buscarNotificacoesProfessor(professorId) {
       };
     });
 
+    // Ordenação decrescente por data de criação (mais recentes primeiro)
     minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data) - new Date(a.criado_em || a.criadoEm || a.data));
 
     const pendentes = minhasNotificacoes.filter(n => !n.lida);
@@ -80,7 +84,7 @@ async function buscarNotificacoesProfessor(professorId) {
  * Injeta o componente do sino no cabeçalho do painel do professor.
  *
  * @async
- * @param {HTMLElement} cabecalhoElemento - Contêiner pai do cabeçalho retornado.
+ * @param {HTMLElement} cabecalhoElemento - Contêiner pai do cabeçalho retornado por `montarCabecalhoPainel`.
  * @param {Object} professor - Objeto de dados do professor autenticado.
  * @returns {Promise<void>}
  */
@@ -123,6 +127,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
       badge.textContent = qtd > 99 ? '99+' : String(qtd);
       badge.style.display = 'block';
 
+      // Dispara efeito sonoro caso haja acréscimo de novas notificações
       if (qtd > contadorAnteriorNotificacoes) {
         tocarSomNotificacao();
       }
@@ -142,20 +147,40 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
     abrirModalNotificacoesProfessor(todas, professor, atualizarContador);
   });
 
-  // Ancoragem resiliente no DOM ao lado do botão "Sair"
-  const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button'));
-  const btnSair = todosBotoes.find(btn => btn.textContent.trim().toLowerCase().includes('sair') || btn.classList.contains('btn-sair'));
+  // Ancoragem resiliente com tentativas automáticas no DOM
+  const tentarInserir = () => {
+    if (document.querySelector('.container-sino-notificacao')) return true;
 
-  if (btnSair && btnSair.parentNode) {
-    btnSair.parentNode.style.display = 'flex';
-    btnSair.parentNode.style.alignItems = 'center';
-    btnSair.parentNode.insertBefore(containerSino, btnSair);
-  } else if (cabecalhoElemento) {
-    const localInsercao = cabecalhoElemento.querySelector('.cabecalho-usuario, .usuario-info, div:last-child') || cabecalhoElemento;
-    localInsercao.appendChild(containerSino);
+    const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button, button'));
+    const btnSair = todosBotoes.find(btn => {
+      const texto = btn.textContent.trim().toLowerCase();
+      return texto.includes('sair') || texto.includes('logout') || texto.includes('encerrar') || btn.classList.contains('btn-sair');
+    });
+
+    if (btnSair && btnSair.parentNode) {
+      btnSair.parentNode.style.display = 'flex';
+      btnSair.parentNode.style.alignItems = 'center';
+      btnSair.parentNode.insertBefore(containerSino, btnSair);
+      return true;
+    } 
+
+    const headerAlvo = cabecalhoElemento || document.querySelector('header') || document.querySelector('.painel-cabecalho') || document.querySelector('#tela-professor');
+    if (headerAlvo) {
+      const localInsercao = headerAlvo.querySelector('.cabecalho-usuario, .usuario-info, div:last-child') || headerAlvo;
+      localInsercao.appendChild(containerSino);
+      return true;
+    }
+
+    return false;
+  };
+
+  if (!tentarInserir()) {
+    setTimeout(tentarInserir, 300);
+    setTimeout(tentarInserir, 800);
+    setTimeout(tentarInserir, 1500);
   }
 
-  // Assinatura reativa no banco para atualizar o sino sem refresh
+  // Assinatura reativa no banco para atualizar o sino sem dar refresh
   if (typeof dbAoAtualizar === 'function') {
     dbAoAtualizar(async () => {
       await atualizarContador();
@@ -165,6 +190,8 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
 
 /**
  * Sintetiza um aviso sonoro via Web Audio API.
+ *
+ * @function tocarSomNotificacao
  */
 function tocarSomNotificacao() {
   try {
@@ -173,8 +200,8 @@ function tocarSomNotificacao() {
     const gain = audioContext.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, audioContext.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15);
+    osc.frequency.setValueAtTime(587.33, audioContext.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15); // A5
 
     gain.gain.setValueAtTime(0.3, audioContext.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
@@ -190,7 +217,12 @@ function tocarSomNotificacao() {
 }
 
 /**
- * Constrói e exibe a janela modal com a listagem de avisos.
+ * Constrói e exibe a janela modal com a listagem de avisos e 
+ * executa a persistência de leitura (`lida = true`) no Supabase.
+ *
+ * @param {Array<Object>} listaNotificacoes - Coleção completa de notificações do professor.
+ * @param {Object} professor - Dados do professor autenticado.
+ * @param {Function} callbackAtualizar - Função para acionar a atualização do badge após leitura.
  */
 function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackAtualizar) {
   const overlay = criarElemento('div', {
@@ -244,6 +276,7 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
         item.appendChild(linkAnexo);
       }
 
+      // Ao interagir com o item, efetua o UPDATE/INSERT no banco de dados e zera o badge
       if (!notif.lida) {
         const marcarComoLida = async () => {
           if (notif.lida) return;

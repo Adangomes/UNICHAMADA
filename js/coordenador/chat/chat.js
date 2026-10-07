@@ -56,7 +56,6 @@
           <h2 class="chat-titulo">Chat</h2>
           <div style="display: flex; gap: 6px; align-items: center;">
             <span class="chat-selo" title="Textos e arquivos são gravados criptografados no banco"></span>
-
           </div>
         </div>
         <div class="chat-tabs"></div>
@@ -96,7 +95,7 @@
 
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
     $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
-      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'], emoji));
+      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
     });
   }
 

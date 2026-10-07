@@ -199,7 +199,7 @@ async function renderAbaChamadas(container, professor) {
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Chamadas']),
-      criarElemento('p', {}, ['Gere a chamada de uma turma e acompanhe/ajuste a frequência de cada aluno.'])
+      criarElemento('p', {}, [''])
     ])
   ]));
 

@@ -96,7 +96,7 @@
 
     $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
     $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
-      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
+      if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'], emoji));
     });
   }
 
@@ -145,8 +145,7 @@
     if (!ABAS.includes(aba)) return;
     seletorAberto = abaAtiva === aba ? !seletorAberto : true;
     abaAtiva = aba;
-    $('.chat-busca').value = '';
-    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    $('.chat-busca').value = '';$('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
     renderLista();
     if (seletorAberto) $('.chat-busca').focus();
   }
@@ -217,14 +216,14 @@
         li.querySelector('.chat-mais').setAttribute('aria-expanded', String(abrir));
       });
       li.querySelector('.chat-remover')?.addEventListener('click', () => removerDaLista(c));
-      // O menu de contexto original continua disponível para apagar o histórico.
       if (Menu() && Excluir()) Menu().vincular(li, () => [Excluir().itemMenuConversa(c, () => apagarConversa(c))]);
     });
   }
 
   function removerDaLista(c) {
     if (!c) return;
-    selecionados.delete(chave(c)); ocultos.add(chave(c));
+    selecionados.delete(chave(c)); 
+    ocultos.add(chave(c));
     if (ativo && chave(ativo) === chave(c)) limparPainel();
     renderLista();
   }
@@ -324,7 +323,6 @@
       contatos = await Dados.listarContatos(eu);
     } catch (e) { console.error('Chat: erro ao carregar contatos', e); return; }
     
-    // Mantém ordenado por última mensagem ou por nome alfabético se não houver conversa
     contatos.sort((a, b) =>
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
@@ -364,8 +362,7 @@
       $('.chat-mensagens').innerHTML = lista.length ? '' : '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
       lista.forEach(adicionarMensagem); rolarFim();
       $('.chat-input').disabled = false; $('.chat-enviar').disabled = false;
-      $('.chat-btn-anexo').disabled = !Anexos(); $('.chat-btn-emoji').disabled = !Emojis();
-      $('.chat-input').focus();
+      $('.chat-btn-anexo').disabled = !Anexos(); $('.chat-btn-emoji').disabled = !Emojis();$('.chat-input').focus();
       await Dados.marcarComoLidas(contato.conversa.id, eu);
       if (versao !== versaoAbertura) return;
       contato.naoLidas = 0; renderLista();
@@ -473,7 +470,6 @@
     });
   }
 
-  // API: altera somente a lista local; não apaga mensagens no banco.
   window.ChatCoordenador = {
     removerDaLista(id, aba = 'professor') {
       if (!raiz || !$('.chat-lista')) return;

@@ -3,7 +3,7 @@
  * 
  * Este módulo provê as rotinas de busca, cálculo de pendências, notificação sonora,
  * injeção resiliente do componente visual do sino no cabeçalho e exibição da janela
- * modal com atualização automática de estado no PostgreSQL/Supabase.
+ * modal com atualização de estado no PostgreSQL/Supabase por clique direto.
  * 
  * @module NotificacoesProfessor
  * @requires dbListar
@@ -217,7 +217,7 @@ function tocarSomNotificacao() {
 
 /**
  * Constrói e exibe a janela modal com a listagem de avisos e 
- * executa a persistência de leitura (`lida = true`) no Supabase.
+ * executa a persistência de leitura (`lida = true`) no Supabase apenas após o clique do usuário na mensagem.
  *
  * @param {Array<Object>} listaNotificacoes - Coleção completa de notificações do professor.
  * @param {Object} professor - Dados do professor autenticado.
@@ -254,7 +254,7 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
     listaNotificacoes.forEach(notif => {
       const item = criarElemento('div', {
         class: `modal-notificacao-item ${notif.lida ? 'lida' : ''}`,
-        style: `padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid ${notif.lida ? '#ccc' : '#007bff'}; background: ${notif.lida ? '#f9f9f9' : '#eef5ff'}; transition: background 0.2s;`
+        style: `padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid ${notif.lida ? '#ccc' : '#007bff'}; background: ${notif.lida ? '#f9f9f9' : '#eef5ff'}; cursor: pointer; transition: background 0.2s;`
       });
 
       const titulo = criarElemento('h4', { style: 'margin: 0 0 5px 0; font-size: 1em; color: #222;' }, [notif.titulo]);
@@ -275,9 +275,12 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
         item.appendChild(linkAnexo);
       }
 
-      // Ao interagir com o item, efetua o UPDATE/INSERT no banco de dados e zera o badge
+      // Ao clicar na notificação dentro do modal, efetua a gravação de leitura no banco e muda o visual para cinza
       if (!notif.lida) {
-        const marcarComoLida = async () => {
+        const marcarComoLida = async (e) => {
+          // Evita conflito se clicar diretamente no link do anexo
+          if (e.target.tagName === 'A') return;
+
           if (notif.lida) return;
           notif.lida = true;
           item.style.borderLeftColor = '#ccc';
@@ -299,13 +302,12 @@ function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackA
               if (res && res.id) notif.relacaoId = res.id;
             }
             await callbackAtualizar();
-          } catch (e) {
-            console.warn('[notificacao.js] Falha ao registrar confirmação de leitura:', e);
+          } catch (err) {
+            console.warn('[notificacao.js] Falha ao registrar confirmação de leitura:', err);
           }
         };
 
-        item.addEventListener('mouseenter', marcarComoLida, { once: true });
-        item.addEventListener('click', marcarComoLida, { once: true });
+        item.addEventListener('click', marcarComoLida);
       }
 
       corpoModal.appendChild(item);

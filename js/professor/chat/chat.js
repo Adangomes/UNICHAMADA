@@ -177,9 +177,6 @@
       const c = contatos.find((c) => chave(c) === b.dataset.chave);
       if (!c) return;
       selecionados.add(chave(c)); ocultos.delete(chave(c)); seletorAberto = false;
-      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
-        Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, true).catch(() => {});
-      }
       renderLista(); abrirConversa(c).catch(mostrarErro);
     }));
     const ul = $('.chat-lista');
@@ -212,24 +209,14 @@
         menu.hidden = !abrir;
         li.querySelector('.chat-mais').setAttribute('aria-expanded', String(abrir));
       });
-      li.querySelector('.chat-remover')?.addEventListener('click', () => removerDaLista(c));
+      li.querySelector('.chat-remover')?.addEventListener('click', () => apagarConversa(c));
       if (Menu() && Excluir()) Menu().vincular(li, () => [Excluir().itemMenuConversa(c, () => apagarConversa(c))]);
     });
   }
 
   async function removerDaLista(c) {
     if (!c) return;
-    selecionados.delete(chave(c)); ocultos.add(chave(c));
-    if (ativo && chave(ativo) === chave(c)) limparPainel();
-    renderLista();
-
-    try {
-      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
-        await Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, false);
-      }
-    } catch (err) {
-      console.warn('Aviso: Estado de ocultação mantido apenas localmente por enquanto.', err);
-    }
+    await apagarConversa(c);
   }
 
   function mostrarErro(e) {
@@ -305,7 +292,6 @@
     rolarFim();
   }
 
-  // Troca o balão de uma mensagem já exibida (edição, exclusão, foto aberta...)
   function aplicarAtualizacao(m) {
     if (!mensagens.has(m.id)) return;
     mensagens.set(m.id, m);
@@ -333,20 +319,19 @@
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
     if (primeiraCarga) {
-      contatos.filter((c) => c.conversa && c.conversa.visivel !== false).forEach((c) => selecionados.add(chave(c)));
-      contatos.filter((c) => c.conversa && c.conversa.oculto === true).forEach((c) => ocultos.add(chave(c)));
+      contatos.filter((c) => c.conversa).forEach((c) => selecionados.add(chave(c)));
       primeiraCarga = false;
     }
-    if (ativo) {                                        // mantém a conversa aberta apontando para o contato novo
+    if (ativo) {
       const atual = contatos.find((c) => chave(c) === chave(ativo));
       if (atual && atual.conversa) ativo = atual;
-      else if (ativo.conversa) limparPainel();      // a conversa foi apagada (pela outra pessoa)
+      else if (ativo.conversa) limparPainel();
       else if (atual) ativo = atual;
     }
     renderLista();
   }
 
-  function recarregarContatosDepois() {            // junta várias atualizações seguidas em uma só
+  function recarregarContatosDepois() {
     clearTimeout(timerRecarga);
     timerRecarga = setTimeout(carregarContatos, 300);
   }
@@ -357,11 +342,6 @@
     const versao = versaoAbertura;
     ativo = contato;
     selecionados.add(chave(contato)); ocultos.delete(chave(contato));
-
-    if (contato.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
-      Dados.atualizarVisibilidadeConversa(contato.conversa.id, eu, true).catch(() => {});
-    }
-
     atualizarCabecalho(); renderLista();
     $('.chat-mensagens').innerHTML = '<p class="chat-vazio">Carregando...</p>';
     try {
@@ -429,9 +409,11 @@
   }
 
   async function apagarConversa(contato) {
+    if (!Excluir()) return;
     const ok = await Excluir().apagarConversa(contato);
     if (!ok) return;
-    selecionados.delete(chave(contato)); ocultos.add(chave(contato));
+    selecionados.delete(chave(contato));
+    ocultos.add(chave(contato));
     if (ativo && chave(ativo) === chave(contato)) limparPainel();
     await carregarContatos();
   }
@@ -444,11 +426,6 @@
       contato = contatos.find((c) => c.conversa && c.conversa.id === m.conversa_id);
       if (!contato) return;                // não é uma conversa minha
     }
-    
-    // Se receber mensagem nova de alguém oculto, traz de volta pra lista
-    ocultos.delete(chave(contato));
-    selecionados.add(chave(contato));
-
     contato.conversa.ultima_mensagem = previaDe(m);
     contato.conversa.ultima_mensagem_em = m.created_at;
     const minha = Dados.ehMinha(m, eu);
@@ -469,7 +446,6 @@
   }
 
   // ---------- INÍCIO ----------
-  // Identidade = quem já entrou no sistema (RA + e-mail), guardado por auth/auth.js
   function usuarioDaSessao() {
     const sessao = typeof window.obterSessao === 'function' ? window.obterSessao() : null;
     if (!sessao || sessao.tipo !== PAPEL || !sessao.dados) return null;
@@ -491,7 +467,6 @@
   }
 
   // ---------- API PÚBLICA ----------
-  // API: altera somente a lista local; não apaga mensagens no banco.
   window.ChatProfessor = {
     removerDaLista(id, aba = 'coordenador') {
       if (!raiz || !$('.chat-lista')) return;

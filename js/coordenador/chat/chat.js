@@ -93,8 +93,10 @@
       if (e.key === 'Escape') { seletorAberto = false; renderAbas(); }
     };
 
-    $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
-    $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
+    $('.chat-enviar').addEventListener('click', enviar);
+    $('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
+    $('.chat-btn-anexo').addEventListener('click', anexar);
+    $('.chat-btn-emoji').addEventListener('click', () => {
       if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
     });
   }
@@ -144,7 +146,8 @@
     if (!ABAS.includes(aba)) return;
     seletorAberto = abaAtiva === aba ? !seletorAberto : true;
     abaAtiva = aba;
-    $('.chat-busca').value = '';$('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    $('.chat-busca').value = '';
+    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
     renderLista();
     if (seletorAberto) $('.chat-busca').focus();
   }
@@ -182,6 +185,9 @@
       const c = contatos.find((c) => chave(c) === b.dataset.chave);
       if (!c) return;
       selecionados.add(chave(c)); ocultos.delete(chave(c)); seletorAberto = false;
+      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+        Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, true).catch(() => {});
+      }
       renderLista(); abrirConversa(c).catch(mostrarErro);
     }));
     const ul = $('.chat-lista');
@@ -219,12 +225,21 @@
     });
   }
 
-  function removerDaLista(c) {
+  async function removerDaLista(c) {
     if (!c) return;
     selecionados.delete(chave(c)); 
     ocultos.add(chave(c));
     if (ativo && chave(ativo) === chave(c)) limparPainel();
     renderLista();
+
+    // Sincroniza com o Supabase se o backend suportar ocultar/arquivar a conversa
+    try {
+      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+        await Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, false);
+      }
+    } catch (err) {
+      console.warn('Aviso: Estado de ocultação mantido apenas localmente por enquanto.', err);
+    }
   }
 
   function mostrarErro(e) {
@@ -326,7 +341,13 @@
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
     if (primeiraCarga) {
-      contatos.filter((c) => c.conversa).forEach((c) => selecionados.add(chave(c)));
+      contatos.filter((c) => c.conversa && c.conversa.visivel !== false).forEach((c) => {
+        selecionados.add(chave(c));
+      });
+      // Se a API retornar explicitamente quais estão ocultas para este usuário no banco:
+      contatos.filter((c) => c.conversa && c.conversa.oculto === true).forEach((c) => {
+        ocultos.add(chave(c));
+      });
       primeiraCarga = false;
     }
     if (ativo) {
@@ -349,6 +370,12 @@
     const versao = versaoAbertura;
     ativo = contato;
     selecionados.add(chave(contato)); ocultos.delete(chave(contato));
+    
+    // Assegura visibilidade no banco ao abrir
+    if (contato.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+      Dados.atualizarVisibilidadeConversa(contato.conversa.id, eu, true).catch(() => {});
+    }
+
     atualizarCabecalho(); renderLista();
     $('.chat-mensagens').innerHTML = '<p class="chat-vazio">Carregando...</p>';
     try {
@@ -430,6 +457,10 @@
       contato = contatos.find((c) => c.conversa && c.conversa.id === m.conversa_id);
       if (!contato) return;
     }
+    // Se nova mensagem chega de alguém que estava oculto, reexibe na lista automaticamente (como o WhatsApp faz)
+    ocultos.delete(chave(contato));
+    selecionados.add(chave(contato));
+
     contato.conversa.ultima_mensagem = previaDe(m);
     contato.conversa.ultima_mensagem_em = m.created_at;
     const minha = Dados.ehMinha(m, eu);

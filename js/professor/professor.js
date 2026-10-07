@@ -557,7 +557,7 @@ async function renderAbaTurmas(container, professor) {
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Minhas turmas']),
-      criarElemento('p', {}, ['Disciplinas e turmas atribuídas a você pela coordenação.'])
+      criarElemento('p', {}, [''])
     ])
   ]));
 

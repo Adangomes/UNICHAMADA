@@ -93,8 +93,10 @@
       if (e.key === 'Escape') { seletorAberto = false; renderAbas(); }
     };
 
-    $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
-    $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
+    $('.chat-enviar').addEventListener('click', enviar);
+    $('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
+    $('.chat-btn-anexo').addEventListener('click', anexar);
+    $('.chat-btn-emoji').addEventListener('click', () => {
       if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
     });
   }

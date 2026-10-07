@@ -9,7 +9,7 @@
   'use strict';
 
   const PAPEL = 'professor';
-  const ABAS = ['coordenador', 'professor'];                       // ordem das abas; a primeira abre por padrão
+  const ABAS = ['coordenador', 'professor'];                        // ordem das abas; a primeira abre por padrão
   const ROTULO = { professor: 'Professores', coordenador: 'Coordenadores' };
   const ROTULO_SING = { professor: 'Professor', coordenador: 'Coordenador' };
   const Dados = window.ChatDados;
@@ -38,7 +38,7 @@
   const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const $ = (sel) => raiz.querySelector(sel);
   const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const chave = (c) => c.aba + ':' + c.id;                 // identifica um contato (id sozinho pode repetir entre tabelas)
+  const chave = (c) => c.aba + ':' + c.id;                       // identifica um contato (id sozinho pode repetir entre tabelas)
   const estaOnline = (c) => online.has(chave(c));
 
   // Texto curto para a lista de contatos
@@ -88,10 +88,8 @@
       if (e.key === 'Escape') { seletorAberto = false; renderAbas(); }
     };
 
-    $('.chat-enviar').addEventListener('click', enviar);
-    $('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
-    $('.chat-btn-anexo').addEventListener('click', anexar);
-    $('.chat-btn-emoji').addEventListener('click', () => {
+    $('.chat-enviar').addEventListener('click', enviar);$('.chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); });
+    $('.chat-btn-anexo').addEventListener('click', anexar);$('.chat-btn-emoji').addEventListener('click', () => {
       if (Emojis()) Emojis().abrir($('.chat-btn-emoji'), (emoji) => Emojis().inserirNoCampo($('.chat-input'), emoji));
     });
   }
@@ -141,8 +139,7 @@
     if (!ABAS.includes(aba)) return;
     seletorAberto = abaAtiva === aba ? !seletorAberto : true;
     abaAtiva = aba;
-    $('.chat-busca').value = '';
-    $('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
+    $('.chat-busca').value = '';$('.chat-busca').placeholder = `Pesquisar ${ROTULO[aba].toLowerCase()}...`;
     renderLista();
     if (seletorAberto) $('.chat-busca').focus();
   }
@@ -311,8 +308,7 @@
     ativo = null;
     mensagens = new Map();
     $('.chat-cabecalho').innerHTML = '<span class="chat-vazio-titulo">Selecione uma conversa</span>';
-    $('.chat-mensagens').innerHTML = '';
-    $('.chat-input').disabled = true;
+    $('.chat-mensagens').innerHTML = '';$('.chat-input').disabled = true;
     $('.chat-enviar').disabled = true;
     $('.chat-btn-anexo').disabled = true;
     $('.chat-btn-emoji').disabled = true;
@@ -330,10 +326,10 @@
       contatos.filter((c) => c.conversa).forEach((c) => selecionados.add(chave(c)));
       primeiraCarga = false;
     }
-    if (ativo) {                                   // mantém a conversa aberta apontando para o contato novo
+    if (ativo) {                                        // mantém a conversa aberta apontando para o contato novo
       const atual = contatos.find((c) => chave(c) === chave(ativo));
       if (atual && atual.conversa) ativo = atual;
-      else if (ativo.conversa) limparPainel();     // a conversa foi apagada (pela outra pessoa)
+      else if (ativo.conversa) limparPainel();      // a conversa foi apagada (pela outra pessoa)
       else if (atual) ativo = atual;
     }
     renderLista();
@@ -362,8 +358,7 @@
       $('.chat-mensagens').innerHTML = lista.length ? '' : '<p class="chat-vazio">Nenhuma mensagem ainda. Diga olá!</p>';
       lista.forEach(adicionarMensagem); rolarFim();
       $('.chat-input').disabled = false; $('.chat-enviar').disabled = false;
-      $('.chat-btn-anexo').disabled = !Anexos(); $('.chat-btn-emoji').disabled = !Emojis();
-      $('.chat-input').focus();
+      $('.chat-btn-anexo').disabled = !Anexos(); $('.chat-btn-emoji').disabled = !Emojis();$('.chat-input').focus();
       await Dados.marcarComoLidas(contato.conversa.id, eu);
       if (versao !== versaoAbertura) return;
       contato.naoLidas = 0; renderLista();
@@ -512,4 +507,4 @@
     seletorAberto = false; versaoAbertura += 1;
     await abrirChat();
   };
-})(); 
+})();

@@ -36,13 +36,11 @@ async function buscarNotificacoesProfessor(professorId) {
     const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
     const relacoesMap = new Map(minhasRelacoes.map(r => [r.notificacao_id || r.notificacaoId, r]));
 
-    // Filtra avisos destinados a "todos" ou especificamente ao professor
+    // Filtra avisos destinados a "todos" ou especificamente ao professor de forma ultra-resiliente
     const minhasNotificacoes = notificacoes.filter(n => {
-      // 1. Se já existe relação criada para esta notificação no banco
-      if (relacoesMap.has(n.id)) return true;
-
-      // 2. Trata e normaliza os destinatários
       let dests = n.destinatarios;
+
+      // Trata e normaliza os destinatários caso venham como string JSON ou texto puro
       if (typeof dests === 'string') {
         try { 
           dests = JSON.parse(dests); 
@@ -54,11 +52,12 @@ async function buscarNotificacoesProfessor(professorId) {
       // Se destinatários estiver vazio/nulo, assume como notificação pública/global
       if (!dests) return true;
 
-      if (Array.isArray(dests)) {
-        return dests.includes('todos') || dests.includes(professorId);
-      }
+      const arrayDests = Array.isArray(dests) ? dests : [dests];
+      
+      const ehParaTodos = arrayDests.some(d => String(d).toLowerCase() === 'todos');
+      const ehParaEsteProfessor = arrayDests.some(d => String(d).trim() === String(professorId).trim());
 
-      return dests === 'todos' || dests === professorId;
+      return ehParaTodos || ehParaEsteProfessor;
     }).map(n => {
       const rel = relacoesMap.get(n.id);
       return {
@@ -69,7 +68,7 @@ async function buscarNotificacoesProfessor(professorId) {
     });
 
     // Ordenação decrescente por data de criação (mais recentes primeiro)
-    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data) - new Date(a.criado_em || a.criadoEm || a.data));
+    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data || 0) - new Date(a.criado_em || a.criadoEm || a.data || 0));
 
     const pendentes = minhasNotificacoes.filter(n => !n.lida);
 

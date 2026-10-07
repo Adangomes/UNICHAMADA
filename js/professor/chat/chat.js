@@ -38,7 +38,7 @@
   const hora = (iso) => new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const $ = (sel) => raiz.querySelector(sel);
   const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const chave = (c) => c.aba + ':' + c.id;                       // identifica um contato (id sozinho pode repetir entre tabelas)
+  const chave = (c) => c.aba + ':' + c.id;                        // identifica um contato (id sozinho pode repetir entre tabelas)
   const estaOnline = (c) => online.has(chave(c));
 
   // Texto curto para a lista de contatos
@@ -177,6 +177,9 @@
       const c = contatos.find((c) => chave(c) === b.dataset.chave);
       if (!c) return;
       selecionados.add(chave(c)); ocultos.delete(chave(c)); seletorAberto = false;
+      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+        Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, true).catch(() => {});
+      }
       renderLista(); abrirConversa(c).catch(mostrarErro);
     }));
     const ul = $('.chat-lista');
@@ -210,16 +213,23 @@
         li.querySelector('.chat-mais').setAttribute('aria-expanded', String(abrir));
       });
       li.querySelector('.chat-remover')?.addEventListener('click', () => removerDaLista(c));
-      // O menu de contexto original continua disponível para apagar o histórico.
       if (Menu() && Excluir()) Menu().vincular(li, () => [Excluir().itemMenuConversa(c, () => apagarConversa(c))]);
     });
   }
 
-  function removerDaLista(c) {
+  async function removerDaLista(c) {
     if (!c) return;
     selecionados.delete(chave(c)); ocultos.add(chave(c));
     if (ativo && chave(ativo) === chave(c)) limparPainel();
     renderLista();
+
+    try {
+      if (c.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+        await Dados.atualizarVisibilidadeConversa(c.conversa.id, eu, false);
+      }
+    } catch (err) {
+      console.warn('Aviso: Estado de ocultação mantido apenas localmente por enquanto.', err);
+    }
   }
 
   function mostrarErro(e) {
@@ -323,7 +333,8 @@
       (b.conversa?.ultima_mensagem_em || '').localeCompare(a.conversa?.ultima_mensagem_em || '') || a.nome.localeCompare(b.nome));
 
     if (primeiraCarga) {
-      contatos.filter((c) => c.conversa).forEach((c) => selecionados.add(chave(c)));
+      contatos.filter((c) => c.conversa && c.conversa.visivel !== false).forEach((c) => selecionados.add(chave(c)));
+      contatos.filter((c) => c.conversa && c.conversa.oculto === true).forEach((c) => ocultos.add(chave(c)));
       primeiraCarga = false;
     }
     if (ativo) {                                        // mantém a conversa aberta apontando para o contato novo
@@ -346,6 +357,11 @@
     const versao = versaoAbertura;
     ativo = contato;
     selecionados.add(chave(contato)); ocultos.delete(chave(contato));
+
+    if (contato.conversa && typeof Dados.atualizarVisibilidadeConversa === 'function') {
+      Dados.atualizarVisibilidadeConversa(contato.conversa.id, eu, true).catch(() => {});
+    }
+
     atualizarCabecalho(); renderLista();
     $('.chat-mensagens').innerHTML = '<p class="chat-vazio">Carregando...</p>';
     try {
@@ -428,6 +444,11 @@
       contato = contatos.find((c) => c.conversa && c.conversa.id === m.conversa_id);
       if (!contato) return;                // não é uma conversa minha
     }
+    
+    // Se receber mensagem nova de alguém oculto, traz de volta pra lista
+    ocultos.delete(chave(contato));
+    selecionados.add(chave(contato));
+
     contato.conversa.ultima_mensagem = previaDe(m);
     contato.conversa.ultima_mensagem_em = m.created_at;
     const minha = Dados.ehMinha(m, eu);

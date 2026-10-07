@@ -257,7 +257,6 @@ function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtual
       });
 
       const titulo = criarElemento('h4', { style: 'margin: 0 0 5px 0; font-size: 1em; color: #222;' }, [notif.titulo]);
-      // Mostra uma prévia curta da mensagem na listagem
       const resumoTexto = notif.mensagem && notif.mensagem.length > 90 ? notif.mensagem.substring(0, 90) + '...' : (notif.mensagem || '');
       const mensagem = criarElemento('p', { style: 'margin: 0 0 8px 0; font-size: 0.85em; color: #555;' }, [resumoTexto]);
       
@@ -270,7 +269,6 @@ function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtual
       // Ao clicar no item da lista, abre o modal detalhado grande (segundo nível)
       item.addEventListener('click', () => {
         abrirModalDetalheNotificacao(notif, professor, async () => {
-          // Atualiza o visual deste item na lista atual para cinza (lida)
           notif.lida = true;
           item.style.borderLeftColor = '#ccc';
           item.style.background = '#f9f9f9';
@@ -311,14 +309,11 @@ function abrirModalDetalheNotificacao(notif, professor, callbackMarcadoLido) {
     style: 'background: #fff; width: 92%; max-width: 650px; max-height: 85vh; border-radius: 10px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.3);'
   });
 
+  // Cabeçalho limpo apenas com o Título (sem o botão X)
   const cabecalhoDetalhe = criarElemento('div', {
-    style: 'display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 20px;'
+    style: 'border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 20px;'
   }, [
-    criarElemento('h2', { style: 'margin: 0; font-size: 1.3em; color: #111;' }, [notif.titulo || 'Detalhes da Notificação']),
-    criarElemento('button', {
-      style: 'background: #f1f1f1; border: none; font-size: 1.1em; font-weight: bold; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #444; display: flex; align-items: center; justify-content: center;',
-      onClick: () => overlayDetalhe.remove()
-    }, ['✕'])
+    criarElemento('h2', { style: 'margin: 0; font-size: 1.3em; color: #111;' }, [notif.titulo || 'Detalhes da Notificação'])
   ]);
 
   const corpoDetalhe = criarElemento('div', { style: 'overflow-y: auto; flex: 1; padding-right: 5px; line-height: 1.6;' });

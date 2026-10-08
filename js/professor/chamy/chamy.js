@@ -23,8 +23,8 @@ function inicializarChamyProfessor(cabecalho, professor) {
         const botaoSino = iconeSino.closest('button') || iconeSino.parentElement;
         acoesCabecalho.insertBefore(btnChamy, botaoSino);
     } else {
-        // Fallback caso não ache o sino
-        acoesCabecallow.appendChild(btnChamy);
+        // Fallback corrigido para não quebrar a aplicação
+        acoesCabecalho.appendChild(btnChamy);
     }
 
     // 3. Injeta o HTML do modal do chat flutuante no body se ainda não existir

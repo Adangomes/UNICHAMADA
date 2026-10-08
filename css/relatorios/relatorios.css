@@ -17,19 +17,16 @@
   background: radial-gradient(120% 90% at 70% 10%, #0b2a33 0%, var(--rel-fundo) 60%);
   font-family: inherit;
   
-  /* Entrada suave e imponente do dashboard inteiro */
-  animation: rel-app-entra 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Estado inicial (invisível e levemente deslocado para a animação de entrada/saída) */
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes rel-app-entra {
-  from {
-    opacity: 0;
-    transform: translateY(18px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* Estado ativo (quando o painel está aberto ou abrindo) */
+.rel-app.rel-ativo {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .rel-app * { box-sizing: border-box; }
@@ -200,6 +197,6 @@
 
 /* quem pede menos movimento no sistema operacional */
 @media (prefers-reduced-motion: reduce) {
-  .rel-app, .rel-ao-vivo, .rel-pagina { animation: none; }
+  .rel-app, .rel-ao-vivo, .rel-pagina { transition: none; animation: none; }
   .rel-barra-fill, .rel-coluna-fill, .rel-rosca-arco, .rel-slide { transition: none; }
 }

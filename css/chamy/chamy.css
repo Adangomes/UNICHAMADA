@@ -1,5 +1,3 @@
-
-/* Estilo do ícone do Chamy no header */
 .chamy-trigger-btn {
     background: none;
     border: none;
@@ -9,6 +7,11 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.2s ease;
+    
+    /* Tira ele do fluxo normal para não empurrar os outros */
+    position: absolute;
+    /* Ajuste este valor de 'left' para mover ele para a esquerda ou direita livremente */
+    left: -60px; /* Aumente ou diminua os pixels para posicionar exatamente onde quer */
 }
 
 .chamy-trigger-btn:hover {

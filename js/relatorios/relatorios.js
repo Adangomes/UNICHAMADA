@@ -568,7 +568,7 @@
     montar(status, vivo, carimbo, atualizar);
 
     // Botão de Voltar / Fechar tela cheia com UX top
-    const btnVoltar = el('button', 'rel-botao-voltar', '✕ Voltar');
+    const btnVoltar = el('button', 'rel-botao-voltar', 'Voltar');
     btnVoltar.type = 'button';
     btnVoltar.title = 'Fechar painel de relatórios';
     btnVoltar.addEventListener('click', () => {

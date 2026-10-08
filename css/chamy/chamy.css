@@ -13,34 +13,39 @@
 }
 
 /* ---- Botão redondo do robô, no cabeçalho ---- */
+/* ---- Botão do Chamy no Cabeçalho ---- */
 .chamy-botao {
-  width: 38px;                              /* largura do botão */
-  height: 38px;                             /* altura do botão (igual à largura = círculo) */
-  padding: 0;                               /* sem espaço interno: a imagem ocupa tudo */
-  margin: 0 0.1rem 0 0;/* >>> AJUSTE AQUI <<< topo=0, DIREITA=.5rem, baixo=0, esquerda=0.
-                                               A DIREITA é a distância até o sino: use .2rem para colar, .8rem para afastar */
-  border: 2px solid rgba(255, 255, 255, .85); /* contorno branco do botão */
-  border-radius: 50%;                       /* deixa redondo */
-  background: #fff;                         /* fundo branco atrás do PNG (esconde o texto branco do desenho) */
-  cursor: pointer;                          /* mãozinha ao passar o mouse */
-  overflow: hidden;                         /* corta o que passar do círculo */
-  flex: 0 0 auto;                           /* não deixa o cabeçalho esticar nem espremer o botão */
-  transition: transform .15s ease, box-shadow .15s ease; /* animação suave do hover */
-}
-.chamy-botao img {
-  width: 100%;                              /* imagem ocupa toda a largura do botão */
-  height: 100%;                             /* e toda a altura */
-  display: block;                           /* tira o espacinho que imagens têm embaixo */
-  object-fit: contain;                      /* mostra a imagem inteira, sem cortar nem distorcer */
-}
-.chamy-botao:hover {
-  transform: scale(1.08);                   /* cresce um pouquinho ao passar o mouse */
-  box-shadow: 0 0 0 3px rgba(91, 140, 255, .35); /* halo azul claro */
-}
-.chamy-botao.ativo {
-  box-shadow: 0 0 0 3px rgba(91, 140, 255, .7);  /* halo mais forte enquanto o painel está aberto */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, .85);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 10;
+  flex-shrink: 0; /* Impede que o botão seja espremido pelo layout */
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
+.chamy-botao img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.chamy-botao:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, .35);
+}
+
+.chamy-botao.ativo {
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, .7);
+}
 /* ---- Painel de conversa ---- */
 .chamy-painel {
   position: fixed;                          /* fica solto sobre a página, sem empurrar nada */

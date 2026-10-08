@@ -12,18 +12,10 @@ function inicializarChamyProfessor(cabecalho, professor) {
     btnChamy.title = "Conversar com o Chamy";
     btnChamy.innerHTML = `<img src="js/professor/chamy/chamy.png" alt="Chamy" class="chamy-icon-img">`;
     
-    // Procura especificamente o botão do sino ou o ícone de notificação
-    const iconeSino = acoesCabecalho.querySelector('.fa-bell') 
-                   || acoesCabecalho.querySelector('i.fa-bell') 
-                   || acoesCabecalho.querySelector('[class*="bell"]')
-                   || acoesCabecalho.querySelector('button');
-
-    if (iconeSino) {
-        // Encontra o elemento pai (o botão do sino) e insere o Chamy logo antes dele
-        const botaoSino = iconeSino.closest('button') || iconeSino.parentElement;
-        acoesCabecalho.insertBefore(btnChamy, botaoSino);
+    // Insere como o PRIMEIRO item dentro do container de ações (ficando mais à esquerda possível, antes do sino)
+    if (acoesCabecalho.firstChild) {
+        acoesCabecalho.insertBefore(btnChamy, acoesCabecalho.firstChild);
     } else {
-        // Fallback corrigido para não quebrar a aplicação
         acoesCabecalho.appendChild(btnChamy);
     }
 

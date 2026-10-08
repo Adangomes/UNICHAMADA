@@ -46,7 +46,8 @@ const estadoChamy = {
   enviando: false,    // já existe uma pergunta sendo respondida?
   professor: null,    // dados do professor logado
   sessaoId: '',       // id da conversa (o n8n usa para lembrar do contexto)
-  observador: null    // vigia o cabeçalho para recolocar o robô se ele sumir
+  observador: null,        // vigia o cabeçalho para recolocar o robô se ele sumir
+  redimensionador: null    // refaz o ajuste de proximidade quando o cabeçalho muda de tamanho
 };
 
 /* ==========================================================================
@@ -293,6 +294,14 @@ function inicializarChamy(cabecalho, professor) {
     }, 50);
   });
   estadoChamy.observador.observe(cabecalho, { childList: true, subtree: true }); // liga o vigia
+
+  estadoChamy.redimensionador?.disconnect();                                // para um observador de tamanho antigo
+  if (window.ResizeObserver) {                                              // navegador suporta?
+    estadoChamy.redimensionador = new ResizeObserver(() => {                // avisa quando o cabeçalho muda de tamanho
+      if (botao.isConnected) chamyAjustarProximidade(botao, cabecalho);     //   (inclui o momento em que ele aparece na tela)
+    });
+    estadoChamy.redimensionador.observe(cabecalho);                         // liga o observador
+  }
 }
 
 /**
@@ -317,21 +326,40 @@ function chamyPosicionar(botao, cabecalho) {
       cabecalho.appendChild(botao);                                         // plano B: fim do cabeçalho
     }
 
-    // ---- Aproxima o robô do sino quando sobra espaço vazio entre os dois ----
-    if (referencia && referencia !== botao) {
-      const folga = referencia.getBoundingClientRect().left                 // posição esquerda do sino
-                  - botao.getBoundingClientRect().right;                    // menos a direita do robô = espaço vazio
-      if (folga > CHAMY_CONFIG.folgaMaxima) {                               // >>> AJUSTE AQUI (folgaMaxima no topo) <<<
-        botao.style.marginLeft = 'auto';                                    // o robô passa a "empurrar" tudo para a direita
-        const mlSino = parseFloat(getComputedStyle(referencia).marginLeft); // margem esquerda atual do sino
-        if (mlSino > CHAMY_CONFIG.folgaMaxima) referencia.style.marginLeft = '0'; // o sino abre mão do empurrão
-      }
-    }
+    chamyAjustarProximidade(botao, cabecalho);                              // aproxima o robô do sino (se já houver layout)
 
-    if (botao.offsetWidth === 0 && botao.offsetHeight === 0) cabecalho.appendChild(botao); // invisível? vai pro fim
+    const cabecalhoVisivel = cabecalho.offsetWidth > 0;                     // o cabeçalho já aparece na tela?
+    if (cabecalhoVisivel && botao.offsetWidth === 0 && botao.offsetHeight === 0) cabecalho.appendChild(botao); // só o botão está invisível? vai pro fim
   } catch (erro) {
     console.error('[Chamy] erro ao posicionar o botão:', erro);             // mostra o erro no Console
     if (!botao.isConnected) cabecalho.appendChild(botao);                   // garante que o botão exista na tela
+  }
+}
+
+/**
+ * Aproxima o robô do elemento que vem logo depois dele (o sino) quando sobra espaço vazio.
+ * Só mede quando o cabeçalho já tem tamanho na tela; se ainda estiver escondido, espera
+ * (o ResizeObserver chama esta função de novo assim que ele aparecer).
+ */
+function chamyAjustarProximidade(botao, cabecalho) {
+  const vizinho = botao.nextElementSibling;                                 // elemento logo depois do robô (sino ou "Sair")
+  if (!vizinho || cabecalho.offsetWidth === 0) return;                      // sem vizinho ou sem layout ainda: tenta depois
+
+  botao.style.marginLeft = '';                                              // tira o ajuste anterior para medir do zero
+  if (vizinho.dataset.chamyMl !== undefined) {                              // o vizinho foi alterado por nós antes?
+    vizinho.style.marginLeft = vizinho.dataset.chamyMl;                     //   devolve a margem original dele
+    delete vizinho.dataset.chamyMl;                                         //   e apaga o lembrete
+  }
+
+  const folga = vizinho.getBoundingClientRect().left                        // posição esquerda do sino
+              - botao.getBoundingClientRect().right;                        // menos a direita do robô = espaço vazio
+  if (folga > CHAMY_CONFIG.folgaMaxima) {                                   // >>> AJUSTE AQUI (folgaMaxima no topo) <<<
+    botao.style.marginLeft = 'auto';                                        // o robô passa a "empurrar" tudo para a direita
+    const mlVizinho = parseFloat(getComputedStyle(vizinho).marginLeft);     // margem esquerda atual do sino
+    if (mlVizinho > CHAMY_CONFIG.folgaMaxima) {                             // o sino também estava se empurrando para a direita?
+      vizinho.dataset.chamyMl = vizinho.style.marginLeft || '';             //   guarda a margem original para poder restaurar
+      vizinho.style.marginLeft = '0';                                       //   o sino abre mão do empurrão
+    }
   }
 }
 

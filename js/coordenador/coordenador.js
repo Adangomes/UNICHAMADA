@@ -32,93 +32,12 @@ const ABAS_COORDENADOR = [
     render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
   }
 ];
-
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.
 // É preenchido lá no montarPainelCoordenador() e usado pelas funções de render.
 let elementoConteudoCoordenador = null;
 
 // Qual aba tá ativa no momento. Começa em 'professores' por padrão.
 let abaAtivaCoordenador = 'professores';
-
-/**
- * Função interna para inicializar e injetar o Modo Noturno perfeitamente.
- */
-function inicializarModoNoturnoIntegrado() {
-  if (document.getElementById('un-modo-container')) return;
-
-  const body = document.body;
-  body.classList.add('modo-escuro');
-
-  // Aplica a intensidade padrão inicial (50%)
-  const intensidade = 0.5;
-  const r = Math.round(4 * (1 - intensidade));
-  const g = Math.round(16 * (1 - intensidade));
-  const b = Math.round(22 * (1 - intensidade));
-  document.documentElement.style.setProperty('--rel-fundo', `rgb(${r}, ${g}, ${b})`);
-  document.documentElement.style.setProperty('--un-intensidade-val', '50%');
-
-  // Procura o botão "Sair" diretamente na tela
-  const botoes = Array.from(document.querySelectorAll('button, a'));
-  const btnSair = botoes.find(b => b.textContent.trim().toLowerCase() === 'sair');
-
-  if (!btnSair || !btnSair.parentNode) return;
-
-  const wrapper = document.createElement('div');
-  wrapper.id = 'un-modo-container';
-  wrapper.className = 'un-modo-painel';
-  wrapper.style.display = 'inline-block';
-  wrapper.style.position = 'relative';
-  wrapper.style.marginRight = '8px';
-
-  wrapper.innerHTML = `
-    <button id="btn-modo-noturno" class="rel-atualizar" type="button" title="Ajustar Modo Noturno" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;">
-      <i class="bi bi-moon-stars-fill"></i>
-    </button>
-    <div id="un-modo-menu" class="un-modo-menu">
-      <p class="un-modo-titulo">Intensidade do Escuro</p>
-      <div class="un-modo-slider-grupo">
-        <input type="range" id="un-slider-intensidade" class="un-modo-slider" min="0" max="100" value="50">
-        <div class="un-modo-info">
-          <span>Suave</span>
-          <span id="un-valor-txt">50%</span>
-          <span>OLED</span>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Insere o botão da lua exatamente antes do botão "Sair"
-  btnSair.parentNode.insertBefore(wrapper, btnSair);
-
-  const btnToggle = wrapper.querySelector('#btn-modo-noturno');
-  const menuPopup = wrapper.querySelector('#un-modo-menu');
-  const slider = wrapper.querySelector('#un-slider-intensidade');
-  const txtValor = wrapper.querySelector('#un-valor-txt');
-
-  btnToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    menuPopup.classList.toggle('ativo');
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!wrapper.contains(e.target)) {
-      menuPopup.classList.remove('ativo');
-    }
-  });
-
-  slider.addEventListener('input', (e) => {
-    const val = e.target.value;
-    txtValor.textContent = val + '%';
-    body.classList.add('modo-escuro');
-    body.classList.remove('modo-claro');
-    const intVal = val / 100;
-    const nr = Math.round(4 * (1 - intVal));
-    const ng = Math.round(16 * (1 - intVal));
-    const nb = Math.round(22 * (1 - intVal));
-    document.documentElement.style.setProperty('--rel-fundo', `rgb(${nr}, ${ng}, ${nb})`);
-    document.documentElement.style.setProperty('--un-intensidade-val', val + '%');
-  });
-}
 
 /**
  * Monta o painel inteiro do coordenador do zero: limpa a tela, coloca o
@@ -164,9 +83,10 @@ async function montarPainelCoordenador(sessao) {
   await renderizarAbaAtivaCoordenador();
 
   // === INICIALIZA O MODO NOTURNO AQUI DENTRO, NO FIM DA FUNÇÃO ===
-  inicializarModoNoturnoIntegrado();
+  if (window.ModoNoturno && typeof window.ModoNoturno.inicializar === 'function') {
+    window.ModoNoturno.inicializar();
+  }
 }
-
 /**
  * Troca a aba ativa: atualiza qual botão fica marcado como "ativo" e
  * renderiza o conteúdo correspondente.

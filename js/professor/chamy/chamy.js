@@ -18,10 +18,10 @@
    ========================================================================== */
 const CHAMY_CONFIG = {
   // URL de PRODUÇÃO do nó Webhook do n8n (precisa ser um endereço público, https)
-  webhookUrl: 'COLE_AQUI_A_URL_DO_WEBHOOK_DO_N8N',
+  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   // Chave simples conferida pelo n8n. Atenção: fica no código público do site,
   // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
-  token: 'troque-por-uma-chave-longa-e-aleatoria',
+  token: 'token: 'chamy-7Hk29xQpLw83mZ4vTb',',
   // Caminho do ícone (relativo à raiz do site)
   icone: 'js/professor/chamy/chamy.png',
   // Tempo máximo de espera pela resposta (ms)

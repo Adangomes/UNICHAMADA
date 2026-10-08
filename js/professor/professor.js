@@ -4,12 +4,11 @@
  * Este módulo gerencia o ciclo de vida da interface gráfica e funcionalidades
  * do painel do professor, incluindo:
  *  - Montagem e inicialização do cabeçalho com indicador de notificações (sino/badge);
- *  - Roteamento interno entre abas ("Chamadas", "Minhas turmas", "Relatórios" e "Chat");
+ *  - Roteamento interno entre abas ("Chamadas", "Minhas turmas" e "Chat");
  *  - Geração e acompanhamento de chamadas em tempo real com barreira anti-duplicação;
  *  - Tabela de frequência mensal (aluno x data) por turma, no lugar de uma lista
  *    infinita de cartões — evita que o histórico cresça sem controle ao longo do tempo;
  *  - Visualização de turmas e listagem de alunos matriculados;
- *  - Dashboard de relatórios em tempo real (js/relatorios/relatorios.js);
  *  - Chat em tempo real com os coordenadores (js/professor/chat/chat.js).
  * 
  * @module PainelProfessor
@@ -57,26 +56,8 @@ let professorLogado = null;
  * @type {Array<{chave: string, rotulo: string, render: Function}>}
  */
 const ABAS_PROFESSOR = [
-  { 
-    chave: 'chamadas', 
-    rotulo: 'Chamadas', 
-    render: (container, prof) => renderAbaChamadas(container, prof) 
-  },
-  { 
-    chave: 'turmas', 
-    rotulo: 'Minhas turmas', 
-    render: (container, prof) => renderAbaTurmas(container, prof) 
-  },
-  {
-    // Dashboard de relatórios (js/relatorios/relatorios.js)
-    chave: 'relatorios',
-    rotulo: 'Relatórios',
-    render: async (container, prof) => {
-      // Ao trocar de aba, renderizarAbaAtivaProfessor() chama esta função e desliga animação e atualização
-      pararAssinaturaAbaProfessor = () => { if (window.Relatorios) window.Relatorios.parar(); };
-      await renderRelatorios(container, 'professor', prof);
-    }
-  },
+  { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
+  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
   {
     // Chat com os coordenadores (js/professor/chat/chat.js)
     chave: 'chat',

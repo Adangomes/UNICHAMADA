@@ -8,6 +8,7 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.2s ease;
+    order: -1; /* Joga o ícone do Chamy para a esquerda de todos os itens do cabeçalho */
 }
 
 .chamy-trigger-btn:hover {
@@ -15,8 +16,8 @@
 }
 
 .chamy-icon-img {
-    width: 28px;
-    height: 28px;
+    width: 36px;  /* Tamanho ajustado do ícone */
+    height: 36px; /* Tamanho proporcional à largura */
     object-fit: contain;
     border-radius: 50%;
 }
@@ -58,11 +59,7 @@
     gap: 10px;
 }
 
-.chamy-header img {
-    width: 24px;
-    height: 24px;
-}
-
+/* Removido o icone antigo do header do chat */
 .chamy-header h3 {
     margin: 0;
     font-size: 16px;

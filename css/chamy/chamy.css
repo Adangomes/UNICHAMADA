@@ -19,7 +19,7 @@
   padding: 0;                               /* sem espaço interno: a imagem ocupa tudo */
   margin: 0 .2rem 0 0;                      /* espaço entre o robô e o sino (2º valor = direita) */
   position: relative;                       /* permite deslocar o robô com "left" sem mexer nos outros itens */
-  left: 0px;                                /* >>> AJUSTE AQUI <<< empurra o robô para a DIREITA: 0px = posição normal,
+  left: 40px;                                /* >>> AJUSTE AQUI <<< empurra o robô para a DIREITA: 0px = posição normal,
                                                20px, 40px, 60px... vão andando para a direita; negativo (-10px) volta para a esquerda */
   border: 2px solid rgba(255, 255, 255, .85); /* contorno branco do botão */
   border-radius: 50%;                       /* deixa redondo */

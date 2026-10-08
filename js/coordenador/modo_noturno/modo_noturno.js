@@ -3,9 +3,9 @@
 
   function aplicarIntensidadeEscuro(valor) {
     const intensidade = valor / 100;
-    const r = Math.round(4 * (1 - intensidade));
-    const g = Math.round(16 * (1 - intensidade));
-    const b = Math.round(22 * (1 - intensidade));
+    const r = Math.round(15 * (1 - intensidade));
+    const g = Math.round(23 * (1 - intensidade));
+    const b = Math.round(42 * (1 - intensidade));
     
     document.documentElement.style.setProperty('--rel-fundo', `rgb(${r}, ${g}, ${b})`);
     document.documentElement.style.setProperty('--un-intensidade-val', valor + '%');

@@ -23,7 +23,7 @@ const CHAMY_CONFIG = {
   // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
   token: 'troque-por-uma-chave-longa-e-aleatoria',
   // Caminho do ícone (relativo à raiz do site)
-  icone: 'img/chamy/chamy-icone.png',
+  icone: 'js/professor/chamy/chamy.png',
   // Tempo máximo de espera pela resposta (ms)
   timeoutMs: 60000,
   // Máximo de caracteres por pergunta
@@ -250,3 +250,5 @@ function inicializarChamy(cabecalho, professor) {
 }
 
 window.inicializarChamy = inicializarChamy;
+// Nome usado no professor.js: inicializarChamyProfessor(cabecalho, professorLogado)
+window.inicializarChamyProfessor = inicializarChamy;

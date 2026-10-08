@@ -24,7 +24,7 @@ header, .cabecalho-principal, .painel-cabecalho {
 .chamy-botao {
   position: absolute !important;
   top: 50% !important;
-  right: 130px !important; /* >>> MEXA AQUI: Aumente (ex: 130px) para ir para a esquerda, diminua (ex: 100px) para encostar no sino <<< */
+  right: 150px !important; /* >>> MEXA AQUI: Aumente (ex: 130px) para ir para a esquerda, diminua (ex: 100px) para encostar no sino <<< */
   left: auto !important;
   transform: translateY(-50%) !important;
 

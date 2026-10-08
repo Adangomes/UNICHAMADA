@@ -1,17 +1,15 @@
+/* Estilo do botão do Chamy no header (Alinhado perfeitamente no fluxo Flexbox) */
 .chamy-trigger-btn {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
-    display: flex;
+    padding: 0;
+    margin-right: 12px; /* Dá o espaçamento exato e natural antes do botão do sino */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.2s ease;
-    
-    /* Tira ele do fluxo normal para não empurrar os outros */
-    position: absolute;
-    /* Ajuste este valor de 'left' para mover ele para a esquerda ou direita livremente */
-    left: -60px; /* Aumente ou diminua os pixels para posicionar exatamente onde quer */
+    vertical-align: middle;
 }
 
 .chamy-trigger-btn:hover {
@@ -23,6 +21,7 @@
     height: 28px;
     object-fit: contain;
     border-radius: 50%;
+    display: block;
 }
 
 /* Janela do Chat Flutuante do Chamy */

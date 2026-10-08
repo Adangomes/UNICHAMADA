@@ -150,3 +150,42 @@
   .rel-ao-vivo, .rel-pagina { animation: none; }
   .rel-barra-fill, .rel-coluna-fill, .rel-rosca-arco, .rel-slide { transition: none; }
 }
+
+
+/* Grupo do status + botão voltar alinhados */
+.rel-status-grupo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Botão de voltar no mesmo pique dos componentes do sistema */
+.rel-botao-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--rel-borda);
+  border-radius: 999px;
+  background: var(--rel-vidro);
+  color: var(--rel-texto);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.rel-botao-voltar:hover {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: var(--rel-destaque);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+}
+
+.rel-botao-voltar:active {
+  background: rgba(45, 212, 191, 0.25);
+}

@@ -1,144 +1,157 @@
-/* ==========================================
-   ESTILOS DO CHAMY (BOTÃO E MODAL DO CHAT)
-   ========================================== */
+/* ==========================================================================
+   Chamy — assistente de dados (painel do professor)
+   ========================================================================== */
 
-/* Estilo perfeito e fixo do botão do Chamy */
-.chamy-trigger-btn {
-    position: relative; 
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    
-    /* Espaço à direita para desgrudar do sino */
-    margin-right: 56px; 
-    
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
-    vertical-align: middle;
-    z-index: 10;
+:root {
+  --chamy-azul: #29407f;
+  --chamy-fundo: #101a33;
+  --chamy-fundo-2: #17244a;
+  --chamy-borda: rgba(255, 255, 255, .12);
+  --chamy-texto: #e9eefc;
+  --chamy-texto-suave: #9fb0d8;
+  --chamy-destaque: #5b8cff;
 }
 
-/* Efeito hover limpo sem quebrar a posição */
-.chamy-trigger-btn:hover {
-    transform: scale(1.15);
+/* ---- Botão ao lado do sino ---- */
+.chamy-botao {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  margin: 0 .5rem;
+  border: 2px solid rgba(255, 255, 255, .85);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  flex: 0 0 auto;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
+.chamy-botao img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.chamy-botao:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(91, 140, 255, .35); }
+.chamy-botao.ativo { box-shadow: 0 0 0 3px rgba(91, 140, 255, .7); }
 
-.chamy-icon-img {
-    width: 42px;  /* Tamanho grande e proporcional */
-    height: 42px; 
-    object-fit: contain;
-    border-radius: 50%;
-    display: block;
+/* ---- Painel ---- */
+.chamy-painel {
+  position: fixed;
+  right: 1rem;
+  top: 4.2rem;
+  z-index: 9999;
+  width: min(390px, calc(100vw - 2rem));
+  height: min(560px, calc(100vh - 5.5rem));
+  display: flex;
+  flex-direction: column;
+  background: var(--chamy-fundo);
+  color: var(--chamy-texto);
+  border: 1px solid var(--chamy-borda);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px) scale(.98);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
 }
+.chamy-painel.aberto { opacity: 1; transform: none; pointer-events: auto; }
 
-/* Janela do Chat Flutuante do Chamy */
-#chamy-chat-modal {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 350px;
-    height: 450px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-    display: flex;
-    flex-direction: column;
-    z-index: 9999;
-    overflow: hidden;
-    font-family: inherit;
-    border: 1px solid #e0e0e0;
+.chamy-topo {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .8rem 1rem;
+  background: var(--chamy-fundo-2);
+  border-bottom: 1px solid var(--chamy-borda);
 }
-
-.chamy-hidden {
-    display: none !important;
+.chamy-topo-icone { width: 34px; height: 34px; border-radius: 50%; background: #fff; }
+.chamy-topo-texto { display: flex; flex-direction: column; line-height: 1.2; flex: 1; }
+.chamy-topo-texto span { font-size: .78rem; color: var(--chamy-texto-suave); }
+.chamy-fechar {
+  border: 0; background: transparent; color: var(--chamy-texto-suave);
+  font-size: 1rem; cursor: pointer; padding: .3rem .5rem; border-radius: 6px;
 }
+.chamy-fechar:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 
-.chamy-header {
-    background: #1e1e2f;
-    color: #fff;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+/* ---- Mensagens ---- */
+.chamy-lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
 }
-
-.chamy-header-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.chamy-msg {
+  max-width: 86%;
+  padding: .6rem .8rem;
+  border-radius: 14px;
+  font-size: .92rem;
+  line-height: 1.45;
+  word-wrap: break-word;
 }
+.chamy-msg p { margin: 0 0 .35rem; }
+.chamy-msg p:last-child { margin-bottom: 0; }
+.chamy-msg .chamy-item { position: relative; padding-left: 1rem; }
+.chamy-msg .chamy-item::before { content: '•'; position: absolute; left: .2rem; color: var(--chamy-destaque); }
+.chamy-msg-chamy { align-self: flex-start; background: var(--chamy-fundo-2); border: 1px solid var(--chamy-borda); border-bottom-left-radius: 4px; }
+.chamy-msg-professor { align-self: flex-end; background: var(--chamy-azul); border-bottom-right-radius: 4px; }
+.chamy-msg-erro { border-color: rgba(255, 120, 120, .5); color: #ffd4d4; }
 
-.chamy-header h3 {
-    margin: 0;
-    font-size: 16px;
+/* indicador "digitando…" */
+.chamy-digitando { display: inline-flex; gap: 4px; align-items: center; height: 1em; }
+.chamy-digitando i {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--chamy-texto-suave);
+  animation: chamy-pulo 1s infinite ease-in-out;
 }
+.chamy-digitando i:nth-child(2) { animation-delay: .15s; }
+.chamy-digitando i:nth-child(3) { animation-delay: .3s; }
+@keyframes chamy-pulo { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
 
-#chamy-close-btn {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
+/* sugestões */
+.chamy-sugestoes { display: flex; flex-direction: column; gap: .4rem; margin-top: .2rem; }
+.chamy-chip {
+  text-align: left;
+  padding: .5rem .75rem;
+  font-size: .85rem;
+  color: var(--chamy-texto);
+  background: transparent;
+  border: 1px solid var(--chamy-borda);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
 }
+.chamy-chip:hover { background: rgba(91, 140, 255, .12); border-color: var(--chamy-destaque); }
 
-.chamy-body {
-    flex: 1;
-    padding: 12px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: #f9f9f9;
+/* ---- Rodapé ---- */
+.chamy-rodape {
+  display: flex;
+  align-items: flex-end;
+  gap: .5rem;
+  padding: .7rem .8rem .4rem;
+  border-top: 1px solid var(--chamy-borda);
 }
-
-.chamy-message {
-    padding: 8px 12px;
-    border-radius: 8px;
-    max-width: 80%;
-    font-size: 14px;
-    line-height: 1.4;
+.chamy-campo {
+  flex: 1;
+  resize: none;
+  padding: .55rem .7rem;
+  font: inherit;
+  font-size: .92rem;
+  color: var(--chamy-texto);
+  background: var(--chamy-fundo-2);
+  border: 1px solid var(--chamy-borda);
+  border-radius: 10px;
+  outline: none;
+  max-height: 110px;
 }
-
-.chamy-message.user {
-    background: #007bff;
-    color: white;
-    align-self: flex-end;
+.chamy-campo:focus { border-color: var(--chamy-destaque); }
+.chamy-enviar {
+  width: 38px; height: 38px;
+  border: 0; border-radius: 10px;
+  background: var(--chamy-destaque); color: #fff;
+  font-size: 1rem; cursor: pointer;
 }
+.chamy-enviar:disabled { opacity: .5; cursor: not-allowed; }
+.chamy-aviso { margin: 0; padding: 0 1rem .6rem; font-size: .7rem; color: var(--chamy-texto-suave); text-align: center; }
 
-.chamy-message.assistant {
-    background: #e4e6eb;
-    color: #333;
-    align-self: flex-start;
-}
-
-.chamy-footer {
-    padding: 10px;
-    background: #fff;
-    border-top: 1px solid #eee;
-    display: flex;
-    gap: 8px;
-}
-
-#chamy-input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    outline: none;
-}
-
-#chamy-send-btn {
-    background: #007bff;
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-#chamy-send-btn:hover {
-    background: #0056b3;
+/* ---- Celular: painel ocupa a tela toda ---- */
+@media (max-width: 600px) {
+  .chamy-painel { right: 0; left: 0; top: 0; bottom: 0; width: 100%; height: 100%; border-radius: 0; }
 }

@@ -5,14 +5,27 @@ function inicializarChamyProfessor(cabecalho, professor) {
     // Evita duplicar o botão se já existir na tela
     if (document.getElementById("btn-chamy")) return;
 
-    // 2. Cria o botão com o ícone customizado do Chamy ao lado do sino
+    // 2. Cria o botão com o ícone customizado do Chamy
     const btnChamy = document.createElement("button");
     btnChamy.id = "btn-chamy";
     btnChamy.className = "chamy-trigger-btn";
     btnChamy.title = "Conversar com o Chamy";
     btnChamy.innerHTML = `<img src="js/professor/chamy/chamy.png" alt="Chamy" class="chamy-icon-img">`;
     
-    acoesCabecalho.appendChild(btnChamy);
+    // Procura especificamente o botão do sino ou o ícone de notificação
+    const iconeSino = acoesCabecalho.querySelector('.fa-bell') 
+                   || acoesCabecalho.querySelector('i.fa-bell') 
+                   || acoesCabecalho.querySelector('[class*="bell"]')
+                   || acoesCabecalho.querySelector('button');
+
+    if (iconeSino) {
+        // Encontra o elemento pai (o botão do sino) e insere o Chamy logo antes dele
+        const botaoSino = iconeSino.closest('button') || iconeSino.parentElement;
+        acoesCabecalho.insertBefore(btnChamy, botaoSino);
+    } else {
+        // Fallback caso não ache o sino
+        acoesCabecallow.appendChild(btnChamy);
+    }
 
     // 3. Injeta o HTML do modal do chat flutuante no body se ainda não existir
     if (!document.getElementById("chamy-chat-modal")) {
@@ -20,7 +33,6 @@ function inicializarChamyProfessor(cabecalho, professor) {
             <div id="chamy-chat-modal" class="chamy-hidden">
                 <div class="chamy-header">
                     <div class="chamy-header-info">
-                        <img src="js/professor/chamy/chamy.png" alt="Chamy" style="width:24px;height:24px;border-radius:50%;">
                         <h3>Chamy AI</h3>
                     </div>
                     <button id="chamy-close-btn">&times;</button>
@@ -68,7 +80,6 @@ function inicializarChamyProfessor(cabecalho, professor) {
         const loadingId = appendMessage("Chamy está a consultar os dados...", "assistant");
 
         try {
-            // Cole aqui a URL do Webhook do n8n
             const webhookUrl = "SUA_URL_DO_WEBHOOK_N8N_AQUI"; 
 
             const response = await fetch(webhookUrl, {
@@ -76,7 +87,7 @@ function inicializarChamyProfessor(cabecalho, professor) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "include", // Seguro: sem expor tokens em localStorage[cite: 1, 2]
+                credentials: "include",
                 body: JSON.stringify({ 
                     pergunta: texto,
                     professor_id: professor?.id || null 
@@ -97,13 +108,11 @@ function inicializarChamyProfessor(cabecalho, professor) {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
-    // Eventos de clique e tecla Enter no input
     sendBtn.addEventListener("click", enviarMensagem);
     inputField.addEventListener("keypress", (e) => {
         if (e.key === "Enter") enviarMensagem();
     });
 
-    // Função auxiliar para renderizar balões de chat
     function appendMessage(text, sender) {
         const msgDiv = document.createElement("div");
         const msgId = "msg-" + Date.now() + Math.random();
@@ -116,5 +125,4 @@ function inicializarChamyProfessor(cabecalho, professor) {
     }
 }
 
-// Expõe a função globalmente para ser chamada pelo painel do professor
 window.inicializarChamyProfessor = inicializarChamyProfessor;

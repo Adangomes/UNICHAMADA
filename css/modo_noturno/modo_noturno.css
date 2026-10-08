@@ -4,18 +4,20 @@
   display: inline-block;
 }
 
+/* Menu flutuante do slider - Cores ajustadas para combinar com o tema do sistema */
 .un-modo-menu {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  top: calc(100% + 10px);
+  /* Mude 'right: 0' para 'left: 0' se quiser alinhar à esquerda do botão */
+  right: 0; 
   width: 240px;
   padding: 14px;
-  background: var(--rel-vidro, rgba(8, 30, 36, 0.95));
-  border: 1px solid var(--rel-borda, rgba(94, 234, 212, 0.2));
-  border-radius: 14px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  /* Fundo escuro sólido/translúcido padrão dos painéis do sistema */
+  background: #1e293b; 
+  /* Borda sutil combinando com o layout */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   z-index: 999999;
   display: flex;
   flex-direction: column;
@@ -25,7 +27,7 @@
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
   font-family: inherit;
-  color: var(--rel-texto, #d7f3f1);
+  color: #f8fafc;
 }
 
 .un-modo-menu.ativo {
@@ -39,7 +41,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--rel-destaque, #2dd4bf);
+  color: #38bdf8; /* Azul destaque do sistema */
   margin: 0;
 }
 
@@ -51,7 +53,7 @@
 
 .un-modo-slider {
   width: 100%;
-  accent-color: var(--rel-destaque, #2dd4bf);
+  accent-color: #38bdf8;
   cursor: pointer;
 }
 
@@ -59,12 +61,12 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--rel-suave, #8fb9b6);
+  color: #94a3b8;
 }
 
-/* Níveis dinâmicos de escurecimento aplicados via variável ou classe */
+/* Níveis dinâmicos de escurecimento */
 body.modo-escuro {
-  --fundo-base: #041016;
+  --fundo-base: #0f172a;
 }
 
 body.modo-claro {

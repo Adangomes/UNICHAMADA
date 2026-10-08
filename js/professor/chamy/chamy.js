@@ -1,19 +1,28 @@
 function inicializarChamyProfessor(cabecalho, professor) {
-    // 1. Pega o cabeçalho principal como referência para o posicionamento livre
-    const cabecalhoPrincipal = cabecalho.closest('header') || cabecalho;
-
     // Evita duplicar o botão se já existir na tela
     if (document.getElementById("btn-chamy")) return;
 
-    // 2. Cria o botão com o ícone customizado do Chamy
+    // 1. Cria o botão com o ícone customizado do Chamy
     const btnChamy = document.createElement("button");
     btnChamy.id = "btn-chamy";
     btnChamy.className = "chamy-trigger-btn";
     btnChamy.title = "Conversar com o Chamy";
     btnChamy.innerHTML = `<img src="js/professor/chamy/chamy.png" alt="Chamy" class="chamy-icon-img">`;
     
-    // Insere diretamente no cabeçalho para flutuar livremente
-    cabecalhoPrincipal.appendChild(btnChamy);
+    // 2. Procura especificamente o botão do sino ou o elemento de notificação para colocar bem na frente dele
+    const iconeSino = document.querySelector('.fa-bell') 
+                   || document.querySelector('i.fa-bell') 
+                   || document.querySelector('[class*="bell"]')
+                   || document.querySelector('header button:nth-last-child(2)');
+
+    if (iconeSino) {
+        const containerSino = iconeSino.closest('button') || iconeSino.parentElement;
+        containerSino.parentNode.insertBefore(btnChamy, containerSino);
+    } else {
+        // Fallback caso não encontre o sino: joga no container de ações do cabeçalho
+        const acoesCabecalho = cabecalho.querySelector('.cabecalho-acoes') || cabecalho;
+        acoesCabecalho.appendChild(btnChamy);
+    }
 
     // 3. Injeta o HTML do modal do chat flutuante no body se ainda não existir
     if (!document.getElementById("chamy-chat-modal")) {

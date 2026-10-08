@@ -2,7 +2,7 @@
     position: absolute;
     top: 50%;
     /* MEXA NESTE VALOR EM PIXELS PARA MOVER PARA ESQUERDA OU DIREITA: */
-    left: 450px; /* Começa com 450px e vai ajustando (ex: 300px vai pra esquerda, 600px pra direita) */
+    left: 650px; /* Começa com 450px e vai ajustando (ex: 300px vai pra esquerda, 600px pra direita) */
     transform: translateY(-50%) scale(1);
     
     background: none;

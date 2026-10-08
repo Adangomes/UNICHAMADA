@@ -17,17 +17,17 @@
    CONFIGURAÇÃO — troque pelos dados do seu n8n
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (precisa ser um endereço público, https)
-  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
-  // Chave simples conferida pelo n8n. Atenção: fica no código público do site,
-  // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
-  token: 'token: 'chamy-7Hk29xQpLw83mZ4vTb',',
-  // Caminho do ícone (relativo à raiz do site)
-  icone: 'js/professor/chamy/chamy.png',
-  // Tempo máximo de espera pela resposta (ms)
-  timeoutMs: 60000,
-  // Máximo de caracteres por pergunta
-  maxPergunta: 500
+  // URL de PRODUÇÃO do nó Webhook do n8n (precisa ser um endereço público, https)
+  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+  // Chave simples conferida pelo n8n. Atenção: fica no código público do site,
+  // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
+  token: 'chamy-7Hk29xQpLw83mZ4vTb',
+  // Caminho do ícone (relativo à raiz do site)
+  icone: 'js/professor/chamy/chamy.png',
+  // Tempo máximo de espera pela resposta (ms)
+  timeoutMs: 60000,
+  // Máximo de caracteres por pergunta
+  maxPergunta: 500
 };
 
 const CHAMY_SUGESTOES = [
@@ -37,7 +37,7 @@ const CHAMY_SUGESTOES = [
 ];
 
 /** @type {{aberto: boolean, enviando: boolean, professor: Object|null, sessaoId: string}} */
-const estadoChamy = { aberto: false, enviando: false, professor: null, sessaoId: '' };
+const estadoChamy = { aberto: false, enviando: false, professor: null, sessaoId: '', observador: null };
 
 /* ==========================================================================
    UTILITÁRIOS
@@ -76,12 +76,15 @@ function chamyFormatarResposta(texto) {
 
 function chamyIdSessao() {
   const chave = 'chamy_sessao_id';
-  let id = sessionStorage.getItem(chave);
-  if (!id) {
-    id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
-    sessionStorage.setItem(chave, id);
+  const novoId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+  try {
+    let id = sessionStorage.getItem(chave);
+    if (!id) { id = novoId(); sessionStorage.setItem(chave, id); }
+    return id;
+  } catch (e) {
+    // Navegador bloqueou o sessionStorage: usa um id só para esta página
+    return novoId();
   }
-  return id;
 }
 
 /* ==========================================================================
@@ -260,20 +263,48 @@ function inicializarChamy(cabecalho, professor) {
     title: 'Pergunte ao Chamy', 'aria-label': 'Abrir o Chamy', onClick: chamyAlternar
   }, [chamyEl('img', { src: CHAMY_CONFIG.icone, alt: 'Chamy' })]);
 
-  // Ordem desejada: [Chamy] [sino] [Sair]
-  const sair = chamyAcharSair(cabecalho);
-  let sino = chamyAcharSino(cabecalho);
+  chamyPosicionar(botao, cabecalho);
 
-  // Sobe do sino até o mesmo nível do "Sair", para o robô não entrar dentro do sino
-  if (sino && sair) {
-    while (sino.parentNode && sino.parentNode !== sair.parentNode && sino.parentNode !== cabecalho) {
-      sino = sino.parentNode;
+  // Se outro módulo (ex.: o sino) refizer o cabeçalho e o robô sumir, ele volta sozinho.
+  estadoChamy.observador?.disconnect();
+  let agendado = false;
+  estadoChamy.observador = new MutationObserver(() => {
+    if (botao.isConnected || agendado) return;
+    agendado = true;
+    setTimeout(() => { agendado = false; if (!botao.isConnected) chamyPosicionar(botao, cabecalho); }, 50);
+  });
+  estadoChamy.observador.observe(cabecalho, { childList: true, subtree: true });
+}
+
+/**
+ * Coloca o botão na ordem [Chamy] [sino] [Sair]. Se algo der errado
+ * ou o botão ficar invisível, usa o plano B (fim do cabeçalho).
+ */
+function chamyPosicionar(botao, cabecalho) {
+  try {
+    const sair = chamyAcharSair(cabecalho);
+    let sino = chamyAcharSino(cabecalho);
+
+    // Sobe do sino até o mesmo nível do "Sair", para o robô não entrar dentro do sino
+    if (sino && sair) {
+      while (sino.parentNode && sino.parentNode !== sair.parentNode && sino.parentNode !== cabecalho) {
+        sino = sino.parentNode;
+      }
     }
-  }
 
-  const referencia = sino || sair;
-  if (referencia && referencia.parentNode) referencia.parentNode.insertBefore(botao, referencia);
-  else cabecalho.appendChild(botao);   // plano B: nem sino nem "Sair" achados
+    const referencia = sino || sair;
+    if (referencia && referencia.parentNode && !referencia.contains(botao)) {
+      referencia.parentNode.insertBefore(botao, referencia);
+    } else {
+      cabecalho.appendChild(botao);
+    }
+
+    // Se mesmo assim estiver invisível (ex.: caiu dentro de algo escondido), vai para o fim do cabeçalho
+    if (botao.offsetWidth === 0 && botao.offsetHeight === 0) cabecalho.appendChild(botao);
+  } catch (erro) {
+    console.error('[Chamy] erro ao posicionar o botão:', erro);
+    if (!botao.isConnected) cabecalho.appendChild(botao);
+  }
 }
 
 window.inicializarChamy = inicializarChamy;

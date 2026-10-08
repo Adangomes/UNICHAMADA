@@ -1,19 +1,23 @@
-/* Estilo do botão do Chamy com controle total de posição */
 .chamy-trigger-btn {
+    position: absolute;
+    top: 50%;
+    /* MEXA NESTE VALOR EM PIXELS PARA MOVER PARA ESQUERDA OU DIREITA: */
+    left: 450px; /* Começa com 450px e vai ajustando (ex: 300px vai pra esquerda, 600px pra direita) */
+    transform: translateY(-50%) scale(1);
+    
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
-    
-    /* É SÓ MEXER AQUI PARA MOVER: */
-    margin-left: auto;   /* Joga ele totalmente para a esquerda da barra */
-    margin-right: 20px;  /* Distância que ele fica dos botões da direita (sino/sair) */
-    
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease;
-    vertical-align: middle;
+    transition: transform 0.2s ease, left 0.1s ease;
+    z-index: 10;
+}
+
+.chamy-trigger-btn:hover {
+    transform: translateY(-50%) scale(1.1);
 }
 
 .chamy-trigger-btn:hover {

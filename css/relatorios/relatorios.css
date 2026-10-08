@@ -16,7 +16,22 @@
   padding: 16px; overflow: hidden; border-radius: 18px; color: var(--rel-texto);
   background: radial-gradient(120% 90% at 70% 10%, #0b2a33 0%, var(--rel-fundo) 60%);
   font-family: inherit;
+  
+  /* Entrada suave e imponente do dashboard inteiro */
+  animation: rel-app-entra 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes rel-app-entra {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .rel-app * { box-sizing: border-box; }
 
 /* globo ao fundo */
@@ -134,24 +149,6 @@
 .rel-chip-vazio { opacity: .6; }
 .rel-chip-eu { background: var(--rel-destaque); border-color: var(--rel-destaque); color: #022; font-weight: 700; }
 
-/* telas pequenas: a navegação vira uma faixa no topo */
-@media (max-width: 800px) {
-  .rel-app { flex-direction: column; padding: 12px; }
-  .rel-nav { width: 100%; flex-direction: row; overflow-x: auto; padding: 8px; }
-  .rel-marca { display: none; }
-  .rel-nav-item { flex: 0 0 auto; min-width: 74px; }
-  .rel-duas { grid-template-columns: 1fr; }
-  .rel-titulo { font-size: 1.35rem; }
-  .rel-barra-linha { grid-template-columns: 90px 1fr 40px; }
-}
-
-/* quem pede menos movimento no sistema operacional */
-@media (prefers-reduced-motion: reduce) {
-  .rel-ao-vivo, .rel-pagina { animation: none; }
-  .rel-barra-fill, .rel-coluna-fill, .rel-rosca-arco, .rel-slide { transition: none; }
-}
-
-
 /* Grupo do status + botão voltar alinhados */
 .rel-status-grupo {
   display: flex;
@@ -189,32 +186,20 @@
 .rel-botao-voltar:active {
   background: rgba(45, 212, 191, 0.25);
 }
-.rel-app {
-  --rel-fundo: #041016;
-  --rel-vidro: rgba(8, 30, 36, .62);
-  --rel-borda: rgba(94, 234, 212, .18);
-  --rel-texto: #d7f3f1;
-  --rel-suave: #8fb9b6;
-  --rel-destaque: #2dd4bf;
-  --rel-azul: #7dd3fc;
-  --rel-aviso: #fbbf24;
-  --rel-erro: #f87171;
-  position: relative; display: flex; gap: 16px; min-height: calc(100vh - 150px);
-  padding: 16px; overflow: hidden; border-radius: 18px; color: var(--rel-texto);
-  background: radial-gradient(120% 90% at 70% 10%, #0b2a33 0%, var(--rel-fundo) 60%);
-  font-family: inherit;
-  
-  /* Efeito de entrada suave do painel inteiro */
-  animation: rel-app-entra 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+/* telas pequenas: a navegação vira uma faixa no topo */
+@media (max-width: 800px) {
+  .rel-app { flex-direction: column; padding: 12px; }
+  .rel-nav { width: 100%; flex-direction: row; overflow-x: auto; padding: 8px; }
+  .rel-marca { display: none; }
+  .rel-nav-item { flex: 0 0 auto; min-width: 74px; }
+  .rel-duas { grid-template-columns: 1fr; }
+  .rel-titulo { font-size: 1.35rem; }
+  .rel-barra-linha { grid-template-columns: 90px 1fr 40px; }
 }
 
-@keyframes rel-app-entra {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.99);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+/* quem pede menos movimento no sistema operacional */
+@media (prefers-reduced-motion: reduce) {
+  .rel-app, .rel-ao-vivo, .rel-pagina { animation: none; }
+  .rel-barra-fill, .rel-coluna-fill, .rel-rosca-arco, .rel-slide { transition: none; }
 }

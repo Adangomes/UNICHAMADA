@@ -17,7 +17,7 @@
   width: 38px;                              /* largura do botão */
   height: 38px;                             /* altura do botão (igual à largura = círculo) */
   padding: 0;                               /* sem espaço interno: a imagem ocupa tudo */
-  margin: 0 .8rem 0 0;                      /* >>> AJUSTE AQUI <<< topo=0, DIREITA=.5rem, baixo=0, esquerda=0.
+  margin: 0 .2rem 0 0;                      /* >>> AJUSTE AQUI <<< topo=0, DIREITA=.5rem, baixo=0, esquerda=0.
                                                A DIREITA é a distância até o sino: use .2rem para colar, .8rem para afastar */
   border: 2px solid rgba(255, 255, 255, .85); /* contorno branco do botão */
   border-radius: 50%;                       /* deixa redondo */

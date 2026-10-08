@@ -8,22 +8,17 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.2s ease;
-    
-    /* Use esta linha para puxar ele para a esquerda (aumente ou diminua os pixels) */
-    transform: translateX(-200px); /* Ajuste este valor até ele parar em cima do ponto vermelho */
+    /* Sem translate aqui! A posição vem do HTML */
+    transform: translateY(2px); /* Apenas um leve ajuste para baixo se precisar */
 }
 
 .chamy-trigger-btn:hover {
-    transform: translateX(-180px) scale(1.1); /* Mantém o efeito de zoom junto com a posição */
-}
-
-.chamy-trigger-btn:hover {
-    transform: scale(1.1);
+    transform: translateY(2px) scale(1.1); /* Zoom seguro */
 }
 
 .chamy-icon-img {
-    width: 36px;  /* Tamanho ajustado do ícone */
-    height: 36px; /* Tamanho proporcional à largura */
+    width: 36px;  
+    height: 36px; 
     object-fit: contain;
     border-radius: 50%;
 }
@@ -65,7 +60,6 @@
     gap: 10px;
 }
 
-/* Removido o icone antigo do header do chat */
 .chamy-header h3 {
     margin: 0;
     font-size: 16px;

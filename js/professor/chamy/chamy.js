@@ -17,17 +17,17 @@
    CONFIGURAÇÃO — troque pelos dados do seu n8n
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (precisa ser um endereço público, https)
-  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
-  // Chave simples conferida pelo n8n. Atenção: fica no código público do site,
-  // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
-  token: 'token: 'chamy-7Hk29xQpLw83mZ4vTb',',
-  // Caminho do ícone (relativo à raiz do site)
-  icone: 'js/professor/chamy/chamy.png',
-  // Tempo máximo de espera pela resposta (ms)
-  timeoutMs: 60000,
-  // Máximo de caracteres por pergunta
-  maxPergunta: 500
+  // URL de PRODUÇÃO do nó Webhook do n8n (precisa ser um endereço público, https)
+  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+  // Chave simples conferida pelo n8n. Atenção: fica no código público do site,
+  // então só barra abuso casual — a proteção de verdade é o limite de uso no n8n.
+  token: 'token: 'chamy-7Hk29xQpLw83mZ4vTb',',
+  // Caminho do ícone (relativo à raiz do site)
+  icone: 'js/professor/chamy/chamy.png',
+  // Tempo máximo de espera pela resposta (ms)
+  timeoutMs: 60000,
+  // Máximo de caracteres por pergunta
+  maxPergunta: 500
 };
 
 const CHAMY_SUGESTOES = [
@@ -216,15 +216,31 @@ function chamyAlternar() {
    BOTÃO AO LADO DO SINO
    ========================================================================== */
 
-/** Procura o sino de notificações dentro do cabeçalho (vários nomes possíveis de classe). */
+/** Acha o botão "Sair" do cabeçalho. */
+function chamyAcharSair(cabecalho) {
+  return [...cabecalho.querySelectorAll('button, a')].find((el) =>
+    /^\s*sair\s*$/i.test(el.textContent)
+  ) || null;
+}
+
+/**
+ * Procura o sino de notificações dentro do cabeçalho.
+ * Tenta classes comuns, depois emoji/título "notifica", e por fim o item que vem logo antes do "Sair".
+ */
 function chamyAcharSino(cabecalho) {
   const porSeletor = cabecalho.querySelector(
-    '.sino, .sino-notificacoes, .btn-sino, #btn-sino, .notificacoes-sino, .notif-sino, [data-sino], [data-notificacoes]'
+    '.sino, .sino-notificacoes, .btn-sino, #btn-sino, .notificacoes-sino, .notif-sino, [data-sino], [data-notificacoes], [class*="sino"], [class*="notif"]'
   );
   if (porSeletor) return porSeletor;
-  return [...cabecalho.querySelectorAll('button, a, div')].find((el) =>
+
+  const porTexto = [...cabecalho.querySelectorAll('button, a, div, span')].find((el) =>
     el.textContent.includes('🔔') || /notifica/i.test(el.getAttribute('title') || el.getAttribute('aria-label') || '')
-  ) || null;
+  );
+  if (porTexto) return porTexto;
+
+  const sair = chamyAcharSair(cabecalho);
+  const anterior = sair?.previousElementSibling;
+  return anterior && anterior.id !== 'chamy-botao' ? anterior : null;
 }
 
 /**
@@ -244,9 +260,20 @@ function inicializarChamy(cabecalho, professor) {
     title: 'Pergunte ao Chamy', 'aria-label': 'Abrir o Chamy', onClick: chamyAlternar
   }, [chamyEl('img', { src: CHAMY_CONFIG.icone, alt: 'Chamy' })]);
 
-  const sino = chamyAcharSino(cabecalho);
-  if (sino && sino.parentNode) sino.parentNode.insertBefore(botao, sino);
-  else cabecalho.appendChild(botao);   // plano B: se o sino não for achado, entra no fim do cabeçalho
+  // Ordem desejada: [Chamy] [sino] [Sair]
+  const sair = chamyAcharSair(cabecalho);
+  let sino = chamyAcharSino(cabecalho);
+
+  // Sobe do sino até o mesmo nível do "Sair", para o robô não entrar dentro do sino
+  if (sino && sair) {
+    while (sino.parentNode && sino.parentNode !== sair.parentNode && sino.parentNode !== cabecalho) {
+      sino = sino.parentNode;
+    }
+  }
+
+  const referencia = sino || sair;
+  if (referencia && referencia.parentNode) referencia.parentNode.insertBefore(botao, referencia);
+  else cabecalho.appendChild(botao);   // plano B: nem sino nem "Sair" achados
 }
 
 window.inicializarChamy = inicializarChamy;

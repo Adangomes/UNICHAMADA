@@ -4,7 +4,7 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    margin-right: 12px; /* Dá o espaçamento exato e natural antes do botão do sino */
+    margin-right: 15px; 
     display: inline-flex;
     align-items: center;
     justify-content: center;

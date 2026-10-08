@@ -26,7 +26,7 @@
   flex: 0 0 auto;
   transition: transform .15s ease, box-shadow .15s ease;
 }
-.chamy-botao img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.chamy-botao img { width: 100%; height: 100%; display: block; object-fit: contain; }
 .chamy-botao:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(91, 140, 255, .35); }
 .chamy-botao.ativo { box-shadow: 0 0 0 3px rgba(91, 140, 255, .7); }
 

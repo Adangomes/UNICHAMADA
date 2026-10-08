@@ -12,7 +12,12 @@
   }
 
   function inicializarModoNoturno() {
-    if (document.getElementById('un-modo-container')) return;
+    console.log('ModoNoturno: Tentando inicializar...');
+
+    if (document.getElementById('un-modo-container')) {
+      console.log('ModoNoturno: Já existe na tela.');
+      return;
+    }
 
     const body = document.body;
     body.classList.add('modo-escuro');
@@ -23,9 +28,11 @@
     const btnSair = botoes.find(b => b.textContent.trim().toLowerCase() === 'sair');
 
     if (!btnSair || !btnSair.parentNode) {
-      console.warn('ModoNoturno: Botão Sair não foi encontrado.');
+      console.warn('ModoNoturno: Botão Sair não foi encontrado. Verifique se o texto do botão é exatamente "Sair".');
       return;
     }
+
+    console.log('ModoNoturno: Botão Sair encontrado com sucesso, injetando o botão da lua...');
 
     const wrapper = document.createElement('div');
     wrapper.id = 'un-modo-container';

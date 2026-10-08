@@ -3,155 +3,252 @@
    ========================================================================== */
 
 :root {
-  --chamy-azul: #29407f;
-  --chamy-fundo: #101a33;
-  --chamy-fundo-2: #17244a;
-  --chamy-borda: rgba(255, 255, 255, .12);
-  --chamy-texto: #e9eefc;
-  --chamy-texto-suave: #9fb0d8;
-  --chamy-destaque: #5b8cff;
+  --chamy-azul: #29407f;                    /* azul do balão do professor e do ícone */
+  --chamy-fundo: #101a33;                   /* fundo do painel de conversa */
+  --chamy-fundo-2: #17244a;                 /* fundo do topo, balões do Chamy e caixa de texto */
+  --chamy-borda: rgba(255, 255, 255, .12);  /* cor das bordas finas */
+  --chamy-texto: #e9eefc;                   /* cor do texto principal */
+  --chamy-texto-suave: #9fb0d8;             /* cor do texto secundário */
+  --chamy-destaque: #5b8cff;                /* azul claro de destaque (foco, hover, botão enviar) */
 }
 
-/* ---- Botão ao lado do sino ---- */
+/* ---- Botão redondo do robô, no cabeçalho ---- */
 .chamy-botao {
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  margin: 0 .5rem;
-  border: 2px solid rgba(255, 255, 255, .85);
-  border-radius: 50%;
-  background: #fff;
-  cursor: pointer;
-  overflow: hidden;
-  flex: 0 0 auto;
-  transition: transform .15s ease, box-shadow .15s ease;
+  width: 38px;                              /* largura do botão */
+  height: 38px;                             /* altura do botão (igual à largura = círculo) */
+  padding: 0;                               /* sem espaço interno: a imagem ocupa tudo */
+  margin: 0 .5rem 0 0;                      /* >>> AJUSTE AQUI <<< topo=0, DIREITA=.5rem, baixo=0, esquerda=0.
+                                               A DIREITA é a distância até o sino: use .2rem para colar, .8rem para afastar */
+  border: 2px solid rgba(255, 255, 255, .85); /* contorno branco do botão */
+  border-radius: 50%;                       /* deixa redondo */
+  background: #fff;                         /* fundo branco atrás do PNG (esconde o texto branco do desenho) */
+  cursor: pointer;                          /* mãozinha ao passar o mouse */
+  overflow: hidden;                         /* corta o que passar do círculo */
+  flex: 0 0 auto;                           /* não deixa o cabeçalho esticar nem espremer o botão */
+  transition: transform .15s ease, box-shadow .15s ease; /* animação suave do hover */
 }
-.chamy-botao img { width: 100%; height: 100%; display: block; object-fit: contain; }
-.chamy-botao:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(91, 140, 255, .35); }
-.chamy-botao.ativo { box-shadow: 0 0 0 3px rgba(91, 140, 255, .7); }
+.chamy-botao img {
+  width: 100%;                              /* imagem ocupa toda a largura do botão */
+  height: 100%;                             /* e toda a altura */
+  display: block;                           /* tira o espacinho que imagens têm embaixo */
+  object-fit: contain;                      /* mostra a imagem inteira, sem cortar nem distorcer */
+}
+.chamy-botao:hover {
+  transform: scale(1.08);                   /* cresce um pouquinho ao passar o mouse */
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, .35); /* halo azul claro */
+}
+.chamy-botao.ativo {
+  box-shadow: 0 0 0 3px rgba(91, 140, 255, .7);  /* halo mais forte enquanto o painel está aberto */
+}
 
-/* ---- Painel ---- */
+/* ---- Painel de conversa ---- */
 .chamy-painel {
-  position: fixed;
-  right: 1rem;
-  top: 4.2rem;
-  z-index: 9999;
-  width: min(390px, calc(100vw - 2rem));
-  height: min(560px, calc(100vh - 5.5rem));
-  display: flex;
-  flex-direction: column;
-  background: var(--chamy-fundo);
-  color: var(--chamy-texto);
-  border: 1px solid var(--chamy-borda);
-  border-radius: 16px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-8px) scale(.98);
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
+  position: fixed;                          /* fica solto sobre a página, sem empurrar nada */
+  right: 1rem;                              /* distância da borda direita da tela */
+  top: 4.2rem;                              /* distância do topo (logo abaixo do cabeçalho) */
+  z-index: 9999;                            /* fica na frente de tudo */
+  width: min(390px, calc(100vw - 2rem));    /* 390 px, ou menos em telas pequenas */
+  height: min(560px, calc(100vh - 5.5rem)); /* 560 px, ou menos em telas baixas */
+  display: flex;                            /* organiza topo, mensagens e rodapé em coluna */
+  flex-direction: column;                   /* de cima para baixo */
+  background: var(--chamy-fundo);           /* fundo azul-escuro */
+  color: var(--chamy-texto);                /* texto claro */
+  border: 1px solid var(--chamy-borda);     /* borda fina */
+  border-radius: 16px;                      /* cantos arredondados */
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .45); /* sombra para destacar do fundo */
+  overflow: hidden;                         /* o conteúdo não vaza pelos cantos */
+  opacity: 0;                               /* começa invisível */
+  transform: translateY(-8px) scale(.98);   /* e levemente deslocado (para animar ao abrir) */
+  pointer-events: none;                     /* invisível não recebe cliques */
+  transition: opacity .18s ease, transform .18s ease; /* animação de abrir/fechar */
 }
-.chamy-painel.aberto { opacity: 1; transform: none; pointer-events: auto; }
+.chamy-painel.aberto {
+  opacity: 1;                               /* aparece */
+  transform: none;                          /* volta à posição normal */
+  pointer-events: auto;                     /* volta a receber cliques */
+}
 
+/* ---- Topo do painel ---- */
 .chamy-topo {
-  display: flex;
-  align-items: center;
-  gap: .7rem;
-  padding: .8rem 1rem;
-  background: var(--chamy-fundo-2);
-  border-bottom: 1px solid var(--chamy-borda);
+  display: flex;                            /* ícone, título e ✕ lado a lado */
+  align-items: center;                      /* alinhados verticalmente ao centro */
+  gap: .7rem;                               /* espaço entre os itens */
+  padding: .8rem 1rem;                      /* espaço interno */
+  background: var(--chamy-fundo-2);         /* fundo um pouco mais claro */
+  border-bottom: 1px solid var(--chamy-borda); /* linha separando do conteúdo */
 }
-.chamy-topo-icone { width: 34px; height: 34px; border-radius: 50%; background: #fff; }
-.chamy-topo-texto { display: flex; flex-direction: column; line-height: 1.2; flex: 1; }
-.chamy-topo-texto span { font-size: .78rem; color: var(--chamy-texto-suave); }
+.chamy-topo-icone {
+  width: 34px;                              /* largura do ícone no topo */
+  height: 34px;                             /* altura do ícone no topo */
+  border-radius: 50%;                       /* redondo */
+  background: #fff;                         /* fundo branco atrás do PNG */
+}
+.chamy-topo-texto {
+  display: flex;                            /* nome e subtítulo em coluna */
+  flex-direction: column;                   /* um embaixo do outro */
+  line-height: 1.2;                         /* altura da linha */
+  flex: 1;                                  /* ocupa o espaço que sobra (empurra o ✕ para a direita) */
+}
+.chamy-topo-texto span {
+  font-size: .78rem;                        /* subtítulo menor */
+  color: var(--chamy-texto-suave);          /* cor mais discreta */
+}
 .chamy-fechar {
-  border: 0; background: transparent; color: var(--chamy-texto-suave);
-  font-size: 1rem; cursor: pointer; padding: .3rem .5rem; border-radius: 6px;
+  border: 0;                                /* sem borda */
+  background: transparent;                  /* sem fundo */
+  color: var(--chamy-texto-suave);          /* cor discreta */
+  font-size: 1rem;                          /* tamanho do ✕ */
+  cursor: pointer;                          /* mãozinha */
+  padding: .3rem .5rem;                     /* área clicável maior */
+  border-radius: 6px;                       /* cantos arredondados no hover */
 }
-.chamy-fechar:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.chamy-fechar:hover {
+  background: rgba(255, 255, 255, .08);     /* fundo suave ao passar o mouse */
+  color: #fff;                              /* ✕ fica branco */
+}
 
-/* ---- Mensagens ---- */
+/* ---- Lista de mensagens ---- */
 .chamy-lista {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
+  flex: 1;                                  /* ocupa todo o espaço entre topo e rodapé */
+  overflow-y: auto;                         /* barra de rolagem quando passar do tamanho */
+  padding: 1rem;                            /* espaço interno */
+  display: flex;                            /* balões em coluna */
+  flex-direction: column;                   /* um embaixo do outro */
+  gap: .6rem;                               /* espaço entre balões */
 }
 .chamy-msg {
-  max-width: 86%;
-  padding: .6rem .8rem;
-  border-radius: 14px;
-  font-size: .92rem;
-  line-height: 1.45;
-  word-wrap: break-word;
+  max-width: 86%;                           /* balão nunca passa de 86% da largura */
+  padding: .6rem .8rem;                     /* espaço interno do balão */
+  border-radius: 14px;                      /* cantos arredondados */
+  font-size: .92rem;                        /* tamanho do texto */
+  line-height: 1.45;                        /* altura da linha (leitura confortável) */
+  word-wrap: break-word;                    /* quebra palavras muito longas */
 }
-.chamy-msg p { margin: 0 0 .35rem; }
-.chamy-msg p:last-child { margin-bottom: 0; }
-.chamy-msg .chamy-item { position: relative; padding-left: 1rem; }
-.chamy-msg .chamy-item::before { content: '•'; position: absolute; left: .2rem; color: var(--chamy-destaque); }
-.chamy-msg-chamy { align-self: flex-start; background: var(--chamy-fundo-2); border: 1px solid var(--chamy-borda); border-bottom-left-radius: 4px; }
-.chamy-msg-professor { align-self: flex-end; background: var(--chamy-azul); border-bottom-right-radius: 4px; }
-.chamy-msg-erro { border-color: rgba(255, 120, 120, .5); color: #ffd4d4; }
+.chamy-msg p { margin: 0 0 .35rem; }        /* espaço entre parágrafos dentro do balão */
+.chamy-msg p:last-child { margin-bottom: 0; } /* o último parágrafo não precisa de espaço embaixo */
+.chamy-msg .chamy-item {
+  position: relative;                       /* referência para a bolinha */
+  padding-left: 1rem;                       /* abre espaço para a bolinha à esquerda */
+}
+.chamy-msg .chamy-item::before {
+  content: '•';                             /* a bolinha da lista */
+  position: absolute;                       /* posicionada dentro do item */
+  left: .2rem;                              /* distância da borda esquerda */
+  color: var(--chamy-destaque);             /* bolinha em azul claro */
+}
+.chamy-msg-chamy {
+  align-self: flex-start;                   /* balão do Chamy fica à esquerda */
+  background: var(--chamy-fundo-2);         /* fundo azul-escuro */
+  border: 1px solid var(--chamy-borda);     /* borda fina */
+  border-bottom-left-radius: 4px;           /* "bico" do balão */
+}
+.chamy-msg-professor {
+  align-self: flex-end;                     /* balão do professor fica à direita */
+  background: var(--chamy-azul);            /* fundo azul */
+  border-bottom-right-radius: 4px;          /* "bico" do balão */
+}
+.chamy-msg-erro {
+  border-color: rgba(255, 120, 120, .5);    /* borda avermelhada em caso de erro */
+  color: #ffd4d4;                           /* texto rosado */
+}
 
-/* indicador "digitando…" */
-.chamy-digitando { display: inline-flex; gap: 4px; align-items: center; height: 1em; }
+/* ---- Indicador "digitando…" (três bolinhas) ---- */
+.chamy-digitando {
+  display: inline-flex;                     /* bolinhas lado a lado */
+  gap: 4px;                                 /* espaço entre elas */
+  align-items: center;                      /* alinhadas ao centro */
+  height: 1em;                              /* altura de uma linha de texto */
+}
 .chamy-digitando i {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--chamy-texto-suave);
-  animation: chamy-pulo 1s infinite ease-in-out;
+  width: 6px;                               /* largura da bolinha */
+  height: 6px;                              /* altura da bolinha */
+  border-radius: 50%;                       /* redonda */
+  background: var(--chamy-texto-suave);     /* cor discreta */
+  animation: chamy-pulo 1s infinite ease-in-out; /* pulinho contínuo */
 }
-.chamy-digitando i:nth-child(2) { animation-delay: .15s; }
-.chamy-digitando i:nth-child(3) { animation-delay: .3s; }
-@keyframes chamy-pulo { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+.chamy-digitando i:nth-child(2) { animation-delay: .15s; } /* 2ª bolinha pula um pouco depois */
+.chamy-digitando i:nth-child(3) { animation-delay: .3s; }  /* 3ª pula depois da 2ª */
+@keyframes chamy-pulo {
+  0%, 80%, 100% { opacity: .3; transform: translateY(0); }   /* parada e apagadinha */
+  40% { opacity: 1; transform: translateY(-3px); }           /* sobe e acende */
+}
 
-/* sugestões */
-.chamy-sugestoes { display: flex; flex-direction: column; gap: .4rem; margin-top: .2rem; }
+/* ---- Sugestões de perguntas ---- */
+.chamy-sugestoes {
+  display: flex;                            /* botões em coluna */
+  flex-direction: column;                   /* um embaixo do outro */
+  gap: .4rem;                               /* espaço entre eles */
+  margin-top: .2rem;                        /* pequeno espaço acima */
+}
 .chamy-chip {
-  text-align: left;
-  padding: .5rem .75rem;
-  font-size: .85rem;
-  color: var(--chamy-texto);
-  background: transparent;
-  border: 1px solid var(--chamy-borda);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+  text-align: left;                         /* texto alinhado à esquerda */
+  padding: .5rem .75rem;                    /* espaço interno */
+  font-size: .85rem;                        /* tamanho do texto */
+  color: var(--chamy-texto);                /* texto claro */
+  background: transparent;                  /* sem fundo */
+  border: 1px solid var(--chamy-borda);     /* borda fina */
+  border-radius: 10px;                      /* cantos arredondados */
+  cursor: pointer;                          /* mãozinha */
+  transition: background .15s ease, border-color .15s ease; /* hover suave */
 }
-.chamy-chip:hover { background: rgba(91, 140, 255, .12); border-color: var(--chamy-destaque); }
+.chamy-chip:hover {
+  background: rgba(91, 140, 255, .12);      /* fundo azulado ao passar o mouse */
+  border-color: var(--chamy-destaque);      /* borda azul clara */
+}
 
-/* ---- Rodapé ---- */
+/* ---- Rodapé: caixa de texto + botão enviar ---- */
 .chamy-rodape {
-  display: flex;
-  align-items: flex-end;
-  gap: .5rem;
-  padding: .7rem .8rem .4rem;
-  border-top: 1px solid var(--chamy-borda);
+  display: flex;                            /* caixa e botão lado a lado */
+  align-items: flex-end;                    /* alinhados embaixo (a caixa cresce para cima) */
+  gap: .5rem;                               /* espaço entre eles */
+  padding: .7rem .8rem .4rem;               /* espaço interno */
+  border-top: 1px solid var(--chamy-borda); /* linha separando das mensagens */
 }
 .chamy-campo {
-  flex: 1;
-  resize: none;
-  padding: .55rem .7rem;
-  font: inherit;
-  font-size: .92rem;
-  color: var(--chamy-texto);
-  background: var(--chamy-fundo-2);
-  border: 1px solid var(--chamy-borda);
-  border-radius: 10px;
-  outline: none;
-  max-height: 110px;
+  flex: 1;                                  /* ocupa todo o espaço livre */
+  resize: none;                             /* sem a alça de redimensionar */
+  padding: .55rem .7rem;                    /* espaço interno */
+  font: inherit;                            /* usa a mesma fonte do site */
+  font-size: .92rem;                        /* tamanho do texto digitado */
+  color: var(--chamy-texto);                /* texto claro */
+  background: var(--chamy-fundo-2);         /* fundo azul-escuro */
+  border: 1px solid var(--chamy-borda);     /* borda fina */
+  border-radius: 10px;                      /* cantos arredondados */
+  outline: none;                            /* tira o contorno padrão do navegador */
+  max-height: 110px;                        /* altura máxima ao crescer */
 }
-.chamy-campo:focus { border-color: var(--chamy-destaque); }
+.chamy-campo:focus { border-color: var(--chamy-destaque); } /* borda azul clara ao digitar */
 .chamy-enviar {
-  width: 38px; height: 38px;
-  border: 0; border-radius: 10px;
-  background: var(--chamy-destaque); color: #fff;
-  font-size: 1rem; cursor: pointer;
+  width: 38px;                              /* largura do botão ➤ */
+  height: 38px;                             /* altura do botão ➤ */
+  border: 0;                                /* sem borda */
+  border-radius: 10px;                      /* cantos arredondados */
+  background: var(--chamy-destaque);        /* azul claro */
+  color: #fff;                              /* seta branca */
+  font-size: 1rem;                          /* tamanho da seta */
+  cursor: pointer;                          /* mãozinha */
 }
-.chamy-enviar:disabled { opacity: .5; cursor: not-allowed; }
-.chamy-aviso { margin: 0; padding: 0 1rem .6rem; font-size: .7rem; color: var(--chamy-texto-suave); text-align: center; }
+.chamy-enviar:disabled {
+  opacity: .5;                              /* apagado enquanto espera a resposta */
+  cursor: not-allowed;                      /* cursor de "bloqueado" */
+}
+.chamy-aviso {
+  margin: 0;                                /* sem margem */
+  padding: 0 1rem .6rem;                    /* espaço interno */
+  font-size: .7rem;                         /* texto pequeno */
+  color: var(--chamy-texto-suave);          /* cor discreta */
+  text-align: center;                       /* centralizado */
+}
 
-/* ---- Celular: painel ocupa a tela toda ---- */
+/* ---- Celular: o painel ocupa a tela toda ---- */
 @media (max-width: 600px) {
-  .chamy-painel { right: 0; left: 0; top: 0; bottom: 0; width: 100%; height: 100%; border-radius: 0; }
+  .chamy-painel {
+    right: 0;                               /* encosta na direita */
+    left: 0;                                /* encosta na esquerda */
+    top: 0;                                 /* encosta no topo */
+    bottom: 0;                              /* encosta embaixo */
+    width: 100%;                            /* largura total */
+    height: 100%;                           /* altura total */
+    border-radius: 0;                       /* sem cantos arredondados */
+  }
 }

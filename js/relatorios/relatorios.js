@@ -2,21 +2,13 @@
    UniChamada - Relatórios (dashboard dos painéis de coordenador e professor)
    Lê as tabelas direto do Supabase e mostra números e gráficos num
    painel escuro verde-água, com um globo girando ao fundo e destaques em carrossel.
-
-   Uso (nas abas dos painéis):
-      renderRelatorios(container, 'coordenador')
-      renderRelatorios(container, 'professor', professorLogado)
-      Relatorios.parar()   // ao sair da aba (desliga animação e atualização automática)
-
-   Dependências: js/relatorios/globo.js (opcional) e window.supabaseClient (js/data/db.js).
-   Estilo: css/relatorios.css
    ========================================================= */
 (function () {
-  'use strict';
-  if (window.Relatorios) return;
+   'use strict';
+   if (window.Relatorios) return;
 
-  const ATUALIZAR_A_CADA_MS = 30000;         // busca de novo no banco
-  const CARROSSEL_A_CADA_MS = 5000;         // troca de destaque
+   const ATUALIZAR_A_CADA_MS = 30000;         // busca de novo no banco
+   const CARROSSEL_A_CADA_MS = 5000;         // troca de destaque
 
   // Colunas lidas de cada tabela (sem as fotos em base64, que pesam muito).
   const TABELAS = {
@@ -368,7 +360,7 @@
   }
 
   // =========================================================
-  // 4) TELAS (Sem tabelas inferiores)
+  // 4) TELAS
   // =========================================================
   let estado = null;
 
@@ -525,15 +517,20 @@
     clearInterval(estado.timerCarrossel);
     clearInterval(estado.timerAtualizar);
     if (estado.globo) estado.globo.parar();
+    if (estado.raiz && estado.raiz.isConnected) estado.raiz.remove();
     estado = null;
   }
 
   async function renderRelatorios(container, papel, pessoa) {
     parar();
     papel = papel === 'professor' ? 'professor' : 'coordenador';
-    container.textContent = '';
 
-    const raiz = el('div', 'rel-app rel-app-fullscreen'); // Força ocupar a tela inteira
+    // Garante overlay absoluto cobrindo 100% da tela inteira por cima de tudo
+    const raiz = el('div', 'rel-app rel-app-fullscreen'); 
+    raiz.style.position = 'fixed';
+    raiz.style.inset = '0';
+    raiz.style.zIndex = '99999';
+
     const canvas = el('canvas', 'rel-globo');
     const veu = el('div', 'rel-veu');
     const nav = el('nav', 'rel-nav');
@@ -558,6 +555,9 @@
     titulos.appendChild(el('p', 'rel-subtitulo', papel === 'coordenador'
       ? 'Painel da coordenação · dados em tempo real do banco'
       : 'Painel do professor · dados em tempo real do banco'));
+
+    // Grupo da direita no topo (Status, Botão Atualizar e o Botão de Voltar/Fechar)
+    const statusGrupo = el('div', 'rel-status-grupo');
     const status = el('div', 'rel-status');
     const vivo = el('span', 'rel-ao-vivo');
     const carimbo = el('span', 'rel-carimbo', 'Carregando...');
@@ -566,11 +566,25 @@
     atualizar.title = 'Atualizar agora';
     atualizar.addEventListener('click', () => carregar(true));
     montar(status, vivo, carimbo, atualizar);
-    montar(topo, titulos, status);
+
+    // Botão de Voltar / Fechar tela cheia com UX top
+    const btnVoltar = el('button', 'rel-botao-voltar', '✕ Voltar');
+    btnVoltar.type = 'button';
+    btnVoltar.title = 'Fechar painel de relatórios';
+    btnVoltar.addEventListener('click', () => {
+      parar();
+      // Opcional: se quiser chamar uma função externa para voltar à aba anterior do app principal
+      if (typeof window.voltarAbaAnterior === 'function') window.voltarAbaAnterior();
+    });
+
+    montar(statusGrupo, status, btnVoltar);
+    montar(topo, titulos, statusGrupo);
 
     montar(principal, topo, conteudo);
     montar(raiz, canvas, veu, nav, principal);
-    container.appendChild(raiz);
+    
+    // Injeta direto no body para ignorar containers pais limitados
+    document.body.appendChild(raiz);
 
     estado = {
       raiz, papel, pessoa: pessoa || null, secao: 'geral', conteudo, carimbo, vivo, botoesNav,

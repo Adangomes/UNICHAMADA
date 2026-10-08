@@ -39,15 +39,15 @@
   const SECOES = {
     coordenador: [
       { id: 'geral', rotulo: 'Visão geral', icone: '◧' },
-      { id: 'alunos', rotulo: 'Alunos', icone: '🎓' },
-      { id: 'cursos', rotulo: 'Cursos', icone: '📚' },
-      { id: 'disciplinas', rotulo: 'Disciplinas', icone: '📖' },
-      { id: 'professores', rotulo: 'Professores', icone: '👩‍🏫' }
+      { id: 'alunos', rotulo: 'Alunos', icone: '' },
+      { id: 'cursos', rotulo: 'Cursos', icone: '' },
+      { id: 'disciplinas', rotulo: 'Disciplinas', icone: '' },
+      { id: 'professores', rotulo: 'Professores', icone: '' }
     ],
     professor: [
       { id: 'geral', rotulo: 'Minha atuação', icone: '◧' },
-      { id: 'professores', rotulo: 'Professores', icone: '👩‍🏫' },
-      { id: 'cursos', rotulo: 'Cursos', icone: '📚' }
+      { id: 'professores', rotulo: 'Professores', icone: '' },
+      { id: 'cursos', rotulo: 'Cursos', icone: '' }
     ]
   };
 
@@ -459,16 +459,16 @@
     let esquerda, direita;
     if (e.papel === 'coordenador') {
       montar(faixa,
-        kpi('Alunos', r.totais.alunos, '🎓'), kpi('Professores', r.totais.professores, '👩‍🏫'),
-        kpi('Cursos', r.totais.cursos, '📚'), kpi('Disciplinas', r.totais.disciplinas, '📖'),
-        kpi('Turmas', r.totais.turmas, '🏫'), kpi('Matrículas', r.totais.matriculas, '📝'));
+        kpi('Alunos', r.totais.alunos, ''), kpi('Professores', r.totais.professores, ''),
+        kpi('Cursos', r.totais.cursos, ''), kpi('Disciplinas', r.totais.disciplinas, ''),
+        kpi('Turmas', r.totais.turmas, ''), kpi('Matrículas', r.totais.matriculas, ''));
       esquerda = cartao('Alunos por curso', barras(r.alunosPorCurso.slice(0, 8), 'Cadastre cursos e alunos para ver o gráfico.'));
       direita = cartao('Presença geral', rosca(r.presenca, 'presença'));
     } else {
       const m = r.meu;
       montar(faixa,
-        kpi('Minhas turmas', m.turmas.length, '🏫'), kpi('Minhas disciplinas', m.disciplinas, '📖'),
-        kpi('Meus alunos', m.alunos, '🎓'), kpi('Chamadas feitas', m.chamadas, '📋'),
+        kpi('Minhas turmas', m.turmas.length, ''), kpi('Minhas disciplinas', m.disciplinas, ''),
+        kpi('Meus alunos', m.alunos, ''), kpi('Chamadas feitas', m.chamadas, ''),
         kpi('Chamadas abertas', m.chamadasAtivas, '🟢'));
       esquerda = cartao('Alunos por turma', barras(m.turmas.slice(0, 8), 'A coordenação ainda não atribuiu turmas a você.'));
       direita = cartao('Presença nas suas turmas', rosca(m.presenca, 'presença'));
@@ -481,9 +481,9 @@
     const r = e.r, pagina = el('div', 'rel-pagina');
     montar(pagina,
       montar(el('div', 'rel-kpis'),
-        kpi('Alunos', r.totais.alunos, '🎓'),
+        kpi('Alunos', r.totais.alunos, ''),
         kpiMedia(r.mediaDisciplinas),
-        kpi('Alunos sem disciplina', r.semDisciplina, '⚠️')),
+        kpi('Alunos sem disciplina', r.semDisciplina, '')),
       montar(el('div', 'rel-duas'),
         cartao('Alunos por curso', barras(r.alunosPorCurso, 'Sem cursos cadastrados.')),
         cartao('Quantas disciplinas cada aluno cursa', colunas(r.distDisciplinas))));
@@ -510,7 +510,7 @@
   const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   function kpiMedia(media) {                                // média tem casa decimal: não usa a contagem inteira
     const c = el('div', 'rel-kpi');
-    c.appendChild(el('span', 'rel-kpi-icone', '📖'));
+    c.appendChild(el('span', 'rel-kpi-icone', ''));
     c.appendChild(el('div', 'rel-kpi-valor', String(media).replace('.', ',')));
     c.appendChild(el('div', 'rel-kpi-rotulo', 'Média de disciplinas por aluno'));
     return c;
@@ -526,7 +526,7 @@
       return { classe: meus.has(c.nome) ? 'rel-linha-eu' : '', celulas: [nome, fmt(c.alunos), fmt(c.disciplinas), fmt(c.turmas), fmt(c.professores)] };
     });
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Cursos', r.totais.cursos, '📚'), kpi('Disciplinas', r.totais.disciplinas, '📖'), kpi('Turmas', r.totais.turmas, '🏫')),
+      montar(el('div', 'rel-kpis'), kpi('Cursos', r.totais.cursos, ''), kpi('Disciplinas', r.totais.disciplinas, ''), kpi('Turmas', r.totais.turmas, '')),
       cartao('Alunos por curso', barras(r.cursos.map((c) => ({ nome: c.nome, valor: c.alunos })).sort(porValorDesc), 'Sem cursos cadastrados.')),
       cartao('Cursos', tabela(['Curso', 'Alunos', 'Disciplinas', 'Turmas', 'Professores'], linhas, 'Sem cursos cadastrados.')));
     return pagina;
@@ -535,7 +535,7 @@
   function secaoDisciplinas(e) {
     const r = e.r, pagina = el('div', 'rel-pagina');
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Disciplinas', r.totais.disciplinas, '📖'), kpi('Turmas', r.totais.turmas, '🏫'), kpi('Matrículas', r.totais.matriculas, '📝')),
+      montar(el('div', 'rel-kpis'), kpi('Disciplinas', r.totais.disciplinas, ''), kpi('Turmas', r.totais.turmas, ''), kpi('Matrículas', r.totais.matriculas, '📝')),
       cartao('Alunos por disciplina',
         barras([...r.disciplinas].sort((a, b) => b.alunos - a.alunos).slice(0, 10).map((x) => ({ nome: x.nome, valor: x.alunos })), 'Sem disciplinas cadastradas.')),
       cartao('Disciplinas', tabela(['Disciplina', 'Curso', 'Professor', 'Turmas', 'Alunos'],
@@ -553,7 +553,7 @@
       return { classe: meuId && p.id === meuId ? 'rel-linha-eu' : '', celulas: [nome, chips(p.cursos), fmt(p.disciplinas), fmt(p.turmas), fmt(p.alunos)] };
     });
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Professores', r.totais.professores, '👩‍🏫'), kpi('Turmas', r.totais.turmas, '🏫'), kpi('Cursos', r.totais.cursos, '📚')),
+      montar(el('div', 'rel-kpis'), kpi('Professores', r.totais.professores, ''), kpi('Turmas', r.totais.turmas, ''), kpi('Cursos', r.totais.cursos, '📚')),
       cartao('Turmas por professor',
         barras(r.professores.map((p) => ({ nome: p.nome, valor: p.turmas })).sort(porValorDesc).slice(0, 10), 'Sem professores cadastrados.')),
       cartao('Professores e cursos vinculados', tabela(['Professor', 'Cursos vinculados', 'Disciplinas', 'Turmas', 'Alunos'], linhas, 'Sem professores cadastrados.')));

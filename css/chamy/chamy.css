@@ -11,7 +11,7 @@
     /* Tira ele do fluxo normal para não empurrar os outros */
     position: absolute;
     /* Ajuste este valor de 'left' para mover ele para a esquerda ou direita livremente */
-    left: -30px; /* Aumente ou diminua os pixels para posicionar exatamente onde quer */
+    left: -60px; /* Aumente ou diminua os pixels para posicionar exatamente onde quer */
 }
 
 .chamy-trigger-btn:hover {

@@ -10,7 +10,7 @@
     transition: transform 0.2s ease;
     
     /* Use esta linha para puxar ele para a esquerda (aumente ou diminua os pixels) */
-    transform: translateX(-180px); /* Ajuste este valor até ele parar em cima do ponto vermelho */
+    transform: translateX(-100px); /* Ajuste este valor até ele parar em cima do ponto vermelho */
 }
 
 .chamy-trigger-btn:hover {

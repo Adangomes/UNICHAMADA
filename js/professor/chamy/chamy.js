@@ -1,62 +1,37 @@
-function inicializarChamyProfessor(cabecalho, professor) {
-    // 1. Procura o container de ações do cabeçalho onde fica o sino
-    const acoesCabecalho = cabecalho.querySelector('.cabecalho-acoes') || cabecalho;
+document.addEventListener("DOMContentLoaded", () => {
+    const btnChamy = document.getElementById("btn-chamy");
+    if (!btnChamy) return;
 
-    // Evita duplicar o botão se já existir na tela
-    if (document.getElementById("btn-chamy")) return;
-
-    // 2. Cria o botão com o ícone customizado do Chamy
-    const btnChamy = document.createElement("button");
-    btnChamy.id = "btn-chamy";
-    btnChamy.className = "chamy-trigger-btn";
-    btnChamy.title = "Conversar com o Chamy";
-    btnChamy.innerHTML = `<img src="js/professor/chamy/chamy.png" alt="Chamy" class="chamy-icon-img">`;
-    
-    // Procura especificamente o botão do sino ou o ícone de notificação
-    const iconeSino = acoesCabecalho.querySelector('.fa-bell') 
-                   || acoesCabecalho.querySelector('i.fa-bell') 
-                   || acoesCabecalho.querySelector('[class*="bell"]')
-                   || acoesCabecalho.querySelector('button');
-
-    if (iconeSino) {
-        // Encontra o elemento pai (o botão do sino) e insere o Chamy logo antes dele
-        const botaoSino = iconeSino.closest('button') || iconeSino.parentElement;
-        acoesCabecalho.insertBefore(btnChamy, botaoSino);
-    } else {
-        // Fallback caso não ache o sino
-        acoesCabecallow.appendChild(btnChamy);
-    }
-
-    // 3. Injeta o HTML do modal do chat flutuante no body se ainda não existir
+    // Injeta o HTML do modal do chat dinamicamente no body se não existir
     if (!document.getElementById("chamy-chat-modal")) {
         const chatHTML = `
             <div id="chamy-chat-modal" class="chamy-hidden">
                 <div class="chamy-header">
                     <div class="chamy-header-info">
+                        <img src="${btnChamy.querySelector('img').src}" alt="Chamy">
                         <h3>Chamy AI</h3>
                     </div>
                     <button id="chamy-close-btn">&times;</button>
                 </div>
                 <div id="chamy-body" class="chamy-body">
-                    <div class="chamy-message assistant">Olá! Sou o Chamy, seu assistente de dados. O que gostaria de saber sobre as turmas ou chamadas hoje?</div>
+                    <div class="chamy-message assistant">Olá! Sou o Chamy, seu assistente de dados. O que você gostaria de saber sobre as turmas ou chamadas hoje?</div>
                 </div>
                 <div class="chamy-footer">
                     <input type="text" id="chamy-input" placeholder="Digite sua pergunta...">
-                    <button id="chamy-send-btn"><i class="fas fa-paper-plane"></i> Enviar</button>
+                    <button id="chamy-send-btn"><i class="fas fa-paper-plane"></i>Enviar</button>
                 </div>
             </div>
         `;
         document.body.insertAdjacentHTML("beforeend", chatHTML);
     }
 
-    // 4. Seleciona os elementos da interface do chat
     const modal = document.getElementById("chamy-chat-modal");
     const closeBtn = document.getElementById("chamy-close-btn");
     const sendBtn = document.getElementById("chamy-send-btn");
     const inputField = document.getElementById("chamy-input");
     const chatBody = document.getElementById("chamy-body");
 
-    // 5. Configura os eventos de abrir/fechar
+    // Abre/fecha o chat clicando no ícone do customizado do lado do sino
     btnChamy.addEventListener("click", () => {
         modal.classList.toggle("chamy-hidden");
         if (!modal.classList.contains("chamy-hidden")) {
@@ -68,18 +43,20 @@ function inicializarChamyProfessor(cabecalho, professor) {
         modal.classList.add("chamy-hidden");
     });
 
-    // 6. Lógica de envio de mensagens para o n8n
     async function enviarMensagem() {
         const texto = inputField.value.trim();
         if (!texto) return;
 
+        // Exibe mensagem do usuário
         appendMessage(texto, "user");
         inputField.value = "";
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        const loadingId = appendMessage("Chamy está a consultar os dados...", "assistant");
+        // Mensagem temporária de "Pensando..."
+        const loadingId = appendMessage("Chamy está consultando os dados...", "assistant");
 
         try {
+            // URL DO SEU WEBHOOK DO N8N AQUI 👇
             const webhookUrl = "SUA_URL_DO_WEBHOOK_N8N_AQUI"; 
 
             const response = await fetch(webhookUrl, {
@@ -87,22 +64,19 @@ function inicializarChamyProfessor(cabecalho, professor) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "include",
-                body: JSON.stringify({ 
-                    pergunta: texto,
-                    professor_id: professor?.id || null 
-                })
+                body: JSON.stringify({ pergunta: texto })
             });
 
             const data = await response.json();
             
+            // Remove o "pensando" e bota a resposta real
             document.getElementById(loadingId).remove();
             appendMessage(data.resposta || "Não consegui processar a resposta no momento.", "assistant");
 
         } catch (error) {
             console.error("Erro ao falar com o Chamy:", error);
             document.getElementById(loadingId).remove();
-            appendMessage("Desculpe, ocorreu um erro de ligação com o servidor de IA.", "assistant");
+            appendMessage("Desculpe, ocorreu um erro de conexão com o servidor de IA.", "assistant");
         }
 
         chatBody.scrollTop = chatBody.scrollHeight;
@@ -123,6 +97,4 @@ function inicializarChamyProfessor(cabecalho, professor) {
         chatBody.scrollTop = chatBody.scrollHeight;
         return msgId;
     }
-}
-
-window.inicializarChamyProfessor = inicializarChamyProfessor;
+});

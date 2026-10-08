@@ -23,7 +23,7 @@
 
   let eu = null, raiz = null, contatos = [], ativo = null, abaAtiva = ABAS[0];
   let mensagens = new Map();        // id -> mensagem da conversa aberta
-  let online = new Set();           // chaves "papel:id" de quem está online
+  let online = new Set();            // chaves "papel:id" de quem está online
   let timerRecarga = null;
   let seletorAberto = false;
   let selecionados = new Set();
@@ -230,7 +230,7 @@
     $('.chat-cabecalho').innerHTML = `
       ${avatarHtml(ativo)}
       <div><strong>${esc(ativo.nome)}</strong>
-      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'} · ${ROTULO_SING[ativo.aba]}</small></div>`;
+      <small class="${on ? 'chat-status-online' : ''}">${on ? 'Online' : 'Offline'}</small></div>`;
   }
 
   // ---------- MENSAGENS (balões) ----------

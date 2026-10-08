@@ -580,8 +580,8 @@
     const titulos = el('div');
     titulos.appendChild(el('h2', 'rel-titulo', 'Relatórios'));
     titulos.appendChild(el('p', 'rel-subtitulo', papel === 'coordenador'
-      ? 'Painel da coordenação · dados em tempo real do banco'
-      : 'Painel do professor · dados em tempo real do banco'));
+      ? ''
+      : ''));
 
     // Grupo da direita no topo (Status, Botão Atualizar e o Botão de Voltar/Fechar)
     const statusGrupo = el('div', 'rel-status-grupo');

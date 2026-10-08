@@ -12,31 +12,27 @@
   }
 
   function inicializarModoNoturno() {
-    // Evita duplicar se já foi inserido
     if (document.getElementById('un-modo-container')) return;
 
-    // Ativa o modo escuro padrão com 50% de intensidade
     const body = document.body;
     body.classList.add('modo-escuro');
     aplicarIntensidadeEscuro(50);
 
-    // Procura o container do topo/cabeçalho onde fica o botão "Sair"
-    // Geralmente a barra superior tem o nome do usuário e o botão Sair à direita
-    const cabecalhoTopo = document.querySelector('#tela-coordenador header, .painel-cabecalho, header');
-    
-    if (!cabecalhoTopo) {
-      console.warn('ModoNoturno: Cabeçalho não encontrado para injetar o botão.');
+    // Tenta encontrar o botão "Sair" diretamente em toda a tela (já que ele fica no topo direito)
+    const botoes = Array.from(document.querySelectorAll('button, a'));
+    const btnSair = botoes.find(b => b.textContent.trim().toLowerCase() === 'sair');
+
+    if (!btnSair || !btnSair.parentNode) {
+      console.warn('ModoNoturno: Botão Sair não foi encontrado.');
       return;
     }
 
-    // Cria o wrapper do botão e do menu flutuante
     const wrapper = document.createElement('div');
     wrapper.id = 'un-modo-container';
     wrapper.className = 'un-modo-painel';
     wrapper.style.display = 'inline-block';
     wrapper.style.position = 'relative';
-    wrapper.style.marginLeft = 'auto'; // Joga para a direita se o pai for flex
-    wrapper.style.marginRight = '10px';
+    wrapper.style.marginRight = '8px'; // Espaçamento para o botão Sair
 
     wrapper.innerHTML = `
       <button id="btn-modo-noturno" class="rel-atualizar" type="button" title="Ajustar Modo Noturno" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;">
@@ -55,36 +51,25 @@
       </div>
     `;
 
-    // Tenta achar o botão "Sair" existente para injetar logo antes dele
-    const botoes = Array.from(cabecalhoTopo.querySelectorAll('button, a'));
-    const btnSair = botoes.find(b => b.textContent.trim().toLowerCase() === 'sair');
-
-    if (btnSair && btnSair.parentNode) {
-      btnSair.parentNode.insertBefore(wrapper, btnSair);
-    } else {
-      // Se não achar o botão Sair exato, joga no final do cabeçalho
-      cabecalhoTopo.appendChild(wrapper);
-    }
+    // Insere o container exatamente antes do botão "Sair"
+    btnSair.parentNode.insertBefore(wrapper, btnSair);
 
     const btnToggle = wrapper.querySelector('#btn-modo-noturno');
     const menuPopup = wrapper.querySelector('#un-modo-menu');
     const slider = wrapper.querySelector('#un-slider-intensidade');
     const txtValor = wrapper.querySelector('#un-valor-txt');
 
-    // Abre/fecha o menu flutuante ao clicar na lua
     btnToggle.addEventListener('click', (e) => {
       e.stopPropagation();
       menuPopup.classList.toggle('ativo');
     });
 
-    // Fecha ao clicar fora
     document.addEventListener('click', (e) => {
       if (!wrapper.contains(e.target)) {
         menuPopup.classList.remove('ativo');
       }
     });
 
-    // Atualiza a intensidade dinamicamente ao mexer no slider
     slider.addEventListener('input', (e) => {
       const val = e.target.value;
       txtValor.textContent = val + '%';

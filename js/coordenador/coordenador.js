@@ -83,7 +83,7 @@ async function montarPainelCoordenador(sessao) {
   await renderizarAbaAtivaCoordenador();
 
   }
-}
+
 /**
  * Troca a aba ativa: atualiza qual botão fica marcado como "ativo" e
  * renderiza o conteúdo correspondente.

@@ -80,10 +80,13 @@ async function montarPainelCoordenador(sessao) {
   tela.appendChild(corpo);
 
   // Assim que monta o painel, já renderiza o conteúdo da aba ativa
-  // (senão o usuário veria o menu sem nada embaixo)
   await renderizarAbaAtivaCoordenador();
-}
 
+  // === INICIALIZA O MODO NOTURNO AQUI DENTRO, NO FIM DA FUNÇÃO ===
+  if (window.ModoNoturno && typeof window.ModoNoturno.inicializar === 'function') {
+    window.ModoNoturno.inicializar();
+  }
+}
 /**
  * Troca a aba ativa: atualiza qual botão fica marcado como "ativo" e
  * renderiza o conteúdo correspondente.
@@ -121,4 +124,4 @@ async function renderizarAbaAtivaCoordenador() {
 // Expõe a função no escopo global pra poder ser chamada de outros arquivos
 // (ex: pelo roteador que decide qual painel montar de acordo com o login)
 window.montarPainelCoordenador = montarPainelCoordenador;
-window.ModoNoturno.inicializar();
+

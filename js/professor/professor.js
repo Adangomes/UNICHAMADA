@@ -139,6 +139,9 @@ async function montarPainelProfessor(sessao) {
   corpo.append(nav, elementoConteudoProfessor);
   tela.appendChild(corpo);
 
+  if (typeof inicializarChamyProfessor === 'function') {
+        inicializarChamyProfessor(cabecalho, professorLogado);
+    }
   // 4. Renderiza a aba ativa inicial
   await renderizarAbaAtivaProfessor();
 }

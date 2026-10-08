@@ -24,9 +24,14 @@ const ABAS_COORDENADOR = [
       elementoConteudoCoordenador.innerHTML = '<div id="chat-coordenador-root"></div>';
       await iniciarChatCoordenador('chat-coordenador-root');
     }
+  }, // <--- VÍRGULA AQUI ENTRE OS OBJETOS DO ARRAY
+  {
+    // Dashboard de relatórios (js/relatorios/relatorios.js)
+    chave: 'relatorios',
+    rotulo: 'Relatórios',
+    render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
   }
 ];
-
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.
 // É preenchido lá no montarPainelCoordenador() e usado pelas funções de render.
 let elementoConteudoCoordenador = null;

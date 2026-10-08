@@ -521,6 +521,33 @@
     estado = null;
   }
 
+  // Função interna para fechar com transição suave de saída
+  function fecharPainelSuave() {
+    if (!estado || !estado.raiz) {
+      parar();
+      if (typeof window.voltarAbaAnterior === 'function') window.voltarAbaAnterior();
+      return;
+    }
+    
+    const raizEl = estado.raiz;
+    // Remove a classe ativa para disparar o fade out / zoom out reverso
+    raizEl.classList.remove('rel-ativo');
+
+    // Pausa timers e globo imediatamente
+    clearInterval(estado.timerCarrossel);
+    clearInterval(estado.timerAtualizar);
+    if (estado.globo) estado.globo.parar();
+
+    // Aguarda exatamente o tempo da transição CSS (0.6s) antes de remover o elemento do DOM
+    setTimeout(() => {
+      if (raizEl.isConnected) raizEl.remove();
+      estado = null;
+      if (typeof window.voltarAbaAnterior === 'function') {
+        window.voltarAbaAnterior();
+      }
+    }, 600);
+  }
+
   async function renderRelatorios(container, papel, pessoa) {
     parar();
     papel = papel === 'professor' ? 'professor' : 'coordenador';
@@ -572,9 +599,7 @@
     btnVoltar.type = 'button';
     btnVoltar.title = 'Fechar painel de relatórios';
     btnVoltar.addEventListener('click', () => {
-      parar();
-      // Opcional: se quiser chamar uma função externa para voltar à aba anterior do app principal
-      if (typeof window.voltarAbaAnterior === 'function') window.voltarAbaAnterior();
+      fecharPainelSuave();
     });
 
     montar(statusGrupo, status, btnVoltar);
@@ -585,6 +610,13 @@
     
     // Injeta direto no body para ignorar containers pais limitados
     document.body.appendChild(raiz);
+
+    // Pequeno delay para garantir que o elemento foi pintado e ativar a classe de entrada suave
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        raiz.classList.add('rel-ativo');
+      });
+    });
 
     estado = {
       raiz, papel, pessoa: pessoa || null, secao: 'geral', conteudo, carimbo, vivo, botoesNav,

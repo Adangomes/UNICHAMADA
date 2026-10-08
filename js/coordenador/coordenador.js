@@ -121,3 +121,4 @@ async function renderizarAbaAtivaCoordenador() {
 // Expõe a função no escopo global pra poder ser chamada de outros arquivos
 // (ex: pelo roteador que decide qual painel montar de acordo com o login)
 window.montarPainelCoordenador = montarPainelCoordenador;
+window.ModoNoturno.inicializar();

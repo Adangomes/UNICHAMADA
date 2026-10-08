@@ -1,23 +1,29 @@
+/* ==========================================================================
+   MODO NOTURNO — Cores integradas com a identidade do base.css
+   ========================================================================== */
+
 /* Container flutuante do controle de intensidade do modo escuro */
 .un-modo-painel {
   position: relative;
   display: inline-block;
 }
 
-/* Menu flutuante do slider - Cores ajustadas para combinar com o tema do sistema */
+/* Menu flutuante do slider estilizado com as cores do sistema (Tinta e Cartão) */
 .un-modo-menu {
   position: absolute;
   top: calc(100% + 10px);
-  /* Mude 'right: 0' para 'left: 0' se quiser alinhar à esquerda do botão */
-  right: 0; 
+  
+  /* [PONTO DE AJUSTE PARA A DIREITA] 
+     Mude este valor (ex: -10px, -25px, -40px) para mover o menu para a direita até alinhar com o botão */
+  right: -25px; 
+  
   width: 240px;
   padding: 14px;
-  /* Fundo escuro sólido/translúcido padrão dos painéis do sistema */
-  background: #1e293b; 
-  /* Borda sutil combinando com o layout */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  /* Utiliza a cor de fundo de cartão do sistema ou a tinta profunda com transparência */
+  background: var(--tinta, #1F2D50);
+  border: 1.5px solid var(--linha, #DAD5C6);
+  border-radius: var(--raio, 10px);
+  box-shadow: 0 10px 25px rgba(31, 45, 80, 0.3);
   z-index: 999999;
   display: flex;
   flex-direction: column;
@@ -26,8 +32,8 @@
   transform: translateY(-8px);
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
-  font-family: inherit;
-  color: #f8fafc;
+  font-family: var(--fonte-corpo, inherit);
+  color: #FFFFFF;
 }
 
 .un-modo-menu.ativo {
@@ -41,7 +47,8 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #38bdf8; /* Azul destaque do sistema */
+  /* Cor amarela de alerta/destaque do base.css */
+  color: var(--amarelo-alerta, #C98A1E);
   margin: 0;
 }
 
@@ -53,7 +60,7 @@
 
 .un-modo-slider {
   width: 100%;
-  accent-color: #38bdf8;
+  accent-color: var(--coral, #D65B4A);
   cursor: pointer;
 }
 
@@ -61,14 +68,21 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--linha, #DAD5C6);
 }
 
-/* Níveis dinâmicos de escurecimento */
+/* Regras para escurecer a página com base na variável controlada pelo JS */
 body.modo-escuro {
-  --fundo-base: #0f172a;
+  background-color: var(--rel-fundo, #041016) !important;
+  color: #E2E8F0 !important;
 }
 
-body.modo-claro {
-  --fundo-base: #f8fafc;
+/* Força os cartões e elementos do painel a escurecerem junto no modo noturno */
+body.modo-escuro .cartao,
+body.modo-escuro .painel-conteudo,
+body.modo-escuro input,
+body.modo-escuro select {
+  background-color: #111C33 !important;
+  color: #F8FAFC !important;
+  border-color: #2A3B66 !important;
 }

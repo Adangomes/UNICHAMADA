@@ -1,0 +1,55 @@
+# Chamy — assistente de dados (painel do professor)
+
+O professor pergunta em linguagem natural; o n8n consulta o Supabase e responde.
+
+## Arquivos
+- `js/professor/chamy/chamy.js` — botão ao lado do sino, painel de conversa e chamada ao n8n
+- `css/chamy/chamy.css` — visual
+- `img/chamy/chamy-icone.png` — ícone do robô
+
+## Ligação no site
+1. `index.html`: `<link rel="stylesheet" href="css/chamy/chamy.css">` e `<script src="js/professor/chamy/chamy.js"></script>` (antes do `professor.js`).
+2. `professor.js`, em `montarPainelProfessor`, logo após o sino:
+   `if (typeof inicializarChamy === 'function') inicializarChamy(cabecalho, professorLogado);`
+3. `chamy.js`: preencher `CHAMY_CONFIG.webhookUrl` e `CHAMY_CONFIG.token`.
+
+## Fluxo no n8n
+`Webhook (POST)` → `IF (token confere)` → `AI Agent` → `Respond to Webhook`
+
+O `AI Agent` tem três ligações embaixo:
+- **Chat Model** (OpenAI, Gemini ou Claude)
+- **Memory** (Simple Memory, chave = `{{ $json.body.sessao_id }}`)
+- **Tool** (MCP Client do Supabase, só leitura)
+
+### Webhook
+- Method `POST`, Path `chamy`, Respond: `Using 'Respond to Webhook' Node`
+- Options → Allowed Origins (CORS): `https://adangomes.github.io`
+
+### IF
+- `{{ $json.body.token }}` igual à chave definida no `chamy.js`
+- Falso → Respond to Webhook com `{ "resposta": "Acesso negado." }`
+
+### AI Agent
+- Source for Prompt: *Define below* → `{{ $json.body.pergunta }}`
+- System Message: ver abaixo
+
+### MCP Client Tool (Supabase)
+- Endpoint: `https://mcp.supabase.com/mcp?project_ref=SEU_PROJECT_REF&read_only=true&features=database`
+- Autenticação: Bearer com um Personal Access Token do Supabase
+- Tools: apenas as de leitura (`execute_sql`, `list_tables`)
+
+### Respond to Webhook
+- Respond With: JSON → `{ "resposta": "{{ $json.output }}" }`
+
+## System Message sugerida
+```
+Você é o Chamy, assistente de dados do UniChamada. Responda sempre em português do Brasil, de forma curta e clara.
+Você está conversando com o professor de id {{ $('Webhook').item.json.body.professor_id }}.
+Regras:
+- Consulte SOMENTE dados das turmas desse professor (turmas.professor_id = esse id). Nunca mostre dados de outros professores.
+- Só faça consultas de leitura (SELECT). Nunca altere dados.
+- Nunca mostre RA, e-mail, foto ou qualquer dado de contato de alunos. Use apenas o nome.
+- Se a pergunta fugir dos dados do sistema, diga que só sabe responder sobre turmas, alunos e presenças.
+- Se não tiver certeza ou a consulta não retornar nada, diga isso; nunca invente números.
+Tabelas: alunos, chamadas, cursos, disciplinas, matriculas, presencas, professores, turmas.
+```

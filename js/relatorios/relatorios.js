@@ -1,17 +1,12 @@
 /* =========================================================
    UniChamada - Relatórios (dashboard dos painéis de coordenador e professor)
-   Lê as tabelas direto do Supabase e mostra números, gráficos e tabelas num
+   Lê as tabelas direto do Supabase e mostra números e gráficos num
    painel escuro verde-água, com um globo girando ao fundo e destaques em carrossel.
 
-   Seções
-   - Coordenador: Visão geral | Alunos | Cursos | Disciplinas | Professores
-   - Professor:   Minha atuação | Professores | Cursos
-   O RA e o e-mail das pessoas NÃO aparecem aqui (só nomes e contagens).
-
    Uso (nas abas dos painéis):
-     renderRelatorios(container, 'coordenador')
-     renderRelatorios(container, 'professor', professorLogado)
-     Relatorios.parar()   // ao sair da aba (desliga animação e atualização automática)
+      renderRelatorios(container, 'coordenador')
+      renderRelatorios(container, 'professor', professorLogado)
+      Relatorios.parar()   // ao sair da aba (desliga animação e atualização automática)
 
    Dependências: js/relatorios/globo.js (opcional) e window.supabaseClient (js/data/db.js).
    Estilo: css/relatorios.css
@@ -20,11 +15,10 @@
   'use strict';
   if (window.Relatorios) return;
 
-  const ATUALIZAR_A_CADA_MS = 30000;       // busca de novo no banco
-  const CARROSSEL_A_CADA_MS = 5000;        // troca de destaque
+  const ATUALIZAR_A_CADA_MS = 30000;         // busca de novo no banco
+  const CARROSSEL_A_CADA_MS = 5000;         // troca de destaque
 
   // Colunas lidas de cada tabela (sem as fotos em base64, que pesam muito).
-  // Se o seu banco tiver outro nome de coluna, a busca tenta de novo com "*".
   const TABELAS = {
     alunos:      'id, nome, curso_id',
     professores: 'id, nome',
@@ -60,7 +54,7 @@
     for (const colunas of [TABELAS[nome], '*']) {
       const linhas = [];
       let falhou = false;
-      for (let ini = 0; ; ini += 1000) {                  // o Supabase entrega no máximo 1000 por vez
+      for (let ini = 0; ; ini += 1000) {              // o Supabase entrega no máximo 1000 por vez
         const { data, error } = await cli.from(nome).select(colunas).order('id', { ascending: true }).range(ini, ini + 999);
         if (error) { falhou = true; break; }
         linhas.push(...data);
@@ -81,7 +75,7 @@
   }
 
   // =========================================================
-  // 2) CÁLCULOS (funções puras: recebem as tabelas e devolvem números)
+  // 2) CÁLCULOS
   // =========================================================
   const sid = (v) => (v == null ? '' : String(v));
   const porNomeAsc = (a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR');
@@ -110,7 +104,6 @@
     const nomeCurso = (id) => (cursoPorId.get(sid(id)) || {}).nome || 'Sem curso';
     const nomeProf = (id) => (profPorId.get(sid(id)) || {}).nome || '—';
 
-    // matrículas: quem está em qual turma
     const turmasDoAluno = new Map(), alunosDaTurma = new Map();
     for (const m of matriculas) {
       const a = sid(m.aluno_id), t = sid(m.turma_id);
@@ -119,13 +112,12 @@
       turmasDoAluno.get(a).add(t);
       alunosDaTurma.get(t).add(a);
     }
-    const alunosDeTurmas = (ids) => {                      // alunos distintos de um conjunto de turmas
+    const alunosDeTurmas = (ids) => {
       const s = new Set();
       ids.forEach((t) => (alunosDaTurma.get(sid(t)) || []).forEach((a) => s.add(a)));
       return s;
     };
 
-    // disciplinas de cada aluno = disciplinas das turmas em que ele está matriculado
     const discsDoAluno = new Map();
     for (const [a, ts] of turmasDoAluno) {
       const s = new Set();
@@ -133,7 +125,6 @@
       discsDoAluno.set(a, s);
     }
 
-    // ---- alunos ----
     const listaAlunos = alunos.map((a) => ({
       id: sid(a.id), nome: a.nome || '—', curso: nomeCurso(a.curso_id),
       disciplinas: (discsDoAluno.get(sid(a.id)) || new Set()).size
@@ -145,12 +136,11 @@
     const semCurso = alunos.filter((a) => !cursoPorId.has(sid(a.curso_id))).length;
     if (semCurso) alunosPorCurso.push({ id: '', nome: 'Sem curso', valor: semCurso });
 
-    const faixas = [0, 0, 0, 0, 0];                        // 0, 1, 2, 3, 4+ disciplinas
+    const faixas = [0, 0, 0, 0, 0];
     listaAlunos.forEach((a) => { faixas[Math.min(a.disciplinas, 4)]++; });
     const distDisciplinas = ['0', '1', '2', '3', '4+'].map((rotulo, i) => ({ nome: rotulo, valor: faixas[i] }));
     const somaDisc = listaAlunos.reduce((s, a) => s + a.disciplinas, 0);
 
-    // ---- cursos ----
     const listaCursos = cursos.map((c) => {
       const cid = sid(c.id);
       const profs = new Set();
@@ -165,7 +155,6 @@
       };
     }).sort(porNomeAsc);
 
-    // ---- disciplinas ----
     const listaDisciplinas = disciplinas.map((x) => {
       const did = sid(x.id);
       const ts = turmas.filter((t) => sid(t.disciplina_id) === did);
@@ -179,7 +168,6 @@
       };
     }).sort(porNomeAsc);
 
-    // ---- professores ----
     const listaProfessores = professores.map((p) => {
       const pid = sid(p.id);
       const ts = turmas.filter((t) => sid(t.professor_id) === pid);
@@ -195,7 +183,6 @@
       };
     }).sort(porNomeAsc);
 
-    // ---- escopo do professor logado ----
     let meu = null;
     if (papel === 'professor') {
       const meuId = sid(euId);
@@ -219,7 +206,6 @@
       };
     }
 
-    // ---- destaques do carrossel ----
     const presencaGeral = calcularPresenca(presencas);
     const destaques = [];
     if (papel === 'coordenador') {
@@ -259,7 +245,7 @@
   }
 
   // =========================================================
-  // 3) PEÇAS VISUAIS (sem biblioteca: DOM + SVG)
+  // 3) PEÇAS VISUAIS
   // =========================================================
   const fmt = (n) => Number(n).toLocaleString('pt-BR');
 
@@ -275,7 +261,7 @@
   }
   function depoisDoDesenho(fn) { requestAnimationFrame(() => requestAnimationFrame(fn)); }
 
-  function contar(alvoEl, alvo, sufixo) {                  // número subindo até o valor
+  function contar(alvoEl, alvo, sufixo) {
     const inicio = performance.now(), duracao = 700;
     function passo(agora) {
       if (alvoEl.isConnected === false) return;
@@ -294,7 +280,7 @@
 
   function kpi(rotulo, valor, icone, sufixo) {
     const c = el('div', 'rel-kpi');
-    c.appendChild(el('span', 'rel-kpi-icone', icone));
+    if (icone) c.appendChild(el('span', 'rel-kpi-icone', icone));
     const v = el('div', 'rel-kpi-valor', '0');
     c.appendChild(v);
     c.appendChild(el('div', 'rel-kpi-rotulo', rotulo));
@@ -302,7 +288,7 @@
     return c;
   }
 
-  function barras(itens, vazio) {                          // barras horizontais
+  function barras(itens, vazio) {
     const caixa = el('div', 'rel-barras');
     if (!itens.length) { caixa.appendChild(el('p', 'rel-vazio', vazio || 'Sem dados ainda.')); return caixa; }
     const max = Math.max(...itens.map((i) => i.valor), 1);
@@ -321,7 +307,7 @@
     return caixa;
   }
 
-  function colunas(itens) {                                // colunas verticais
+  function colunas(itens) {
     const caixa = el('div', 'rel-colunas');
     const max = Math.max(...itens.map((i) => i.valor), 1);
     itens.forEach((i) => {
@@ -339,7 +325,7 @@
     return caixa;
   }
 
-  function rosca(pres, legenda) {                          // gráfico de rosca (taxa de presença)
+  function rosca(pres, legenda) {
     const caixa = el('div', 'rel-rosca');
     const ns = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(ns, 'svg');
@@ -381,41 +367,12 @@
     return caixa;
   }
 
-  function tabela(cabecalho, linhas, vazio) {
-    const envolta = el('div', 'rel-tabela-wrap');
-    if (!linhas.length) { envolta.appendChild(el('p', 'rel-vazio', vazio || 'Nada para mostrar ainda.')); return envolta; }
-    const t = el('table', 'rel-tabela');
-    const cab = el('tr');
-    cabecalho.forEach((h) => cab.appendChild(el('th', null, h)));
-    t.appendChild(el('thead')).appendChild(cab);
-    const corpo = el('tbody');
-    linhas.forEach((l) => {
-      const tr = el('tr', l.classe);
-      l.celulas.forEach((c) => {
-        const td = el('td');
-        if (c instanceof Node) td.appendChild(c); else td.textContent = c;
-        tr.appendChild(td);
-      });
-      corpo.appendChild(tr);
-    });
-    t.appendChild(corpo);
-    envolta.appendChild(t);
-    return envolta;
-  }
-
-  function chips(nomes) {
-    const caixa = el('div', 'rel-chips');
-    if (!nomes.length) { caixa.appendChild(el('span', 'rel-chip rel-chip-vazio', 'sem vínculo')); return caixa; }
-    nomes.forEach((n) => caixa.appendChild(el('span', 'rel-chip', n)));
-    return caixa;
-  }
-
   // =========================================================
-  // 4) ESTADO E TELAS
+  // 4) TELAS (Sem tabelas inferiores)
   // =========================================================
   let estado = null;
 
-  function carrossel(destaques) {                          // destaques que trocam sozinhos
+  function carrossel(destaques) {
     const caixa = el('section', 'rel-carrossel');
     const slides = destaques.map((d, i) => {
       const s = el('div', 'rel-slide' + (i === 0 ? ' ativo' : ''));
@@ -459,17 +416,17 @@
     let esquerda, direita;
     if (e.papel === 'coordenador') {
       montar(faixa,
-        kpi('Alunos', r.totais.alunos, ''), kpi('Professores', r.totais.professores, ''),
-        kpi('Cursos', r.totais.cursos, ''), kpi('Disciplinas', r.totais.disciplinas, ''),
-        kpi('Turmas', r.totais.turmas, ''), kpi('Matrículas', r.totais.matriculas, ''));
+        kpi('Alunos', r.totais.alunos), kpi('Professores', r.totais.professores),
+        kpi('Cursos', r.totais.cursos), kpi('Disciplinas', r.totais.disciplinas),
+        kpi('Turmas', r.totais.turmas), kpi('Matrículas', r.totais.matriculas));
       esquerda = cartao('Alunos por curso', barras(r.alunosPorCurso.slice(0, 8), 'Cadastre cursos e alunos para ver o gráfico.'));
       direita = cartao('Presença geral', rosca(r.presenca, 'presença'));
     } else {
       const m = r.meu;
       montar(faixa,
-        kpi('Minhas turmas', m.turmas.length, ''), kpi('Minhas disciplinas', m.disciplinas, ''),
-        kpi('Meus alunos', m.alunos, ''), kpi('Chamadas feitas', m.chamadas, ''),
-        kpi('Chamadas abertas', m.chamadasAtivas, '🟢'));
+        kpi('Minhas turmas', m.turmas.length), kpi('Minhas disciplinas', m.disciplinas),
+        kpi('Meus alunos', m.alunos), kpi('Chamadas feitas', m.chamadas),
+        kpi('Chamadas abertas', m.chamadasAtivas));
       esquerda = cartao('Alunos por turma', barras(m.turmas.slice(0, 8), 'A coordenação ainda não atribuiu turmas a você.'));
       direita = cartao('Presença nas suas turmas', rosca(m.presenca, 'presença'));
     }
@@ -481,82 +438,46 @@
     const r = e.r, pagina = el('div', 'rel-pagina');
     montar(pagina,
       montar(el('div', 'rel-kpis'),
-        kpi('Alunos', r.totais.alunos, ''),
+        kpi('Alunos', r.totais.alunos),
         kpiMedia(r.mediaDisciplinas),
-        kpi('Alunos sem disciplina', r.semDisciplina, '')),
+        kpi('Alunos sem disciplina', r.semDisciplina)),
       montar(el('div', 'rel-duas'),
         cartao('Alunos por curso', barras(r.alunosPorCurso, 'Sem cursos cadastrados.')),
         cartao('Quantas disciplinas cada aluno cursa', colunas(r.distDisciplinas))));
-
-    // tabela com busca
-    const busca = el('input', 'rel-busca');
-    busca.type = 'search'; busca.placeholder = 'Pesquisar aluno ou curso...'; busca.value = e.termo;
-    const area = el('div');
-    function desenhar() {
-      const termo = semAcento(busca.value.trim());
-      e.termo = busca.value;
-      const filtrados = r.alunos.filter((a) => !termo || semAcento(a.nome).includes(termo) || semAcento(a.curso).includes(termo));
-      area.textContent = '';
-      area.appendChild(tabela(['Aluno', 'Curso', 'Disciplinas'],
-        filtrados.slice(0, 200).map((a) => ({ celulas: [a.nome, a.curso, String(a.disciplinas)] })),
-        'Nenhum aluno encontrado.'));
-      if (filtrados.length > 200) area.appendChild(el('p', 'rel-nota', 'Mostrando 200 de ' + fmt(filtrados.length) + '. Use a busca para filtrar.'));
-    }
-    busca.addEventListener('input', desenhar);
-    desenhar();
-    pagina.appendChild(cartao('Alunos e disciplinas', busca, area));
     return pagina;
   }
-  const semAcento = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  function kpiMedia(media) {                                // média tem casa decimal: não usa a contagem inteira
+
+  function kpiMedia(media) {
     const c = el('div', 'rel-kpi');
-    c.appendChild(el('span', 'rel-kpi-icone', ''));
     c.appendChild(el('div', 'rel-kpi-valor', String(media).replace('.', ',')));
     c.appendChild(el('div', 'rel-kpi-rotulo', 'Média de disciplinas por aluno'));
     return c;
   }
 
   function secaoCursos(e) {
-    const r = e.r, meus = new Set((r.meu && r.meu.cursos) || []);
+    const r = e.r;
     const pagina = el('div', 'rel-pagina');
-    const linhas = r.cursos.map((c) => {
-      const nome = el('span');
-      nome.appendChild(document.createTextNode(c.nome + ' '));
-      if (meus.has(c.nome)) nome.appendChild(el('span', 'rel-chip rel-chip-eu', 'seu curso'));
-      return { classe: meus.has(c.nome) ? 'rel-linha-eu' : '', celulas: [nome, fmt(c.alunos), fmt(c.disciplinas), fmt(c.turmas), fmt(c.professores)] };
-    });
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Cursos', r.totais.cursos, ''), kpi('Disciplinas', r.totais.disciplinas, ''), kpi('Turmas', r.totais.turmas, '')),
-      cartao('Alunos por curso', barras(r.cursos.map((c) => ({ nome: c.nome, valor: c.alunos })).sort(porValorDesc), 'Sem cursos cadastrados.')),
-      cartao('Cursos', tabela(['Curso', 'Alunos', 'Disciplinas', 'Turmas', 'Professores'], linhas, 'Sem cursos cadastrados.')));
+      montar(el('div', 'rel-kpis'), kpi('Cursos', r.totais.cursos), kpi('Disciplinas', r.totais.disciplinas), kpi('Turmas', r.totais.turmas)),
+      cartao('Alunos por curso', barras(r.cursos.map((c) => ({ nome: c.nome, valor: c.alunos })).sort(porValorDesc), 'Sem cursos cadastrados.')));
     return pagina;
   }
 
   function secaoDisciplinas(e) {
     const r = e.r, pagina = el('div', 'rel-pagina');
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Disciplinas', r.totais.disciplinas, ''), kpi('Turmas', r.totais.turmas, ''), kpi('Matrículas', r.totais.matriculas, '📝')),
+      montar(el('div', 'rel-kpis'), kpi('Disciplinas', r.totais.disciplinas), kpi('Turmas', r.totais.turmas), kpi('Matrículas', r.totais.matriculas)),
       cartao('Alunos por disciplina',
-        barras([...r.disciplinas].sort((a, b) => b.alunos - a.alunos).slice(0, 10).map((x) => ({ nome: x.nome, valor: x.alunos })), 'Sem disciplinas cadastradas.')),
-      cartao('Disciplinas', tabela(['Disciplina', 'Curso', 'Professor', 'Turmas', 'Alunos'],
-        r.disciplinas.map((x) => ({ celulas: [x.nome, x.curso, x.professor, fmt(x.turmas), fmt(x.alunos)] })), 'Sem disciplinas cadastradas.')));
+        barras([...r.disciplinas].sort((a, b) => b.alunos - a.alunos).slice(0, 10).map((x) => ({ nome: x.nome, valor: x.alunos })), 'Sem disciplinas cadastradas.')));
     return pagina;
   }
 
   function secaoProfessores(e) {
-    const r = e.r, meuId = e.papel === 'professor' && e.pessoa ? sid(e.pessoa.id) : null;
-    const pagina = el('div', 'rel-pagina');
-    const linhas = r.professores.map((p) => {
-      const nome = el('span');
-      nome.appendChild(document.createTextNode(p.nome + ' '));
-      if (meuId && p.id === meuId) nome.appendChild(el('span', 'rel-chip rel-chip-eu', 'você'));
-      return { classe: meuId && p.id === meuId ? 'rel-linha-eu' : '', celulas: [nome, chips(p.cursos), fmt(p.disciplinas), fmt(p.turmas), fmt(p.alunos)] };
-    });
+    const r = e.r, pagina = el('div', 'rel-pagina');
     montar(pagina,
-      montar(el('div', 'rel-kpis'), kpi('Professores', r.totais.professores, ''), kpi('Turmas', r.totais.turmas, ''), kpi('Cursos', r.totais.cursos, '📚')),
+      montar(el('div', 'rel-kpis'), kpi('Professores', r.totais.professores), kpi('Turmas', r.totais.turmas), kpi('Cursos', r.totais.cursos)),
       cartao('Turmas por professor',
-        barras(r.professores.map((p) => ({ nome: p.nome, valor: p.turmas })).sort(porValorDesc).slice(0, 10), 'Sem professores cadastrados.')),
-      cartao('Professores e cursos vinculados', tabela(['Professor', 'Cursos vinculados', 'Disciplinas', 'Turmas', 'Alunos'], linhas, 'Sem professores cadastrados.')));
+        barras(r.professores.map((p) => ({ nome: p.nome, valor: p.turmas })).sort(porValorDesc).slice(0, 10), 'Sem professores cadastrados.')));
     return pagina;
   }
 
@@ -583,12 +504,12 @@
     if (!e) return;
     try {
       const dados = await buscarDados();
-      if (estado !== e) return;                            // saiu da aba enquanto buscava
+      if (estado !== e) return;
       const r = calcular(dados, e.papel, e.pessoa && e.pessoa.id);
       const assinatura = JSON.stringify(r);
       e.carimbo.textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       e.vivo.classList.remove('erro');
-      if (forcar || assinatura !== e.assinatura) {         // só redesenha se algo mudou
+      if (forcar || assinatura !== e.assinatura) {
         e.assinatura = assinatura;
         e.r = r;
         desenharSecao();
@@ -612,7 +533,7 @@
     papel = papel === 'professor' ? 'professor' : 'coordenador';
     container.textContent = '';
 
-    const raiz = el('div', 'rel-app');
+    const raiz = el('div', 'rel-app rel-app-fullscreen'); // Força ocupar a tela inteira
     const canvas = el('canvas', 'rel-globo');
     const veu = el('div', 'rel-veu');
     const nav = el('nav', 'rel-nav');
@@ -620,7 +541,6 @@
     const topo = el('header', 'rel-topo');
     const conteudo = el('div', 'rel-conteudo');
 
-    // navegação lateral
     nav.appendChild(el('div', 'rel-marca', '◈'));
     const botoesNav = SECOES[papel].map((s) => {
       const botao = el('button', 'rel-nav-item');
@@ -633,7 +553,6 @@
       return { id: s.id, botao };
     });
 
-    // topo
     const titulos = el('div');
     titulos.appendChild(el('h2', 'rel-titulo', 'Relatórios'));
     titulos.appendChild(el('p', 'rel-subtitulo', papel === 'coordenador'

@@ -1,10 +1,14 @@
-/* Estilo do botão do Chamy no header (Alinhado perfeitamente no fluxo Flexbox) */
+/* Estilo do botão do Chamy com controle total de posição */
 .chamy-trigger-btn {
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
-    margin-right: 15px; 
+    
+    /* É SÓ MEXER AQUI PARA MOVER: */
+    margin-left: auto;   /* Joga ele totalmente para a esquerda da barra */
+    margin-right: 20px;  /* Distância que ele fica dos botões da direita (sino/sair) */
+    
     display: inline-flex;
     align-items: center;
     justify-content: center;

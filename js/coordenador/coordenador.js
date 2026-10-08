@@ -82,9 +82,6 @@ async function montarPainelCoordenador(sessao) {
   // Assim que monta o painel, já renderiza o conteúdo da aba ativa
   await renderizarAbaAtivaCoordenador();
 
-  // === INICIALIZA O MODO NOTURNO AQUI DENTRO, NO FIM DA FUNÇÃO ===
-  if (window.ModoNoturno && typeof window.ModoNoturno.inicializar === 'function') {
-    window.ModoNoturno.inicializar();
   }
 }
 /**

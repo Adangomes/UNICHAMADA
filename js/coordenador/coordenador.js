@@ -29,7 +29,7 @@ const ABAS_COORDENADOR = [
     // Dashboard de relatórios (js/relatorios/relatorios.js)
     chave: 'relatorios',
     rotulo: 'Relatórios',
-    render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
+    render: async () => await renderRelatorios(elementoConteudoCoordenador, 'CORDENADOR')
   }
 ];
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.

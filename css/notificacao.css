@@ -105,7 +105,7 @@
   justify-content: center;
   padding: 12px;
   margin-left: auto !important;
-  margin-right: 12px;
+  margin-right: 08px;
   border-radius: 50%;
   transition: background-color 0.2s ease, opacity 0.2s ease;
 }

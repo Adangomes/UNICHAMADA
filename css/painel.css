@@ -11,7 +11,9 @@
 .painel-header {
   background: var(--tinta);
   color: #fff;
-  padding: .8em 1.4em;
+  padding: .5em 1.4em !important; /* Força o mesmo padding fino nas duas telas */
+  height: 60px !important;        /* Trava a altura exata para nunca esticar */
+  box-sizing: border-box;         /* Garante que o padding não aumente a altura */
   display: flex;
   align-items: center;
   justify-content: space-between;

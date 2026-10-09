@@ -11,7 +11,7 @@
 .painel-header {
   background: var(--tinta);
   color: #fff;
-  padding: .4em 1.4em;
+  padding: .8em 1.4em;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -211,7 +211,7 @@ function chamyMontarPainel() {
       chamyEl('img', { src: CHAMY_CONFIG.icone, alt: '', class: 'chamy-topo-icone' }), // ícone do robô
       chamyEl('div', { class: 'chamy-topo-texto' }, [                       // título e subtítulo
         chamyEl('strong', {}, ['Chamy']),
-        chamyEl('span', {}, ['Assistente de dados'])
+        chamyEl('span', {}, ['Assistente'])
       ]),
       chamyEl('button', { class: 'chamy-fechar', type: 'button', title: 'Fechar', onClick: chamyAlternar }, ['✕']) // fechar
     ]),

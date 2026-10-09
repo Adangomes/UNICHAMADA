@@ -217,7 +217,7 @@ function chamyMontarPainel() {
     ]),
     lista,                                                                  // mensagens
     chamyEl('footer', { class: 'chamy-rodape' }, [campo, botaoEnviar]),     // caixa de texto + enviar
-    chamyEl('p', { class: 'chamy-aviso' }, ['Respostas geradas por IA — confira dados importantes.']) // aviso
+    chamyEl('p', { class: 'chamy-aviso' }, ['']) // aviso
   ]);
 
   document.body.appendChild(painel);                                        // coloca o painel na página

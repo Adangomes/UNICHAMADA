@@ -28,8 +28,8 @@ header, .cabecalho-principal, .painel-cabecalho {
   left: auto !important;
   transform: translateY(-50%) !important;
 
-  width: 38px !important;
-  height: 38px !important;
+  width: 30px !important;
+  height: 30px !important;
   padding: 0 !important;
   margin: 0 !important;
   border: 2px solid rgba(255, 255, 255, .85) !important;

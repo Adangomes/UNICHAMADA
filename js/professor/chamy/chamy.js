@@ -18,7 +18,7 @@
    ========================================================================== */
 const CHAMY_CONFIG = {
   // URL de PRODUÇÃO do nó Webhook do n8n (para outros computadores precisa ser um endereço público https)
-  webhookUrl: 'http://localhost:5678/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+  webhookUrl: 'https://remix-wma-hiv-sports.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   // Chave simples conferida pelo nó IF do n8n (precisa ser IDÊNTICA à que está lá).
   // Fica no código público do site: só barra abuso casual.
   token: 'chamy-7Hk29xQpLw83mZ4vTb',

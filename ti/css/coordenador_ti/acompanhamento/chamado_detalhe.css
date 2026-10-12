@@ -1,0 +1,16 @@
+/* coordenador_ti/acompanhamento/chamado_detalhe.css — detalhe de um chamado (js/coordenador_ti/acompanhamento/chamado/detalhe.js): abas, conversa e nota interna. */
+
+/* ---- abas (Responder / Nota interna) ---- */
+.ti-abas { display: flex; gap: 18px; padding: 0 22px; border-bottom: 1px solid var(--ti-linha-2); }
+.ti-aba { padding: 16px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ti-suave); font-weight: 600; cursor: pointer; }
+.ti-aba.ativo { border-bottom-color: var(--ti-acento); color: var(--ti-tinta); font-weight: 700; }
+
+/* ---- conversa do chamado ---- */
+.ti-conversa { display: flex; flex-direction: column; gap: 22px; padding: 0 22px 22px; }
+.ti-msg { display: flex; gap: 14px; align-items: flex-start; }
+.ti-msg-corpo { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ti-msg-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ti-msg-meta span { font-size: 13px; color: var(--ti-suave); }
+.ti-bolha { background: #f6f4f0; border-radius: 14px; padding: 14px 16px; line-height: 1.55; white-space: pre-wrap; }
+.ti-bolha.ti { background: #e4e8f6; }
+.ti-bolha.interna { background: #fdf3d3; border: 1px dashed #cfa93a; }

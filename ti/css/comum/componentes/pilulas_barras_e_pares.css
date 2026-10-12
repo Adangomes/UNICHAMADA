@@ -1,0 +1,19 @@
+/* comum/componentes/pilulas_barras_e_pares.css — pílulas de filtro, barras e pares rótulo/valor. Carregado ao abrir o site (vale para todas as telas). */
+
+/* ---- pílulas (filtros) ---- */
+.ti-pilulas { display: flex; flex-wrap: wrap; gap: 8px; }
+.ti-pilula { height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #d6d3ca; background: var(--ti-branco); font-weight: 500; cursor: pointer; }
+.ti-pilula.ativo { background: var(--ti-navy); border-color: var(--ti-navy); color: #fff; font-weight: 600; }
+
+
+/* ---- barras ---- */
+.ti-barra-linha { display: flex; flex-direction: column; gap: 6px; }
+.ti-barra-topo { display: flex; justify-content: space-between; gap: 12px; }
+.ti-barra { height: 8px; border-radius: 999px; background: #ece9e2; }
+.ti-barra > div { height: 8px; border-radius: 999px; background: var(--ti-acento); }
+
+
+/* ---- pares rótulo/valor ---- */
+.ti-par { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ti-par-rotulo { color: var(--ti-suave); }
+.ti-par-valor { font-weight: 600; text-align: right; }

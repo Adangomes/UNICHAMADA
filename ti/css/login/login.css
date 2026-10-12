@@ -1,0 +1,38 @@
+/* login/login.css — TUDO do login do TI começa aqui: variáveis de cor, página e cartão.
+   O painel animado está em painel_animado.css e o formulário em formulario.css (mesma pasta). */
+
+:root {
+  --ti-lg-acento: #2f55c4;          /* botão "Entrar", links e marca */
+  --ti-lg-acento-escuro: #1f3f9e;   /* botão ao passar o mouse */
+}
+
+/* ---- página: fundo quadriculado claro ---- */
+.ti-lg-pagina {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background-color: #eceae6;
+  background-image:
+    linear-gradient(#dedbd5 1px, transparent 1px),
+    linear-gradient(90deg, #dedbd5 1px, transparent 1px);
+  background-size: 38px 38px;
+}
+
+/* ---- cartão grande e arredondado ---- */
+.ti-lg-cartao {
+  width: 100%;
+  max-width: 1180px;
+  min-height: 660px;
+  display: flex;
+  background: #ffffff;
+  border-radius: 40px;
+  padding: 16px;
+  box-shadow: 0 30px 80px rgba(15, 23, 60, .18);
+}
+
+@media (max-width: 900px) {
+  .ti-lg-pagina { padding: 14px; }
+  .ti-lg-cartao { min-height: 0; border-radius: 28px; padding: 6px; }
+}

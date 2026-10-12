@@ -1,0 +1,24 @@
+/* comum/componentes/cartoes_e_linhas.css — cartões e linhas de lista. Carregado ao abrir o site (vale para todas as telas). */
+
+/* ---- cartões ---- */
+.ti-cartao { background: var(--ti-branco); border: 1px solid var(--ti-linha); border-radius: 16px; overflow: hidden; }
+.ti-cartao-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px; }
+.ti-cartao-cab h2 { font-size: 17px; font-weight: 700; }
+.ti-cartao-corpo { padding: 0 22px 22px; display: flex; flex-direction: column; gap: 14px; }
+.ti-cartao-corpo.com-topo { padding-top: 18px; }
+.ti-link { border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--ti-acento); font-weight: 600; }
+
+
+/* ---- linhas de lista ---- */
+.ti-linha {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding: 15px 22px; border-top: 1px solid var(--ti-linha-2);
+}
+.ti-linha-clicavel { width: 100%; border-left: 0; border-right: 0; border-bottom: 0; background: transparent; text-align: left; cursor: pointer; }
+.ti-linha-clicavel:hover { background: #faf9f6; }
+.ti-linha-texto { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ti-linha-titulo { font-weight: 600; font-size: 15px; }
+/* quando a linha/cartão empilha em coluna, o texto não deve esticar na vertical */
+.ti-cartao-corpo > .ti-linha-texto { flex: 0 0 auto; }
+.ti-linha-sub { font-size: 13px; color: var(--ti-suave); }
+.ti-codigo { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; color: var(--ti-suave); }

@@ -1,0 +1,62 @@
+/* login/formulario.css — lado direito do login: marca, título, campos, botão e avisos. */
+
+/* ---- lado do formulário (direita) ---- */
+.ti-lg-direita {
+  flex: 1 1 46%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 44px 22px;
+}
+.ti-lg-topo { display: flex; align-items: center; gap: 10px; }
+.ti-lg-marca { font-size: 22px; font-weight: 800; letter-spacing: -.01em; color: var(--ti-lg-acento); }
+.ti-lg-selo {
+  font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  border: 1px solid var(--ti-lg-acento); color: var(--ti-lg-acento);
+  border-radius: 999px; padding: 2px 10px;
+}
+.ti-lg-centro {
+  flex: 1; width: 100%; max-width: 400px; margin: 0 auto;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+}
+.ti-lg-titulo { font-size: 38px; line-height: 1.12; font-weight: 800; letter-spacing: -.025em; text-align: center; color: var(--ti-tinta); text-wrap: balance; }
+.ti-lg-sub { text-align: center; color: var(--ti-suave); font-size: 16px; margin-bottom: 14px; }
+
+.ti-lg-form { display: flex; flex-direction: column; gap: 14px; }
+.ti-lg-campo { position: relative; }
+.ti-lg-input {
+  width: 100%; height: 50px; padding: 0 16px; border-radius: 12px;
+  border: 1px solid #d9d6ce; background: #ffffff; color: var(--ti-tinta); font-size: 15px;
+}
+.ti-lg-input::placeholder { color: #8e93a6; }
+.ti-lg-input:focus { outline: 2px solid var(--ti-lg-acento); outline-offset: 1px; border-color: transparent; }
+.ti-lg-campo .ti-lg-input { padding-right: 84px; }
+.ti-lg-olho {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; cursor: pointer; padding: 6px 8px;
+  color: var(--ti-lg-acento); font-size: 13px; font-weight: 600;
+}
+.ti-lg-linha-link { display: flex; justify-content: flex-end; margin-top: -4px; }
+.ti-lg-link { border: 0; background: transparent; cursor: pointer; padding: 0; color: var(--ti-lg-acento); font-size: 13px; font-weight: 600; }
+.ti-lg-link:hover, .ti-lg-olho:hover { text-decoration: underline; }
+.ti-lg-botao {
+  height: 52px; border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ti-lg-acento); color: #ffffff; font-size: 16px; font-weight: 600;
+  margin-top: 6px; transition: background .15s ease, transform .1s ease;
+}
+.ti-lg-botao:hover { background: var(--ti-lg-acento-escuro); }
+.ti-lg-botao:active { transform: scale(.99); }
+.ti-lg-botao:disabled { opacity: .6; cursor: not-allowed; }
+.ti-lg-rodape { text-align: center; min-height: 20px; }
+.ti-lg-ajuda { font-size: 13.5px; color: var(--ti-suave); }
+
+.ti-login-erro {
+  background: var(--ti-alta-bg); color: var(--ti-alta);
+  border-radius: 10px; padding: 10px 12px; font-weight: 600; font-size: 13.5px;
+}
+
+@media (max-width: 900px) {
+  .ti-lg-direita { padding: 22px 18px 18px; }
+  .ti-lg-centro { padding: 28px 0 16px; }
+  .ti-lg-titulo { font-size: 32px; }
+}

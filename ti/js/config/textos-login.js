@@ -13,8 +13,8 @@ TI.K.login = {
   ajuda: '',
   // mensagens que se alternam no painel animado (título + texto)
   mensagens: [
-    { titulo: 'Nada vai ao ar sem revisão', texto: 'Chamados devem ser atendidos com urgencias essa semana},
-    { titulo: 'Nada vai ao ar sem revisão', texto: 'A coordenação vai conferir e autoriza cada ajuste, antes do deploy.' },
-    { titulo: 'Nada vai ao ar sem revisão', texto: 'ajustar tela de do Cordenador e Professores' }
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'Chamados devem ser atendidos com urgencias essa semana.'},
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'A coordenação vai conferir e autoriza cada ajuste, antes do deploy.'},
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'ajustar tela de do Cordenador e Professores.'}
   ]
 };

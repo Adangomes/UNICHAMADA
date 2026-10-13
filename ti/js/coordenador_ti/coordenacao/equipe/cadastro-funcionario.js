@@ -33,7 +33,7 @@ TI.telas.cadastroFuncionario = {
     const modal = ui.modal({
       titulo: 'Novo funcionário',
       corpo: [
-        el('p', { class: 'ti-sub' }, ['Cadastre os dados para que o funcionário possa realizar o primeiro acesso com o RA e e-mail.']),
+        el('p', { class: 'ti-sub' }, ['']),
         erro,
         ui.campo('Nome completo', nome),
         ui.campo('RA / matrícula', ra),

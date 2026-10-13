@@ -51,12 +51,12 @@ TI.telas.login = {
           // Se falhou no Auth, tenta autenticar o funcionário comum cadastrado na tabela ti_funcionarios
         }
 
-        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha (armazenada no campo 'ra')
+        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha
         const resp = await TI.db
           .from('ti_funcionarios')
           .select('*')
           .eq('email', valEmail)
-          .eq('ra', valSenha)
+          .eq('senha', valSenha)
           .eq('ativo', true)
           .maybeSingle();
 

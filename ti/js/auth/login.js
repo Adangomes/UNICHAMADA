@@ -52,7 +52,7 @@ TI.telas.login = {
         }
 
         // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha
-        const resp = await TI.db
+        const { data: funcionario, error: dbErr } = await TI.db
           .from('ti_funcionarios')
           .select('*')
           .eq('email', valEmail)
@@ -60,9 +60,7 @@ TI.telas.login = {
           .eq('ativo', true)
           .maybeSingle();
 
-        const funcionario = TI.dados.tratar(resp);
-
-        if (!funcionario) {
+        if (dbErr || !funcionario) {
           throw new Error('E-mail ou senha incorretos (ou conta inativa).');
         }
 

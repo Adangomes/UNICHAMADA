@@ -3,7 +3,8 @@ window.TI = window.TI || {};
 
 TI.dados.funcionarios = {
   async listar() {
-    const d = TI.dados.tratar(await TI.db.from('ti_funcionarios').select('*').order('nome', { ascending: true }));
+    const resp = await TI.db.rpc('listar_funcionarios');
+    const d = TI.dados.tratar(resp);
     return d || [];
   },
   async buscarPorAuth(authUserId) {

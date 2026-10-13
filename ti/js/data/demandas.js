@@ -1,6 +1,5 @@
 /** demandas.js — tabela ti_demandas */
 window.TI = window.TI || {};
-window.TI.dados = window.TI.dados || {};
 
 TI.dados.demandas = {
   async listar() {
@@ -15,17 +14,11 @@ TI.dados.demandas = {
   },
   async criar(dados) {
     const f = TI.sessao.funcionario;
-    const resp = await TI.db.rpc('criar_demanda', {
-      p_titulo: dados.titulo,
-      p_descricao: dados.descricao || null,
-      p_area: dados.area || null,
-      p_prioridade: dados.prioridade || 'media',
-      p_grupo_destino: dados.grupo_destino,
-      p_solicitante_id: f.id,
-      p_solicitante_nome: f.nome
-    });
-    const d = TI.dados.tratar(resp);
-    return Array.isArray(d) ? d[0] : d;
+    const corpo = Object.assign({
+      status: 'backlog', solicitante_tipo: 'ti', solicitante_id: f.id, solicitante_nome: f.nome
+    }, dados);
+    const resp = await TI.db.from('ti_demandas').insert([corpo]).select().single();
+    return TI.dados.tratar(resp);
   },
   async atualizar(id, campos) {
     const resp = await TI.db.from('ti_demandas').update(campos).eq('id', id).select().single();

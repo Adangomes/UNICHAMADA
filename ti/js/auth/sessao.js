@@ -8,7 +8,8 @@ TI.sessao = {
 
   /** Há alguém logado? Carrega o cadastro em ti_funcionarios. */
   async iniciar() {
-    const { session } = TI.dados.tratar(await TI.db.auth.getSession());
+    const resp = await TI.db.auth.getSession();
+    const session = TI.dados.tratar(resp)?.session || (resp && resp.data ? resp.data.session : null);
     if (!session) return false;
     return this._carregar(session.user);
   },

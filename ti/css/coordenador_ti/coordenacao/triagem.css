@@ -1,7 +1,0 @@
-/* coordenador_ti/coordenacao/triagem.css — tela "Triagem" (js/coordenador_ti/coordenacao/triagem/triagem.js). */
-
-.ti-triagem-item { flex-direction: column; align-items: stretch; gap: 14px; }   /* cada item empilhado */
-.ti-triagem-item > .ti-linha-texto { flex: 0 0 auto; }                         /* texto não estica na vertical */
-.ti-triagem-titulo { font-size: 16px; }
-.ti-triagem-campo { flex: 1 1 180px; }                                          /* caixa "Direcionar para" */
-.ti-triagem-campo.largo { flex: 1 1 220px; }                                    /* caixa "Quem assume?" */

@@ -1,0 +1,28 @@
+/* comum/layout/conteudo.css — área de conteúdo e cabeçalho de página (título, ações, voltar). Carregado depois do login. */
+
+/* contêiner da tela inteira: menu lateral + conteúdo lado a lado */
+.ti-app { display: flex; flex-wrap: wrap; min-height: 100vh; }
+
+
+.ti-conteudo {
+  flex: 999 1 560px; min-width: 0;
+  padding: 32px 40px 48px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+.ti-pagina-cab { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ti-sub { font-size: 13.5px; color: var(--ti-suave); }
+.ti-titulo { font-size: 30px; letter-spacing: -.02em; margin-top: 2px; }
+.ti-acoes { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.ti-voltar { border: 0; background: transparent; padding: 0; cursor: pointer; color: var(--ti-acento); font-weight: 600; }
+
+/* respiro entre os chips do cabeçalho e o título da página */
+.ti-pagina-cab .ti-acoes + .ti-titulo { margin-top: 8px; }
+
+/* variações usadas por várias telas */
+.ti-titulo.menor { font-size: 26px; }              /* título de página de detalhe (chamado, demanda) */
+.ti-acoes.fim { justify-content: flex-end; }       /* alinha botões à direita */
+
+@media (max-width: 760px) {
+  .ti-conteudo { padding: 20px 16px 40px; }
+  .ti-titulo { font-size: 24px; }
+}

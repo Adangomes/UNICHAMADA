@@ -1,0 +1,10 @@
+/* comum/componentes/estados_e_texto.css — estados (vazio, carregando, erro) e texto corrido. Carregado ao abrir o site (vale para todas as telas). */
+
+/* ---- estados ---- */
+.ti-vazio { padding: 28px 22px; text-align: center; color: var(--ti-suave); }
+.ti-carregando { padding: 28px 22px; text-align: center; color: var(--ti-suave); }
+.ti-erro { background: var(--ti-alta-bg); color: var(--ti-alta); border-radius: 12px; padding: 14px 16px; font-weight: 600; }
+
+
+/* ---- texto corrido (descrições longas) ---- */
+.ti-texto-corrido { line-height: 1.55; white-space: pre-wrap; }

@@ -1,5 +1,5 @@
 /**
- * login.js — tela de login do TI (E-mail + Senha para funcionários e Coordenador).
+ * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
  * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.login.
  */
 window.TI = window.TI || {};
@@ -42,16 +42,22 @@ TI.telas.login = {
       botao.textContent = 'Entrando…';
 
       try {
-        // 1. Tenta autenticar como Coordenador (via Supabase Auth - E-mail e Senha)
+        let logouComoCoordenador = false;
+
+        // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
         try {
           await TI.sessao.entrar(valEmail, valSenha);
-          await opcoes.aoEntrar();
-          return;
+          logouComoCoordenador = true;
         } catch (authErr) {
-          // Se falhou no Auth, tenta autenticar o funcionário comum cadastrado na tabela ti_funcionarios
+          // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
         }
 
-        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha
+        if (logouComoCoordenador) {
+          await opcoes.aoEntrar();
+          return;
+        }
+
+        // 2. Se não é coordenador no Auth, valida se é funcionário comum na tabela ti_funcionarios
         const { data: funcionario, error: dbErr } = await TI.db
           .from('ti_funcionarios')
           .select('*')
@@ -64,7 +70,7 @@ TI.telas.login = {
           throw new Error('E-mail ou senha incorretos (ou conta inativa).');
         }
 
-        // Define o funcionário na sessão local ativa
+        // Define o funcionário comum na sessão local ativa
         TI.sessao.funcionario = funcionario;
         await opcoes.aoEntrar();
 

@@ -1,5 +1,5 @@
 /**
- * login.js — tela de login do TI (E-mail + RA para funcionários, ou E-mail + Senha para o Coordenador).
+ * login.js — tela de login do TI (E-mail + Senha para funcionários e Coordenador).
  * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.login.
  */
 window.TI = window.TI || {};
@@ -8,7 +8,6 @@ TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
   render(raiz, opcoes) {
     const { el } = TI.dom;
-    const { ui } = TI;
     const L = TI.K.login;
 
     const erro = el('div', { class: 'ti-login-erro', role: 'alert' }, [opcoes.mensagem || '']);
@@ -16,47 +15,55 @@ TI.telas.login = {
     const mostrarErro = (texto) => { erro.textContent = texto; erro.hidden = !texto; };
 
     const email = el('input', { class: 'ti-lg-input', type: 'email', autocomplete: 'username', placeholder: 'E-mail profissional', 'aria-label': 'E-mail' });
-    const raOuSenha = el('input', { class: 'ti-lg-input', type: 'text', autocomplete: 'current-password', placeholder: 'RA / Matrícula ou Senha', 'aria-label': 'RA ou Senha' });
+    const senha = el('input', { class: 'ti-lg-input', type: 'password', autocomplete: 'current-password', placeholder: 'Senha de acesso', 'aria-label': 'Senha' });
     
+    const olho = el('button', { class: 'ti-lg-olho', type: 'button', 'aria-label': 'Mostrar senha', 'aria-pressed': 'false', onClick: () => {
+      const mostrar = senha.type === 'password';
+      senha.type = mostrar ? 'text' : 'password';
+      olho.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      olho.setAttribute('aria-pressed', String(mostrar));
+      olho.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+    } }, ['Mostrar']);
+
     const botao = el('button', { class: 'ti-lg-botao', type: 'submit' }, ['Entrar']);
 
     const form = el('form', { class: 'ti-lg-form', novalidate: true, onSubmit: async (e) => {
       e.preventDefault();
       mostrarErro('');
       const valEmail = email.value.trim().toLowerCase();
-      const valChave = raOuSenha.value.trim();
+      const valSenha = senha.value.trim();
 
-      if (!valEmail || !valChave) { 
-        mostrarErro('Preencha o e-mail e o RA/matrícula (ou senha para coordenador).'); 
+      if (!valEmail || !valSenha) { 
+        mostrarErro('Preencha o e-mail e a senha.'); 
         return; 
       }
 
       botao.disabled = true;
-      botao.textContent = 'A a entrar…';
+      botao.textContent = 'Entrando…';
 
       try {
         // 1. Tenta autenticar como Coordenador (via Supabase Auth - E-mail e Senha)
         try {
-          await TI.sessao.entrar(valEmail, valChave);
+          await TI.sessao.entrar(valEmail, valSenha);
           await opcoes.aoEntrar();
           return;
         } catch (authErr) {
-          // Se falhou no Auth, pode ser um funcionário comum autenticando por E-mail + RA
+          // Se falhou no Auth, tenta autenticar o funcionário comum cadastrado na tabela ti_funcionarios
         }
 
-        // 2. Se não for Auth, valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + RA
+        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha (armazenada no campo 'ra')
         const resp = await TI.db
           .from('ti_funcionarios')
           .select('*')
           .eq('email', valEmail)
-          .eq('ra', valChave)
+          .eq('ra', valSenha)
           .eq('ativo', true)
           .maybeSingle();
 
         const funcionario = TI.dados.tratar(resp);
 
         if (!funcionario) {
-          throw new Error('E-mail ou RA incorretos (ou conta inativa).');
+          throw new Error('E-mail ou senha incorretos (ou conta inativa).');
         }
 
         // Define o funcionário na sessão local ativa
@@ -71,7 +78,7 @@ TI.telas.login = {
     } }, [
       erro,
       el('div', { class: 'ti-lg-campo' }, [email]),
-      el('div', { class: 'ti-lg-campo' }, [raOuSenha]),
+      el('div', { class: 'ti-lg-campo' }, [senha, olho]),
       botao
     ]);
 

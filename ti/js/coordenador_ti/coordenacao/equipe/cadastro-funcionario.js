@@ -1,5 +1,5 @@
 /**
- * cadastro-funcionario.js — janela "Novo funcionário": nome, RA, e-mail e setor.
+ * cadastro-funcionario.js — janela "Novo funcionário": nome, senha, e-mail e setor.
  * O cadastro é gravado diretamente na tabela ti_funcionarios do Supabase.
  */
 window.TI = window.TI || {};
@@ -11,7 +11,7 @@ TI.telas.cadastroFuncionario = {
     const { ui, K } = TI;
 
     const nome = ui.input({ type: 'text', placeholder: 'Nome e sobrenome', autocomplete: 'off' });
-    const ra = ui.input({ type: 'text', placeholder: 'Número do RA / matrícula', autocomplete: 'off' });
+    const senha = ui.input({ type: 'password', placeholder: 'Senha de acesso', autocomplete: 'new-password' });
     const email = ui.input({ type: 'email', placeholder: 'nome@empresa.com', autocomplete: 'off' });
     const setor = ui.select(K.setoresCadastro.map((s) => [s, K.setores[s]]), K.setoresCadastro[0], {
       'aria-label': 'Setor', onChange: () => desenharPermissoes()
@@ -33,10 +33,10 @@ TI.telas.cadastroFuncionario = {
     const modal = ui.modal({
       titulo: 'Novo funcionário',
       corpo: [
-        el('p', { class: 'ti-sub' }, ['Cadastre os dados para que o funcionário possa realizar o primeiro acesso com o RA e e-mail.']),
+        el('p', { class: 'ti-sub' }, ['Cadastre os dados para que o funcionário possa realizar o acesso com o e-mail e a senha.']),
         erro,
         ui.campo('Nome completo', nome),
-        ui.campo('RA / matrícula', ra),
+        ui.campo('Senha de acesso', senha),
         ui.campo('E-mail de trabalho', email),
         ui.campo('Setor', setor),
         permissoes
@@ -45,9 +45,9 @@ TI.telas.cadastroFuncionario = {
         ui.botao('Cancelar', { onClick: () => modal.fechar() }),
         ui.botao('Cadastrar funcionário', { tipo: 'primario', onClick: async () => {
           erro.hidden = true;
-          const dados = { nome: nome.value.trim(), ra: ra.value.trim(), email: email.value.trim().toLowerCase(), setor: setor.value };
+          const dados = { nome: nome.value.trim(), ra: senha.value.trim(), email: email.value.trim().toLowerCase(), setor: setor.value };
           const problema = !dados.nome || dados.nome.length < 3 ? 'Informe o nome completo.'
-            : !dados.ra ? 'Informe o RA / matrícula.'
+            : !dados.ra ? 'Informe a senha de acesso.'
             : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email) ? 'Informe um e-mail válido.' : '';
           if (problema) { erro.textContent = problema; erro.hidden = false; return; }
           

@@ -3,7 +3,8 @@ window.TI = window.TI || {};
 
 TI.dados.demandas = {
   async listar() {
-    const d = TI.dados.tratar(await TI.db.from('ti_demandas').select('*').order('criado_em', { ascending: false }));
+    const resp = await TI.db.rpc('listar_demandas');
+    const d = TI.dados.tratar(resp);
     return d || [];
   },
   async buscar(id) {

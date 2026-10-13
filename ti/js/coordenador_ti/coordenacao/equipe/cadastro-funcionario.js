@@ -52,13 +52,9 @@ TI.telas.cadastroFuncionario = {
           if (problema) { erro.textContent = problema; erro.hidden = false; return; }
           
           try {
-            // Inserção direta na tabela ti_funcionarios do Supabase
-            const { error } = await supabase
-              .from('ti_funcionarios')
-              .insert([dados]);
-
-            if (error) throw error;
-
+            // Inserção direta usando o padrão TI.db e TI.dados.tratar para exibir erros amigáveis
+            const resp = await TI.db.from('ti_funcionarios').insert([dados]).select().single();
+            TI.dados.tratar(resp);
           } catch (err) { 
             erro.textContent = err.message || 'Erro ao salvar no banco de dados.'; 
             erro.hidden = false; 

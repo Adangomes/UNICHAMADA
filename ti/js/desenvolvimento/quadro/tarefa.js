@@ -28,9 +28,51 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   }
 
   const botoes = [ui.botao('Fechar', { onClick: () => modal.fechar() })];
-  if (demanda.status === 'backlog' && (coord || (doGrupo && !demanda.responsavel_id))) {
-    botoes.push(ui.botao('Assumir', { tipo: 'primario', onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu ' + demanda.codigo + '.') }));
+
+  // Se for coordenador e a demanda estiver no backlog, mostramos a opção de Direcionar para um funcionário
+  if (demanda.status === 'backlog' && coord) {
+    let funcionariosEquipa = [];
+    try {
+      const respFuncs = await TI.dados.funcionarios.listar();
+      // Filtra funcionários do mesmo grupo de destino da demanda
+      funcionariosEquipa = (respFuncs || []).filter(item => item.setor === demanda.grupo_destino || item.papel !== 'coordenador_ti');
+    } catch (err) {
+      funcionariosEquipa = [];
+    }
+
+    const selectFunc = el('select', { 
+      id: 'select-direcionar-resp',
+      style: 'padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; margin-right: 8px;'
+    }, [
+      el('option', { value: '' }, ['Selecionar funcionário...']),
+      ...funcionariosEquipa.map(func => el('option', { value: func.id }, [func.nome]))
+    ]);
+
+    botoes.push(selectFunc);
+    botoes.push(ui.botao('Direcionar', {
+      tipo: 'primario',
+      onClick: async () => {
+        const funcionarioId = selectFunc.value;
+        if (!funcionarioId) {
+          ui.toast('Selecione um funcionário para direcionar a demanda.', 'erro');
+          return;
+        }
+        await mover(
+          { responsavel_id: funcionarioId, status: 'desenvolvendo' },
+          'demanda.direcionada',
+          'Demanda direcionada com sucesso!'
+        );
+      }
+    }));
+  } 
+  // Se for funcionário comum (ou caso normal sem ser coord no backlog)
+  else if (demanda.status === 'backlog' && (doGrupo && !demanda.responsavel_id)) {
+    botoes.push(ui.botao('Assumir', { 
+      tipo: 'primario', 
+      onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu ' + demanda.codigo + '.') 
+    }));
   }
+
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
     botoes.push(ui.botao('Enviar para revisão', { tipo: 'primario', onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Enviada para a revisão da coordenação.') }));
   }

@@ -57,7 +57,9 @@ TI.telas.login = {
           return;
         }
 
-        // 2. Se não é coordenador no Auth, valida se é funcionário comum na tabela ti_funcionarios
+        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha
+        console.log('A tentar procurar:', { email: valEmail, senha: valSenha });
+
         const { data: funcionario, error: dbErr } = await TI.db
           .from('ti_funcionarios')
           .select('*')
@@ -65,6 +67,8 @@ TI.telas.login = {
           .eq('senha', valSenha)
           .eq('ativo', true)
           .maybeSingle();
+
+        console.log('Resultado do Supabase:', { funcionario, dbErr });
 
         if (dbErr || !funcionario) {
           throw new Error('E-mail ou senha incorretos (ou conta inativa).');

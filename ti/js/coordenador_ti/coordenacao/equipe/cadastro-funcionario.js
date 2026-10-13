@@ -45,14 +45,14 @@ TI.telas.cadastroFuncionario = {
         ui.botao('Cancelar', { onClick: () => modal.fechar() }),
         ui.botao('Cadastrar funcionário', { tipo: 'primario', onClick: async () => {
           erro.hidden = true;
-          const dados = { nome: nome.value.trim(), ra: senha.value.trim(), email: email.value.trim().toLowerCase(), setor: setor.value };
+          // CORRIGIDO: mudado de 'ra' para 'senha' para coincidir com a coluna do banco de dados
+          const dados = { nome: nome.value.trim(), senha: senha.value.trim(), email: email.value.trim().toLowerCase(), setor: setor.value };
           const problema = !dados.nome || dados.nome.length < 3 ? 'Informe o nome completo.'
-            : !dados.ra ? 'Informe a senha de acesso.'
+            : !dados.senha ? 'Informe a senha de acesso.'
             : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dados.email) ? 'Informe um e-mail válido.' : '';
           if (problema) { erro.textContent = problema; erro.hidden = false; return; }
           
           try {
-            // Inserção direta usando o padrão TI.db e TI.dados.tratar para exibir erros amigáveis
             const resp = await TI.db.from('ti_funcionarios').insert([dados]).select().single();
             TI.dados.tratar(resp);
           } catch (err) { 

@@ -1,22 +1,27 @@
-/** chamados.js — tabela ti_chamados */
+/** demandas.js — tabela ti_demandas */
 window.TI = window.TI || {};
 
-TI.dados.chamados = {
+TI.dados.demandas = {
   async listar() {
-    const resp = await TI.db.rpc('listar_chamados');
+    const resp = await TI.db.rpc('listar_demandas');
     const d = TI.dados.tratar(resp);
     return d || [];
   },
   async buscar(id) {
-    return TI.dados.tratar(await TI.db.from('ti_chamados').select('*').eq('id', id).maybeSingle());
+    const resp = await TI.db.rpc('buscar_demanda_por_id', { demanda_id: id });
+    const d = TI.dados.tratar(resp);
+    return Array.isArray(d) ? d[0] || null : d;
   },
-  /** Cria um chamado (ex.: o TI abrindo em nome de alguém). O prazo (SLA) sai da prioridade. */
   async criar(dados) {
-    const horas = TI.K.slaHoras[dados.prioridade || 'media'];
-    const corpo = Object.assign({ status: 'aberto', prazo_em: new Date(Date.now() + horas * 3600000).toISOString() }, dados);
-    return TI.dados.tratar(await TI.db.from('ti_chamados').insert(corpo).select().single());
+    const f = TI.sessao.funcionario;
+    const corpo = Object.assign({
+      status: 'backlog', solicitante_tipo: 'ti', solicitante_id: f.id, solicitante_nome: f.nome
+    }, dados);
+    const resp = await TI.db.from('ti_demandas').insert([corpo]).select().single();
+    return TI.dados.tratar(resp);
   },
   async atualizar(id, campos) {
-    return TI.dados.tratar(await TI.db.from('ti_chamados').update(campos).eq('id', id).select().single());
+    const resp = await TI.db.from('ti_demandas').update(campos).eq('id', id).select().single();
+    return TI.dados.tratar(resp);
   }
 };

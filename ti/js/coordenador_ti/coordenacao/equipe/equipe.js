@@ -1,5 +1,5 @@
 /**
- * equipe.js — pessoas da equipe de TI, carga de trabalho e menu de ações.
+ * equipe.js — pessoas da equipe de TI, carga de trabalho e menu de ações unificado.
  * Tabelas: ti_funcionarios, ti_chamados, ti_demandas.
  */
 window.TI = window.TI || {};
@@ -43,22 +43,45 @@ TI.telas.equipe = {
         const carga = cargaDe(p);
         const texto = [carga.ch ? carga.ch + ' chamado(s)' : '', carga.de ? carga.de + ' demanda(s)' : ''].filter(Boolean).join(' · ') || 'sem tarefas';
 
-        // Criação do menu de três pontinhos para ações
-        let menuDropdown = null;
+        // Badge de status (Ativo/Desativado) que fica visível na linha
+        const badgeStatus = el('span', { class: 'ti-status ' + (p.ativo ? 'ti-status-resolvido' : 'ti-status-fechado') }, [p.ativo ? 'Ativo' : 'Desativado']);
+
+        // Botão de três pontinhos puramente limpo (sem moldura/quadrado)
+        let acoesContainer = null;
         if (p.id !== ctx.f.id) {
-          const botaoAcoes = el('button', {
-            class: 'ti-botao-pontinhos',
+          const botaoPontinhos = el('button', {
+            style: {
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '18px',
+              color: 'var(--ti-suave, #666)',
+              padding: '4px 8px',
+              lineHeight: '1',
+              borderRadius: '4px'
+            },
             type: 'button',
             title: 'Opções',
             onClick: (e) => {
               e.stopPropagation();
-              // Fecha outros menus abertos se houver
               document.querySelectorAll('.ti-menu-flutuante').forEach(m => m.remove());
 
               const menu = el('div', { class: 'ti-menu-flutuante' }, [
+                el('div', { style: { padding: '8px 12px', fontSize: '12px', color: '#888', borderBottom: '1px solid #eee' } }, [
+                  'Estado: ' + (p.ativo ? 'Ativo' : 'Desativado')
+                ]),
                 el('button', {
                   type: 'button',
-                  class: p.ativo ? 'perigo' : '',
+                  style: {
+                    background: 'transparent',
+                    border: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    color: p.ativo ? '#d32f2f' : '#2e7d32',
+                    fontWeight: '500'
+                  },
                   onClick: async () => {
                     menu.remove();
                     if (p.ativo && !ui.confirmar('Desativar ' + p.nome + '? A pessoa perde o acesso ao painel.')) return;
@@ -70,16 +93,23 @@ TI.telas.equipe = {
                 }, [p.ativo ? 'Desativar funcionário' : 'Reativar funcionário'])
               ]);
 
-              // Posiciona e adiciona ao documento
-              const rect = botaoAcoes.getBoundingClientRect();
+              // Estilização simples do menu flutuante caso não exista no CSS global
               menu.style.position = 'absolute';
+              menu.style.background = '#fff';
+              menu.style.border = '1px solid rgba(0,0,0,0.1)';
+              menu.style.borderRadius = '8px';
+              menu.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              menu.style.zIndex = '1000';
+              menu.style.minWidth = '160px';
+
+              const rect = botaoPontinhos.getBoundingClientRect();
               menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-              menu.style.left = (rect.right - 140 + window.scrollX) + 'px';
+              menu.style.left = (rect.right - 160 + window.scrollX) + 'px';
               
               document.body.appendChild(menu);
 
               const fecharMenu = (ev) => {
-                if (!menu.contains(ev.target) && ev.target !== botaoAcoes) {
+                if (!menu.contains(ev.target) && ev.target !== botaoPontinhos) {
                   menu.remove();
                   document.removeEventListener('click', fecharMenu);
                 }
@@ -88,17 +118,21 @@ TI.telas.equipe = {
             }
           }, ['⋮']);
 
-          menuDropdown = el('div', { style: { position: 'relative' } }, [botaoAcoes]);
+          acoesContainer = el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [badgeStatus, botaoPontinhos]);
+        } else {
+          acoesContainer = el('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [badgeStatus]);
         }
 
-        return el('div', { class: 'ti-linha' }, [
+        return el('div', { class: 'ti-linha', style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' } }, [
           ui.avatar(p.nome, 'grande'),
-          el('div', { class: 'ti-linha-texto' }, [
+          el('div', { class: 'ti-linha-texto', style: { flex: '1' } }, [
             el('span', { class: 'ti-linha-titulo' }, [p.nome + (p.id === ctx.f.id ? ' (você)' : '')])
           ]),
-          el('div', { class: 'ti-linha-texto' }, [el('span', {}, [texto]), el('div', { class: 'ti-barra' }, [el('div', { style: { width: Math.max(3, Math.round(carga.total / maior * 100)) + '%' } })])]),
-          el('span', { class: 'ti-status ' + (p.ativo ? 'ti-status-resolvido' : 'ti-status-fechado') }, [p.ativo ? 'Ativo' : 'Desativado']),
-          menuDropdown
+          el('div', { class: 'ti-linha-texto', style: { flex: '1.5' } }, [
+            el('span', {}, [texto]),
+            el('div', { class: 'ti-barra' }, [el('div', { style: { width: Math.max(3, Math.round(carga.total / maior * 100)) + '%' } })])
+          ]),
+          acoesContainer
         ]);
       });
 

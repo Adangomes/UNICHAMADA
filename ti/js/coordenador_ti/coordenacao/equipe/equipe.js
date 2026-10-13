@@ -45,8 +45,7 @@ TI.telas.equipe = {
         return el('div', { class: 'ti-linha' }, [
           ui.avatar(p.nome, 'grande'),
           el('div', { class: 'ti-linha-texto' }, [
-            el('span', { class: 'ti-linha-titulo' }, [p.nome + (p.id === ctx.f.id ? ' (você)' : '')]),
-            el('span', { class: 'ti-linha-sub' }, [(p.papel === 'coordenador_ti' ? 'Coordenação de TI' : K.setores[p.setor]) + ' · RA ' + p.ra + ' · ' + p.email])
+            el('span', { class: 'ti-linha-titulo' }, [p.nome + (p.id === ctx.f.id ? ' (você)' : '')])
           ]),
           el('div', { class: 'ti-linha-texto' }, [el('span', {}, [texto]), el('div', { class: 'ti-barra' }, [el('div', { style: { width: Math.max(3, Math.round(carga.total / maior * 100)) + '%' } })])]),
           el('span', { class: 'ti-status ' + (p.ativo ? 'ti-status-resolvido' : 'ti-status-fechado') }, [p.ativo ? 'Ativo' : 'Desativado']),

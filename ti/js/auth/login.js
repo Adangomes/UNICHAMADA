@@ -57,18 +57,18 @@ TI.telas.login = {
           return;
         }
 
-        // 2. Valida se é um funcionário cadastrado na tabela ti_funcionarios via E-mail + Senha
-        console.log('A tentar procurar:', { email: valEmail, senha: valSenha });
+        // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
+        console.log('A tentar procurar via RPC:', { email: valEmail });
 
-        const { data: funcionario, error: dbErr } = await TI.db
-          .from('ti_funcionarios')
-          .select('*')
-          .eq('email', valEmail)
-          .eq('senha', valSenha)
-          .eq('ativo', true)
-          .maybeSingle();
+        const { data: funcionarios, error: dbErr } = await TI.db
+          .rpc('verificar_login_funcionario', {
+            p_email: valEmail,
+            p_senha: valSenha
+          });
 
-        console.log('Resultado do Supabase:', { funcionario, dbErr });
+        console.log('Resultado do RPC:', { funcionarios, dbErr });
+
+        const funcionario = funcionarios && funcionarios.length > 0 ? funcionarios[0] : null;
 
         if (dbErr || !funcionario) {
           throw new Error('E-mail ou senha incorretos (ou conta inativa).');

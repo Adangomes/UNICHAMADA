@@ -33,7 +33,7 @@ TI.telas.cadastroFuncionario = {
     const modal = ui.modal({
       titulo: 'Novo funcionário',
       corpo: [
-        el('p', { class: 'ti-sub' }, ['']),
+        el('p', { class: 'ti-sub' }, ['Cadastre os dados para que o funcionário possa realizar o primeiro acesso com o RA e e-mail.']),
         erro,
         ui.campo('Nome completo', nome),
         ui.campo('RA / matrícula', ra),
@@ -52,10 +52,10 @@ TI.telas.cadastroFuncionario = {
           if (problema) { erro.textContent = problema; erro.hidden = false; return; }
           
           try {
-            // Substituído o n8n por uma inserção direta na tabela do Supabase
-            const { error } = await TI.supabase
+            // Inserção direta na tabela ti_funcionarios do Supabase
+            const { error } = await supabase
               .from('ti_funcionarios')
-              s.insert([dados]);
+              .insert([dados]);
 
             if (error) throw error;
 

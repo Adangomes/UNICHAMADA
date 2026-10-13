@@ -27,6 +27,9 @@ TI.telas.dev = {
     const nomeDe = (id) => (equipe.find((p) => p.id === id) || {}).nome;
     let somenteMinhas = false;
 
+    // Verifica se o funcionário atual é o coordenador (ou tem permissão de criação)
+    const ehCoordenador = f.papel === 'coordenador_ti';
+
     const colunas = [
       ['backlog', 'Backlog'], ['desenvolvendo', 'Desenvolvendo'], ['em_revisao', 'Em revisão'], ['aprovado', 'Aprovado'], ['no_ar', 'No ar']
     ];
@@ -59,8 +62,13 @@ TI.telas.dev = {
       }));
     }
 
+    // O botão só é criado e exibido se 'ehCoordenador' for verdadeiro
+    const botaoNovaDemanda = ehCoordenador 
+      ? ui.botao('Nova demanda', { tipo: 'primario', onClick: () => TI.telas.dev.novaDemanda(opcoes, recarregar) }) 
+      : null;
+
     c.replaceChildren(
-      ui.cabecalhoPagina(f.nome, opcoes.titulo, ui.botao('Nova demanda', { tipo: 'primario', onClick: () => TI.telas.dev.novaDemanda(opcoes, recarregar) })),
+      ui.cabecalhoPagina(f.nome, opcoes.titulo, botaoNovaDemanda),
       filtro,
       el('div', { class: 'ti-kanban-wrap' }, [quadro])
     );

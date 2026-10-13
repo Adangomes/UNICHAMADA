@@ -7,14 +7,14 @@ window.TI = window.TI || {};
 TI.K.login = {
   marca: 'UniChamada',
   selo: 'TI',
-  titulo: 'Olá, equipe de TI',
+  titulo: '',
   subtitulo: 'Bem-vindo ao painel do UniChamada',
-  rotuloArte: 'Painel de TI',
-  ajuda: 'Ainda não tem acesso? Peça à coordenação de TI.',
+  rotuloArte: '',
+  ajuda: '',
   // mensagens que se alternam no painel animado (título + texto)
   mensagens: [
-    { titulo: 'Tudo num só lugar', texto: 'Chamados, demandas e a sua equipe de TI no mesmo painel.' },
-    { titulo: 'Nada vai ao ar sem revisão', texto: 'A coordenação confere e autoriza cada entrega antes do deploy.' },
-    { titulo: 'Cada setor com o seu trabalho', texto: 'Infraestrutura, desenvolvimento, banco de dados e Power BI.' }
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'Chamados devem ser atendidos com urgencias essa semana},
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'A coordenação vai conferir e autoriza cada ajuste, antes do deploy.' },
+    { titulo: 'Nada vai ao ar sem revisão', texto: 'ajustar tela de do Cordenador e Professores' }
   ]
 };

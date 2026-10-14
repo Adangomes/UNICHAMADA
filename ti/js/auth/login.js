@@ -1,8 +1,20 @@
 /**
  * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
- * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.login.
+ * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.
  */
 window.TI = window.TI || {};
+
+// BLINDAGEM: Garante que TI.K e seus sub-objetos existam antes mesmo do moldura.js tentar ler 'marca'
+window.TI.K = window.TI.K || {};
+window.TI.K.login = window.TI.K.login || {
+  titulo: 'Acesso',
+  subtitulo: 'Bem-vindo ao painel do UniChamada',
+  ajuda: 'Dúvidas ou problemas no acesso? Fale com a coordenação.'
+};
+window.TI.K.moldura = window.TI.K.moldura || {
+  marca: 'UniChamada',
+  selo: 'TI'
+};
 
 TI.telas = TI.telas || {};
 
@@ -12,15 +24,7 @@ TI.telas.login = {
     if (!raiz) return;
 
     const { el } = TI.dom;
-    
-    // Trava de segurança para não quebrar no GitHub Pages se TI.K demorar para carregar
-    const L = (window.TI && window.TI.K && window.TI.K.login) 
-      ? window.TI.K.login 
-      : {
-          titulo: 'UniChamada',
-          subtitulo: 'Bem-vindo ao painel do UniChamada',
-          ajuda: 'Dúvidas ou problemas no acesso? Fale com a coordenação.'
-        };
+    const L = TI.K.login;
 
     const erro = el('div', { class: 'ti-login-erro', role: 'alert' }, [opcoes.mensagem || '']);
     erro.hidden = !opcoes.mensagem;

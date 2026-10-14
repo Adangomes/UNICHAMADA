@@ -29,7 +29,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
       <div class="carteirinha-login">
         <div class="carteirinha-topo">
           <span class="selo">Sistema Acadêmico</span>
-          <h1>Acesso</h1>
+          <h1></h1>
         </div>
         <div class="carteirinha-corpo">
           <p class="instrucao"></p>

@@ -1,6 +1,6 @@
 /**
  * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
- * Visual Split Screen idêntico ao UniChamadas (banner animado + carteirinha).
+ * Visual idêntico ao login padrão do UniChamada.
  */
 window.TI = window.TI || {};
 
@@ -34,20 +34,25 @@ TI.telas.login = {
       type: 'password', 
       autocomplete: 'current-password', 
       placeholder: '••••••••', 
-      required: true,
-      style: 'padding-right: 70px;'
+      required: true
     });
 
     const olho = el('button', { 
       type: 'button', 
-      class: 'ti-lg-olho',
-      style: 'position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 0.75rem; color: #555; cursor: pointer; font-weight: 600;',
+      class: 'btn-mostrar-senha',
+      style: 'background: none; border: none; font-size: 0.85rem; color: #1b313a; cursor: pointer; font-weight: 600; padding: 0 4px;',
       onClick: () => {
         const mostrar = senha.type === 'password';
         senha.type = mostrar ? 'text' : 'password';
         olho.textContent = mostrar ? 'Ocultar' : 'Mostrar';
       } 
     }, ['Mostrar']);
+
+    // Agrupando o campo de senha com o botão "Mostrar" dentro do wrapper para o CSS alinhar
+    const wrapperSenha = el('div', { style: 'display: flex; align-items: center; position: relative;' }, [
+      senha,
+      el('div', { style: 'position: absolute; right: 12px;' }, [olho])
+    ]);
 
     const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
 
@@ -113,15 +118,14 @@ TI.telas.login = {
         el('label', { for: 'input-email' }, ['E-mail']),
         email
       ]),
-      el('div', { class: 'campo', style: 'position: relative;' }, [
+      el('div', { class: 'campo' }, [
         el('label', { for: 'input-senha' }, ['Senha']),
-        senha,
-        olho
+        wrapperSenha
       ]),
       botao
     ]);
 
-    // Montagem da Estrutura Split Screen idêntica ao login.css
+    // Montagem da Estrutura Split Screen alinhada com o CSS global de login
     const estruturaHTML = el('div', { id: 'tela-login' }, [
       el('div', { class: 'login-wrapper' }, [
         
@@ -138,7 +142,7 @@ TI.telas.login = {
         // LADO DIREITO: CARTEIRINHA DE ACESSO TI
         el('div', { class: 'carteirinha-login' }, [
           el('div', { class: 'carteirinha-topo' }, [
-            el('span', { class: 'selo' }, ['Painel Tecnológico TI']),
+            el('span', { class: 'selo' }, ['Painel TI']),
             el('h1', {}, ['Acesso Geral'])
           ]),
           el('div', { class: 'carteirinha-corpo' }, [

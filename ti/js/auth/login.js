@@ -1,156 +1,174 @@
 /**
  * js/login/login.js
- * Componente da Tela de Login do TI (Com ícone de olho integrado e padrão Split Screen)
+ * Componente da Tela de Login do TI (Espelhado exatamente no formato do professor)
  */
 window.TI = window.TI || {};
 
 TI.telas.login = {
-  /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
-  render(raiz, opcoes) {
-    const { el } = TI.dom;
-    const L = TI.K?.login || { 
-      titulo: 'Painel TI', 
-      subtitulo: 'Informe suas credenciais para acessar o painel.', 
-      ajuda: 'Precisa de ajuda? Contacte a coordenação.' 
-    };
+  /** @param {HTMLElement} container  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
+  render(container, opcoes) {
+    if (!container) return;
 
-    const aviso = el('div', { class: 'aviso-login ' + (opcoes.mensagem ? '' : 'oculto'), role: 'alert' }, [opcoes.mensagem || '']);
-    const mostrarErro = (texto) => {
-      aviso.textContent = texto;
-      if (texto) {
-        aviso.classList.remove('oculto');
-      } else {
-        aviso.classList.add('oculto');
+    // Monta o HTML idêntico ao do professor, adaptado para os campos e textos de TI
+    container.innerHTML = `
+      <div class="login-wrapper">
+        
+        <!-- LADO ESQUERDO: BANNER E MARCA -->
+        <div class="login-banner">
+          <div class="arco-decorativo arco-topo"></div>
+          <div class="login-brand">
+            <h1 class="logo-uni">UNI</h1>
+            <span class="logo-sub">CHAMADAS</span>
+          </div>
+          <div class="arco-decorativo arco-base"></div>
+        </div>
+
+        <!-- LADO DIREITO: CARD DE LOGIN -->
+        <div class="carteirinha-login">
+          <div class="carteirinha-topo">
+            <span class="selo">Painel TI</span>
+            <h1>Acesso</h1>
+          </div>
+          <div class="carteirinha-corpo">
+            <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
+            
+            <form id="form-login" onsubmit="return false;" novalidate>
+              <div class="campo">
+                <label for="input-email">E-mail</label>
+                <input 
+                  id="input-email" 
+                  name="email" 
+                  type="email" 
+                  autocomplete="username" 
+                  required 
+                />
+              </div>
+              
+              <div class="campo" style="position: relative;">
+                <label for="input-senha">Senha</label>
+                <input 
+                  id="input-senha" 
+                  name="senha" 
+                  type="password" 
+                  autocomplete="current-password" 
+                  required 
+                />
+                <button 
+                  type="button" 
+                  id="btn-mostrar-senha"
+                  style="position: absolute; right: 12px; top: 36px; background: none; border: none; font-size: 0.75rem; color: #1b313a; cursor: pointer; font-weight: 600;"
+                >Mostrar</button>
+              </div>
+              
+              <button type="submit" class="btn-primario">Entrar</button>
+            </form>
+            
+            <p id="aviso-login" class="aviso-login oculto">${opcoes.mensagem || ''}</p>
+          </div>
+        </div>
+
+      </div>
+    `;
+
+    // Se houver mensagem inicial passada pelas opções, exibe o aviso
+    const aviso = container.querySelector('#aviso-login');
+    if (opcoes.mensagem && aviso) {
+      aviso.classList.remove('oculto');
+    }
+
+    const form = container.querySelector('#form-login');
+    const inputSenha = container.querySelector('#input-senha');
+    const btnMostrarSenha = container.querySelector('#btn-mostrar-senha');
+
+    if (!form) return;
+
+    // Funcionalidade de alternar visibilidade da senha
+    if (btnMostrarSenha && inputSenha) {
+      btnMostrarSenha.addEventListener('click', () => {
+        const mostrar = inputSenha.type === 'password';
+        inputSenha.type = mostrar ? 'text' : 'password';
+        btnMostrarSenha.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      });
+    }
+
+    // Associa o evento de envio (Submit) com a lógica híbrida do TI
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      
+      const email = form.email ? form.email.value.trim().toLowerCase() : '';
+      const senha = form.senha ? form.senha.value.trim() : '';
+      const botao = form.querySelector('button[type="submit"]');
+
+      if (!email || !senha) {
+        exibirAvisoLogin(aviso, 'Informe o e-mail e a senha de acesso.');
+        return;
       }
-    };
 
-    const email = el('input', { 
-      id: 'input-email',
-      name: 'email',
-      type: 'email', 
-      autocomplete: 'username', 
-      placeholder: 'seu.email@unichamada.edu.br', 
-      required: true 
-    });
-
-    const senha = el('input', { 
-      id: 'input-senha',
-      name: 'senha',
-      type: 'password', 
-      autocomplete: 'current-password', 
-      placeholder: '••••••••', 
-      required: true 
-    });
-    
-    // Ícones SVG para o olho (Mostrar / Ocultar)
-    const iconeOlhoFechado = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-    const iconeOlhoAberto = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-
-    const btnOlho = el('button', { 
-      type: 'button', 
-      class: 'btn-olho-senha',
-      'aria-label': 'Mostrar senha',
-      innerHTML: iconeOlhoFechado,
-      onClick: () => {
-        const mostrar = senha.type === 'password';
-        senha.type = mostrar ? 'text' : 'password';
-        btnOlho.innerHTML = mostrar ? iconeOlhoAberto : iconeOlhoFechado;
-      } 
-    });
-
-    const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
-
-    const form = el('form', { 
-      id: 'form-login', 
-      novalidate: true, 
-      onSubmit: async (e) => {
-        e.preventDefault();
-        mostrarErro('');
-        const valEmail = email.value.trim().toLowerCase();
-        const valSenha = senha.value.trim();
-
-        if (!valEmail || !valSenha) { 
-          mostrarErro('Preencha o e-mail e a senha.'); 
-          return; 
-        }
-
+      if (botao) {
         botao.disabled = true;
         botao.textContent = 'Entrando…';
+      }
 
+      try {
+        let logouComoCoordenador = false;
+
+        // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
         try {
-          let logouComoCoordenador = false;
+          await TI.sessao.entrar(email, senha);
+          logouComoCoordenador = true;
+        } catch (authErr) {
+          // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
+        }
 
-          try {
-            await TI.sessao.entrar(valEmail, valSenha);
-            logouComoCoordenador = true;
-          } catch (authErr) {
-            // Ignora erro do Auth e tenta RPC
-          }
-
-          if (logouComoCoordenador) {
+        if (logouComoCoordenador) {
+          if (typeof opcoes.aoEntrar === 'function') {
             await opcoes.aoEntrar();
-            return;
           }
+          return;
+        }
 
-          const { data: funcionarios, error: dbErr } = await TI.db
-            .rpc('verificar_login_funcionario', {
-              p_email: valEmail,
-              p_senha: valSenha
-            });
+        // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
+        const { data: funcionarios, error: dbErr } = await TI.db
+          .rpc('verificar_login_funcionario', {
+            p_email: email,
+            p_senha: senha
+          });
 
-          const funcionario = funcionarios && funcionarios.length > 0 ? funcionarios[0] : null;
+        const funcionario = funcionarios && funcionarios.length > 0 ? funcionarios[0] : null;
 
-          if (dbErr || !funcionario) {
-            throw new Error('E-mail ou incorretos (ou conta inativa).');
-          }
+        if (dbErr || !funcionario) {
+          throw new Error('E-mail ou senha incorretos (ou conta inativa).');
+        }
 
-          TI.sessao.funcionario = funcionario;
-          await opcoes.aoEntrar();
+        // Define o funcionário na sessão local
+        TI.sessao.funcionario = funcionario;
 
-        } catch (err) {
-          mostrarErro(err.message || 'Erro ao efetuar login.');
+        if (aviso) aviso.classList.add('oculto');
+
+        // Executa a navegação via callback
+        if (typeof opcoes.aoEntrar === 'function') {
+          await opcoes.aoEntrar(funcionario);
+        }
+
+      } catch (err) {
+        exibirAvisoLogin(aviso, err.message || 'Erro ao efetuar login.');
+        if (botao) {
           botao.disabled = false;
           botao.textContent = 'Entrar';
         }
-      } 
-    }, [
-      el('div', { class: 'campo' }, [
-        el('label', { for: 'input-email' }, ['E-mail']),
-        email
-      ]),
-      el('div', { class: 'campo' }, [
-        el('label', { for: 'input-senha' }, ['Senha']),
-        senha,
-        btnOlho
-      ]),
-      botao,
-      aviso
-    ]);
+      }
+    });
 
-    const estruturaHTML = el('div', { id: 'tela-login' }, [
-      el('div', { class: 'login-wrapper' }, [
-        el('div', { class: 'login-banner' }, [
-          el('div', { class: 'arco-decorativo arco-topo' }),
-          el('div', { class: 'login-brand' }, [
-            el('h1', { class: 'logo-uni' }, ['UNI']),
-            el('span', { class: 'logo-sub' }, ['CHAMADAS'])
-          ]),
-          el('div', { class: 'arco-decorativo arco-base' })
-        ]),
-        el('div', { class: 'carteirinha-login' }, [
-          el('div', { class: 'carteirinha-topo' }, [
-            el('span', { class: 'selo' }, ['Painel TI']),
-            el('h1', {}, [L.titulo])
-          ]),
-          el('div', { class: 'carteirinha-corpo' }, [
-            el('p', { class: 'instrucao' }, [L.subtitulo]),
-            form
-          ])
-        ])
-      ])
-    ]);
-
-    raiz.replaceChildren(estruturaHTML);
-    email.focus();
+    const inputEmail = container.querySelector('#input-email');
+    if (inputEmail) inputEmail.focus();
   }
 };
+
+/**
+ * Exibe mensagens de alerta na interface de login
+ */
+function exibirAvisoLogin(aviso, mensagem) {
+  if (!aviso) return;
+  aviso.textContent = mensagem;
+  aviso.classList.remove('oculto');
+}

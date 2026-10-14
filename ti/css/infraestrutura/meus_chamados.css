@@ -1,6 +1,0 @@
-/* infraestrutura/meus_chamados.css — tela "Meus chamados" da infraestrutura (js/infraestrutura/meus-chamados/). */
-
-.ti-infra-topo { justify-content: space-between; }               /* código/prioridade à esquerda, status à direita */
-.ti-infra-titulo { font-size: 17px; }
-.ti-infra-subtitulo { font-size: 17px; margin-top: 8px; }        /* "Disponíveis para assumir" */
-.ti-aviso.ti-infra-dados { flex-direction: row; flex-wrap: wrap; gap: 10px 28px; }   /* local, patrimônio e prazo lado a lado */

@@ -1,6 +1,6 @@
 /**
- * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
- * Utiliza o visual Split Screen idêntico ao restante do sistema UniChamadas.
+ * js/login/login.js
+ * Componente da Tela de Login do TI (Split Screen idêntico ao padrão do sistema)
  */
 window.TI = window.TI || {};
 
@@ -8,10 +8,15 @@ TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
   render(raiz, opcoes) {
     const { el } = TI.dom;
+    const L = TI.K?.login || { 
+      titulo: 'Painel TI', 
+      subtitulo: 'Informe suas credenciais para acessar o painel.', 
+      ajuda: 'Precisa de ajuda? Contacte a coordenação.' 
+    };
 
-    // Elemento de aviso/erro
+    // Elemento de aviso/erro formatado com a classe do sistema (.aviso-login)
     const aviso = el('div', { class: 'aviso-login ' + (opcoes.mensagem ? '' : 'oculto'), role: 'alert' }, [opcoes.mensagem || '']);
-    const mostrarAviso = (texto) => {
+    const mostrarErro = (texto) => {
       aviso.textContent = texto;
       if (texto) {
         aviso.classList.remove('oculto');
@@ -20,7 +25,7 @@ TI.telas.login = {
       }
     };
 
-    // Campos do formulário (E-mail e Senha exigidos pela lógica de TI)
+    // Campos do formulário de TI
     const email = el('input', { 
       id: 'input-email',
       name: 'email',
@@ -38,21 +43,32 @@ TI.telas.login = {
       placeholder: '••••••••', 
       required: true 
     });
+    
+    // Botão de mostrar/ocultar senha integrado no estilo de campos
+    const olho = el('button', { 
+      type: 'button', 
+      style: 'background: none; border: none; font-size: 0.75rem; color: #1b313a; cursor: pointer; font-weight: 600; float: right; margin-top: 4px;',
+      onClick: () => {
+        const mostrar = senha.type === 'password';
+        senha.type = mostrar ? 'text' : 'password';
+        olho.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      } 
+    }, ['Mostrar']);
 
     const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
 
-    // Formulário com submissão tratada via lógica de TI
+    // Formulário de submissão com a lógica de autenticação original do TI
     const form = el('form', { 
       id: 'form-login', 
       novalidate: true, 
       onSubmit: async (e) => {
         e.preventDefault();
-        mostrarAviso('');
+        mostrarErro('');
         const valEmail = email.value.trim().toLowerCase();
         const valSenha = senha.value.trim();
 
         if (!valEmail || !valSenha) { 
-          mostrarAviso('Informe o e-mail e a senha de acesso.'); 
+          mostrarErro('Preencha o e-mail e a senha.'); 
           return; 
         }
 
@@ -75,7 +91,7 @@ TI.telas.login = {
             return;
           }
 
-          // 2. Valida se é um funcionário cadastrado chamando a função RPC no Supabase
+          // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
           const { data: funcionarios, error: dbErr } = await TI.db
             .rpc('verificar_login_funcionario', {
               p_email: valEmail,
@@ -88,12 +104,12 @@ TI.telas.login = {
             throw new Error('E-mail ou senha incorretos (ou conta inativa).');
           }
 
-          // Define o funcionário na sessão local
+          // Define o funcionário comum na sessão local ativa
           TI.sessao.funcionario = funcionario;
           await opcoes.aoEntrar();
 
         } catch (err) {
-          mostrarAviso(err.message || 'Erro ao efetuar login.');
+          mostrarErro(err.message || 'Erro ao efetuar login.');
           botao.disabled = false;
           botao.textContent = 'Entrar';
         }
@@ -105,17 +121,18 @@ TI.telas.login = {
       ]),
       el('div', { class: 'campo' }, [
         el('label', { for: 'input-senha' }, ['Senha']),
-        senha
+        senha,
+        olho
       ]),
       botao,
       aviso
     ]);
 
-    // Montagem exata da estrutura Split Screen visual ("UNI CHAMADAS")
-    const wrapper = el('div', { id: 'tela-login' }, [
+    // Montagem exata da estrutura Split Screen visual ("UNI CHAMADAS") idêntica à outra tela
+    const estruturaHTML = el('div', { id: 'tela-login' }, [
       el('div', { class: 'login-wrapper' }, [
         
-        // Lado Esquerdo: Banner animado com os arcos e marca
+        // Lado Esquerdo: Banner com a marca e os arcos decorativos rotativos
         el('div', { class: 'login-banner' }, [
           el('div', { class: 'arco-decorativo arco-topo' }),
           el('div', { class: 'login-brand' }, [
@@ -125,14 +142,14 @@ TI.telas.login = {
           el('div', { class: 'arco-decorativo arco-base' })
         ]),
 
-        // Lado Direito: Cartão de Acesso ("Painel TI")
+        // Lado Direito: Carteirinha de Acesso com o topo decorado e identificação do Painel TI
         el('div', { class: 'carteirinha-login' }, [
           el('div', { class: 'carteirinha-topo' }, [
             el('span', { class: 'selo' }, ['Painel TI']),
-            el('h1', {}, [''])
+            el('h1', {}, [L.titulo])
           ]),
           el('div', { class: 'carteirinha-corpo' }, [
-            el('p', { class: 'instrucao' }, ['']),
+            el('p', { class: 'instrucao' }, [L.subtitulo]),
             form
           ])
         ])
@@ -140,7 +157,7 @@ TI.telas.login = {
       ])
     ]);
 
-    raiz.replaceChildren(wrapper);
+    raiz.replaceChildren(estruturaHTML);
     email.focus();
   }
 };

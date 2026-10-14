@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LOGIN.CSS — Tela de acesso estilo Split Screen com Marca "UNI CHAMADAS"
+   LOGIN.CSS — Tela de acesso estilo Split Screen com Marca "UNI CHAMADAS" (TI)
    ========================================================================== */
 
 #tela-login {
@@ -38,13 +38,11 @@
   padding: 40px;
 }
 
-/* Animação de rotação contínua e suave */
 @keyframes girarLento {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Arcos Curvos Decorativos com Tracejado Dinâmico */
 .arco-decorativo {
   position: absolute;
   border-radius: 50%;
@@ -73,7 +71,6 @@
   animation-duration: 30s;
 }
 
-/* Tipografia UNI CHAMADAS */
 .login-brand {
   text-align: center;
   z-index: 2;
@@ -105,7 +102,7 @@
 .carteirinha-login {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
+  background: var(--papel-cartao, #ffffff);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -119,7 +116,7 @@
 }
 
 .carteirinha-topo .selo {
-  font-family: monospace;
+  font-family: var(--fonte-mono, monospace);
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -152,7 +149,7 @@
 }
 
 .carteirinha-corpo .instrucao {
-  color: #555;
+  color: var(--grafite-suave, #555);
   font-size: 0.88rem;
   line-height: 1.5;
   margin: -0.2em 0 1.4em;
@@ -170,12 +167,22 @@
   color: #333;
 }
 
+/* Inputs padronizados e idênticos aos da coordenação */
 #form-login input {
   width: 100%;
   padding: 0.75em;
   border: 1px solid #ccc;
   border-radius: 6px;
   box-sizing: border-box;
+  outline: none;
+  font-size: 0.95rem;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+#form-login input:focus {
+  border-color: #1b313a;
+  box-shadow: 0 0 0 2px rgba(27, 49, 58, 0.1);
 }
 
 #form-login .btn-primario {
@@ -209,7 +216,7 @@
   display: none !important; 
 }
 
-/* Responsividade para telemóveis */
+/* Responsividade */
 @media (max-width: 768px) {
   .login-wrapper {
     flex-direction: column;

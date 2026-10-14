@@ -4,7 +4,6 @@
  */
 
 window.TI = window.TI || {};
-
 window.TI.telas = window.TI.telas || {};
 
 window.TI.telas.login = {
@@ -14,7 +13,7 @@ window.TI.telas.login = {
 
     const mensagemInicial = opcoes.mensagem || '';
 
-    // Agidugay iti estruktura ti HTML ti Split Screen a nairanta iti CSS
+    // Monta o HTML usando exatamente as classes do seu login.css original
     raiz.innerHTML = `
       <div class="login-wrapper">
         
@@ -50,9 +49,9 @@ window.TI.telas.login = {
                 />
               </div>
               
-              <div class="campo campo-senha">
+              <div class="campo">
                 <label for="input-senha">Senha</label>
-                <div class="senha-wrapper" style="position: relative; display: flex; align-items: center;">
+                <div style="position: relative; display: flex; align-items: center; width: 100%;">
                   <input 
                     id="input-senha" 
                     name="senha" 
@@ -60,15 +59,14 @@ window.TI.telas.login = {
                     autocomplete="current-password" 
                     placeholder="Sua senha de acesso"
                     required 
-                    style="width: 100%;"
+                    style="padding-right: 65px;"
                   />
                   <button 
                     type="button" 
                     id="btn-toggle-senha" 
-                    class="ti-lg-olho" 
                     aria-label="Mostrar senha" 
                     aria-pressed="false"
-                    style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; font-size: 0.85rem;"
+                    style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; font-size: 0.8rem; color: #555; font-weight: 600;"
                   >Mostrar</button>
                 </div>
               </div>
@@ -92,7 +90,7 @@ window.TI.telas.login = {
 
     if (!form) return;
 
-    // Panagbaliw ti panagkita ti senha (Mostrar / Ocultar)
+    // Comportamento do botão para alternar entre Mostrar e Ocultar dentro da senha
     if (btnToggleSenha && inputSenha) {
       btnToggleSenha.addEventListener('click', () => {
         const mostrar = inputSenha.type === 'password';
@@ -109,7 +107,7 @@ window.TI.telas.login = {
       aviso.classList.remove('oculto');
     };
 
-    // Panag-submits ken panag-authenticate
+    // Submissão e lógica de autenticação do TI
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
       aviso.classList.add('oculto');
@@ -135,7 +133,7 @@ window.TI.telas.login = {
             logouComoCoordenador = true;
           }
         } catch (authErr) {
-          // No maarampat, tuloy ti panag-verify ti ti taga-tabela ti funcionario
+          // Se falhar no Auth, prossegue para verificar funcionário na tabela
         }
 
         if (logouComoCoordenador) {
@@ -145,7 +143,7 @@ window.TI.telas.login = {
           return;
         }
 
-        // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
+        // 2. Valida funcionário via função RPC no Supabase
         const { data: funcionarios, error: dbErr } = await TI.db
           .rpc('verificar_login_funcionario', {
             p_email: valEmail,

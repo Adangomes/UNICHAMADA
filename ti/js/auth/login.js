@@ -1,6 +1,6 @@
 /**
  * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
- * Visual idêntico ao login padrão do UniChamada.
+ * Utiliza exatamente as classes do css/login.css que já tens no projeto.
  */
 window.TI = window.TI || {};
 
@@ -9,20 +9,21 @@ TI.telas.login = {
   render(raiz, opcoes) {
     const { el } = TI.dom;
 
-    // Elemento de erro/alerta
-    const erro = el('div', { class: 'aviso-login ' + (opcoes.mensagem ? '' : 'oculto'), role: 'alert' }, [opcoes.mensagem || '']);
-    const mostrarErro = (texto) => {
-      erro.textContent = texto;
+    // Elemento de aviso/erro
+    const aviso = el('div', { class: 'aviso-login ' + (opcoes.mensagem ? '' : 'oculto'), role: 'alert' }, [opcoes.mensagem || '']);
+    const mostrarAviso = (texto) => {
+      aviso.textContent = texto;
       if (texto) {
-        erro.classList.remove('oculto');
+        aviso.classList.remove('oculto');
       } else {
-        erro.classList.add('oculto');
+        aviso.classList.add('oculto');
       }
     };
 
-    // Campos do formulário
+    // Campos do formulário com as classes exatas do CSS existente
     const email = el('input', { 
       id: 'input-email',
+      name: 'email',
       type: 'email', 
       autocomplete: 'username', 
       placeholder: 'seu.email@unichamada.edu.br', 
@@ -31,43 +32,27 @@ TI.telas.login = {
 
     const senha = el('input', { 
       id: 'input-senha',
+      name: 'senha',
       type: 'password', 
       autocomplete: 'current-password', 
       placeholder: '••••••••', 
       required: true
     });
 
-    const olho = el('button', { 
-      type: 'button', 
-      class: 'btn-mostrar-senha',
-      style: 'background: none; border: none; font-size: 0.85rem; color: #1b313a; cursor: pointer; font-weight: 600; padding: 0 4px;',
-      onClick: () => {
-        const mostrar = senha.type === 'password';
-        senha.type = mostrar ? 'text' : 'password';
-        olho.textContent = mostrar ? 'Ocultar' : 'Mostrar';
-      } 
-    }, ['Mostrar']);
-
-    // Agrupando o campo de senha com o botão "Mostrar" dentro do wrapper para o CSS alinhar
-    const wrapperSenha = el('div', { style: 'display: flex; align-items: center; position: relative;' }, [
-      senha,
-      el('div', { style: 'position: absolute; right: 12px;' }, [olho])
-    ]);
-
     const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
 
-    // Formulário
+    // Formulário de login
     const form = el('form', { 
       id: 'form-login', 
       novalidate: true, 
       onSubmit: async (e) => {
         e.preventDefault();
-        mostrarErro('');
+        mostrarAviso('');
         const valEmail = email.value.trim().toLowerCase();
         const valSenha = senha.value.trim();
 
         if (!valEmail || !valSenha) { 
-          mostrarErro('Informe o e-mail e a senha de acesso.'); 
+          mostrarAviso('Informe o e-mail e a senha de acesso.'); 
           return; 
         }
 
@@ -108,7 +93,7 @@ TI.telas.login = {
           await opcoes.aoEntrar();
 
         } catch (err) {
-          mostrarErro(err.message || 'Erro ao efetuar login.');
+          mostrarAviso(err.message || 'Erro ao efetuar login.');
           botao.disabled = false;
           botao.textContent = 'Entrar';
         }
@@ -120,16 +105,17 @@ TI.telas.login = {
       ]),
       el('div', { class: 'campo' }, [
         el('label', { for: 'input-senha' }, ['Senha']),
-        wrapperSenha
+        senha
       ]),
-      botao
+      botao,
+      aviso
     ]);
 
-    // Montagem da Estrutura Split Screen alinhada com o CSS global de login
+    // Montagem exata usando as classes do teu css/login.css original
     const estruturaHTML = el('div', { id: 'tela-login' }, [
       el('div', { class: 'login-wrapper' }, [
         
-        // LADO ESQUERDO: BANNER E MARCA COM ANIMAÇÃO ROTATIVA
+        // Lado esquerdo: Banner e marca com arcos decorativos
         el('div', { class: 'login-banner' }, [
           el('div', { class: 'arco-decorativo arco-topo' }),
           el('div', { class: 'login-brand' }, [
@@ -139,7 +125,7 @@ TI.telas.login = {
           el('div', { class: 'arco-decorativo arco-base' })
         ]),
 
-        // LADO DIREITO: CARTEIRINHA DE ACESSO TI
+        // Lado direito: Carteirinha de acesso com o título "Painel TI"
         el('div', { class: 'carteirinha-login' }, [
           el('div', { class: 'carteirinha-topo' }, [
             el('span', { class: 'selo' }, ['Painel TI']),
@@ -147,8 +133,7 @@ TI.telas.login = {
           ]),
           el('div', { class: 'carteirinha-corpo' }, [
             el('p', { class: 'instrucao' }, ['Credenciais para equipe técnica e coordenação.']),
-            form,
-            erro
+            form
           ])
         ])
 

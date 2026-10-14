@@ -3,12 +3,15 @@
  * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.login.
  */
 window.TI = window.TI || {};
+window.TI.telas = window.TI.telas || {};
 
 TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
-  render(raiz, opcoes) {
+  render(raiz, opcoes = {}) {
     const { el } = TI.dom;
-    const L = TI.K.login;
+    
+    // Proteção contra TI.K ou TI.K.login estarem undefined
+    const L = TI.K?.login || {};
 
     const erro = el('div', { class: 'ti-login-erro', role: 'alert' }, [opcoes.mensagem || '']);
     erro.hidden = !opcoes.mensagem;
@@ -53,7 +56,7 @@ TI.telas.login = {
         }
 
         if (logouComoCoordenador) {
-          await opcoes.aoEntrar();
+          await opcoes.aoEntrar?.();
           return;
         }
 
@@ -76,7 +79,7 @@ TI.telas.login = {
 
         // Define o funcionário comum na sessão local ativa
         TI.sessao.funcionario = funcionario;
-        await opcoes.aoEntrar();
+        await opcoes.aoEntrar?.();
 
       } catch (err) {
         mostrarErro(err.message || 'Erro ao efetuar login.');
@@ -90,12 +93,14 @@ TI.telas.login = {
       botao
     ]);
 
+    // Usando encadeamento opcional e fallbacks padrão nos textos
     raiz.replaceChildren(TI.moldura.montar({
-      titulo: L.titulo,
-      subtitulo: L.subtitulo,
+      titulo: L.titulo || 'Bem-vindo ao painel do UniChamada',
+      subtitulo: L.subtitulo || 'Digite seu e-mail profissional e senha para acessar.',
       conteudo: [form],
-      rodape: [el('p', { class: 'ti-lg-ajuda' }, [L.ajuda])]
+      rodape: [el('p', { class: 'ti-lg-ajuda' }, [L.ajuda || 'Precisa de suporte? Entre em contato com a coordenação.'])]
     }));
+    
     email.focus();
   }
 };

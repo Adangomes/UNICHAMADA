@@ -1,16 +1,21 @@
 /* ==========================================================================
-   LOGIN.CSS — Tela de acesso estilo Split Screen (Painel TI)
+   LOGIN.CSS — Tela de acesso estilo Split Screen com Marca "UNI CHAMADAS"
    ========================================================================== */
 
 #tela-login {
   min-height: 100vh;
-  width: 100%;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1b323c 0%, #0d1e25 100%);
+  /* Fundo gradiente escuro correto ocupando toda a tela */
+  background: linear-gradient(135deg, #1b323c 0%, #0d1e25 100%) !important;
   padding: 24px;
   box-sizing: border-box;
+  z-index: 9999;
 }
 
 /* Container Principal Split Screen */
@@ -38,11 +43,17 @@
   padding: 40px;
 }
 
+/* Animação de rotação contínua e suave */
 @keyframes girarLento {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
+/* Arcos Curvos Decorativos com Tracejado Dinâmico (Visíveis ao girar) */
 .arco-decorativo {
   position: absolute;
   border-radius: 50%;
@@ -71,6 +82,7 @@
   animation-duration: 30s;
 }
 
+/* Tipografia UNI CHAMADAS */
 .login-brand {
   text-align: center;
   z-index: 2;
@@ -79,7 +91,7 @@
 
 .logo-uni {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 8rem;
+  font-size: 8rem; /* AQUI REGULA O TAMANHO*/
   font-weight: 300;
   color: #ffffff;
   margin: 0;
@@ -95,7 +107,7 @@
   color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.32em;
   margin-top: 6px;
-  margin-left: 16px;
+  margin-left: 16px; /* <--- Aumente o valor pra ir mais pra direita */
 }
 
 /* ================= LADO DIREITO: CARD DE LOGIN ================= */
@@ -109,7 +121,7 @@
 }
 
 .carteirinha-topo {
-  background: #1b313a;
+  background: #1b313a; /* Tom azul profundo harmonizado */
   color: #fff;
   padding: 1.8em 1.8em 1.4em;
   position: relative;
@@ -157,7 +169,6 @@
 
 #form-login .campo {
   margin-bottom: 1.1em;
-  position: relative;
 }
 
 #form-login label {
@@ -171,39 +182,9 @@
 #form-login input {
   width: 100%;
   padding: 0.75em;
-  padding-right: 40px; /* Espaço para o ícone do olho */
   border: 1px solid #ccc;
   border-radius: 6px;
   box-sizing: border-box;
-  outline: none;
-  font-size: 0.95rem;
-  background: #fff;
-  transition: border-color 0.2s ease;
-}
-
-#form-login input:focus {
-  border-color: #1b313a;
-  box-shadow: 0 0 0 2px rgba(27, 49, 58, 0.1);
-}
-
-/* Botão do Olho embutido dentro do input de senha */
-.btn-olho-senha {
-  position: absolute;
-  right: 12px;
-  top: 36px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-  transition: color 0.2s;
-}
-
-.btn-olho-senha:hover {
-  color: #1b313a;
 }
 
 #form-login .btn-primario {
@@ -237,6 +218,7 @@
   display: none !important; 
 }
 
+/* Responsividade: para telas menores de celular */
 @media (max-width: 768px) {
   .login-wrapper {
     flex-direction: column;

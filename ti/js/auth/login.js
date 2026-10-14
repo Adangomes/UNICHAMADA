@@ -41,7 +41,7 @@ TI.telas.login = {
 
     const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
 
-    // Formulário com submissão tratada via JS do TI
+    // Formulário com submissão tratada via lógica de TI
     const form = el('form', { 
       id: 'form-login', 
       novalidate: true, 

@@ -12,13 +12,15 @@ TI.telas.login = {
     if (!raiz) return;
 
     const { el } = TI.dom;
-
-    // PROTEÇÃO AQUI: Garante que se TI.K.login não existir, o sistema não trava!
-    const L = (window.TI && window.TI.K && window.TI.K.login) ? window.TI.K.login : {
-      titulo: 'Acesso',
-      subtitulo: 'Informe suas credenciais profissionais para acessar o painel.',
-      ajuda: 'Precisa de ajuda? Contate a coordenação.'
-    };
+    
+    // Trava de segurança para não quebrar no GitHub Pages se TI.K demorar para carregar
+    const L = (window.TI && window.TI.K && window.TI.K.login) 
+      ? window.TI.K.login 
+      : {
+          titulo: 'UniChamada',
+          subtitulo: 'Bem-vindo ao painel do UniChamada',
+          ajuda: 'Dúvidas ou problemas no acesso? Fale com a coordenação.'
+        };
 
     const erro = el('div', { class: 'ti-login-erro', role: 'alert' }, [opcoes.mensagem || '']);
     erro.hidden = !opcoes.mensagem;

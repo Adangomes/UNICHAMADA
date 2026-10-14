@@ -129,10 +129,10 @@ TI.telas.login = {
         el('div', { class: 'carteirinha-login' }, [
           el('div', { class: 'carteirinha-topo' }, [
             el('span', { class: 'selo' }, ['Painel TI']),
-            el('h1', {}, ['Acesso Geral'])
+            el('h1', {}, [''])
           ]),
           el('div', { class: 'carteirinha-corpo' }, [
-            el('p', { class: 'instrucao' }, ['Informe suas credenciais para acessar o painel.']),
+            el('p', { class: 'instrucao' }, ['']),
             form
           ])
         ])

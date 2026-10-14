@@ -32,7 +32,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
           <h1>Acesso</h1>
         </div>
         <div class="carteirinha-corpo">
-          <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
+          <p class="instrucao"></p>
           
           <form id="form-login" onsubmit="return false;" novalidate>
             <div class="campo">

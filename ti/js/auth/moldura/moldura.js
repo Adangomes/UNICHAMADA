@@ -16,12 +16,14 @@ TI.moldura = TI.moldura || {};
  */
 TI.moldura.montar = function (opcoes) {
   const { el } = TI.dom;
-  const L = TI.K.login;
+  
+  // Proteção contra TI.K ou TI.K.login estarem undefined
+  const L = TI.K?.login || {};
 
   const direita = el('div', { class: 'ti-lg-direita' }, [
     el('div', { class: 'ti-lg-topo' }, [
-      el('span', { class: 'ti-lg-marca' }, [L.marca]),
-      el('span', { class: 'ti-lg-selo' }, [L.selo])
+      el('span', { class: 'ti-lg-marca' }, [L.marca || 'UniChamada']),
+      el('span', { class: 'ti-lg-selo' }, [L.selo || 'TI'])
     ]),
     el('div', { class: 'ti-lg-centro' }, [
       el('h1', { class: 'ti-lg-titulo' }, [opcoes.titulo]),
@@ -39,13 +41,19 @@ TI.moldura.montar = function (opcoes) {
 /** Painel da esquerda: animação + rótulo + mensagens que se alternam. */
 TI.moldura._arte = function () {
   const { el } = TI.dom;
+  const L = TI.K?.login || {};
+  
   const canvas = el('canvas', { 'aria-hidden': 'true' });
   const arte = el('div', { class: 'ti-lg-arte' }, [
     canvas,
     el('div', { class: 'ti-lg-corte', 'aria-hidden': 'true' }),
-    el('div', { class: 'ti-lg-arte-topo' }, [TI.K.login.rotuloArte]),
-    this._carrossel(TI.K.login.mensagens)
+    el('div', { class: 'ti-lg-arte-topo' }, [L.rotuloArte || 'TI']),
+    this._carrossel(L.mensagens || [])
   ]);
-  this._animar(canvas, arte);
+  
+  if (typeof this._animar === 'function') {
+    this._animar(canvas, arte);
+  }
+  
   return arte;
 };

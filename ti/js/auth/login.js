@@ -1,28 +1,12 @@
 /**
  * login.js — tela de login do TI (Coordenação via Auth, Funcionários via tabela ti_funcionarios).
- * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.
+ * O visual (painel animado, cartão) vem de moldura.js; os textos, de TI.K.login.
  */
 window.TI = window.TI || {};
 
-// BLINDAGEM: Garante que TI.K e seus sub-objetos existam antes mesmo do moldura.js tentar ler 'marca'
-window.TI.K = window.TI.K || {};
-window.TI.K.login = window.TI.K.login || {
-  titulo: 'Acesso',
-  subtitulo: 'Bem-vindo ao painel do UniChamada',
-  ajuda: 'Dúvidas ou problemas no acesso? Fale com a coordenação.'
-};
-window.TI.K.moldura = window.TI.K.moldura || {
-  marca: 'UniChamada',
-  selo: 'TI'
-};
-
-TI.telas = TI.telas || {};
-
 TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
-  render(raiz, opcoes = {}) {
-    if (!raiz) return;
-
+  render(raiz, opcoes) {
     const { el } = TI.dom;
     const L = TI.K.login;
 
@@ -62,18 +46,14 @@ TI.telas.login = {
 
         // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
         try {
-          if (TI.sessao && typeof TI.sessao.entrar === 'function') {
-            await TI.sessao.entrar(valEmail, valSenha);
-            logouComoCoordenador = true;
-          }
+          await TI.sessao.entrar(valEmail, valSenha);
+          logouComoCoordenador = true;
         } catch (authErr) {
           // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
         }
 
         if (logouComoCoordenador) {
-          if (typeof opcoes.aoEntrar === 'function') {
-            await opcoes.aoEntrar();
-          }
+          await opcoes.aoEntrar();
           return;
         }
 
@@ -96,9 +76,7 @@ TI.telas.login = {
 
         // Define o funcionário comum na sessão local ativa
         TI.sessao.funcionario = funcionario;
-        if (typeof opcoes.aoEntrar === 'function') {
-          await opcoes.aoEntrar();
-        }
+        await opcoes.aoEntrar();
 
       } catch (err) {
         mostrarErro(err.message || 'Erro ao efetuar login.');

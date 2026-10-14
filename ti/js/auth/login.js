@@ -1,168 +1,106 @@
 /**
  * js/login/login.js
- * Componente da Tela de Login do TI (Espelhado exatamente no formato do professor)
+ * Componente da Tela de Login (Split Screen "UNI CHAMADAS")
  */
-window.TI = window.TI || {};
 
-TI.telas.login = {
-  /** @param {HTMLElement} container  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
-  render(container, opcoes) {
-    if (!container) return;
+/**
+ * Renderiza a estrutura HTML da tela de login e configura a submissão.
+ * @param {HTMLElement} container - O elemento #tela-login
+ * @param {Function} callbackSucesso - Função executada quando o login for válido
+ */
+function renderizarTelaLogin(container, callbackSucesso) {
+  if (!container) return;
 
-    // Monta o HTML idêntico ao do professor, adaptado para os campos e textos de TI
-    container.innerHTML = `
-      <div class="login-wrapper">
-        
-        <!-- LADO ESQUERDO: BANNER E MARCA -->
-        <div class="login-banner">
-          <div class="arco-decorativo arco-topo"></div>
-          <div class="login-brand">
-            <h1 class="logo-uni">UNI</h1>
-            <span class="logo-sub">CHAMADAS</span>
-          </div>
-          <div class="arco-decorativo arco-base"></div>
-        </div>
-
-        <!-- LADO DIREITO: CARD DE LOGIN -->
-        <div class="carteirinha-login">
-          <div class="carteirinha-topo">
-            <span class="selo">Painel TI</span>
-            <h1>Acesso</h1>
-          </div>
-          <div class="carteirinha-corpo">
-            <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
-            
-            <form id="form-login" onsubmit="return false;" novalidate>
-              <div class="campo">
-                <label for="input-email">E-mail</label>
-                <input 
-                  id="input-email" 
-                  name="email" 
-                  type="email" 
-                  autocomplete="username" 
-                  required 
-                />
-              </div>
-              
-              <div class="campo" style="position: relative;">
-                <label for="input-senha">Senha</label>
-                <input 
-                  id="input-senha" 
-                  name="senha" 
-                  type="password" 
-                  autocomplete="current-password" 
-                  required 
-                />
-                <button 
-                  type="button" 
-                  id="btn-mostrar-senha"
-                  style="position: absolute; right: 12px; top: 36px; background: none; border: none; font-size: 0.75rem; color: #1b313a; cursor: pointer; font-weight: 600;"
-                >Mostrar</button>
-              </div>
-              
-              <button type="submit" class="btn-primario">Entrar</button>
-            </form>
-            
-            <p id="aviso-login" class="aviso-login oculto">${opcoes.mensagem || ''}</p>
-          </div>
-        </div>
-
-      </div>
-    `;
-
-    // Se houver mensagem inicial passada pelas opções, exibe o aviso
-    const aviso = container.querySelector('#aviso-login');
-    if (opcoes.mensagem && aviso) {
-      aviso.classList.remove('oculto');
-    }
-
-    const form = container.querySelector('#form-login');
-    const inputSenha = container.querySelector('#input-senha');
-    const btnMostrarSenha = container.querySelector('#btn-mostrar-senha');
-
-    if (!form) return;
-
-    // Funcionalidade de alternar visibilidade da senha
-    if (btnMostrarSenha && inputSenha) {
-      btnMostrarSenha.addEventListener('click', () => {
-        const mostrar = inputSenha.type === 'password';
-        inputSenha.type = mostrar ? 'text' : 'password';
-        btnMostrarSenha.textContent = mostrar ? 'Ocultar' : 'Mostrar';
-      });
-    }
-
-    // Associa o evento de envio (Submit) com a lógica híbrida do TI
-    form.addEventListener('submit', async (evento) => {
-      evento.preventDefault();
+  // Monta o HTML exato exigido pelo login.css
+  container.innerHTML = `
+    <div class="login-wrapper">
       
-      const email = form.email ? form.email.value.trim().toLowerCase() : '';
-      const senha = form.senha ? form.senha.value.trim() : '';
-      const botao = form.querySelector('button[type="submit"]');
+      <!-- LADO ESQUERDO: BANNER E MARCA -->
+      <div class="login-banner">
+        <div class="arco-decorativo arco-topo"></div>
+        <div class="login-brand">
+          <h1 class="logo-uni">UNI</h1>
+          <span class="logo-sub">CHAMADAS</span>
+        </div>
+        <div class="arco-decorativo arco-base"></div>
+      </div>
 
-      if (!email || !senha) {
-        exibirAvisoLogin(aviso, 'Informe o e-mail e a senha de acesso.');
-        return;
-      }
+      <!-- LADO DIREITO: CARD DE LOGIN -->
+      <div class="carteirinha-login">
+        <div class="carteirinha-topo">
+          <span class="selo">Sistema Acadêmico</span>
+          <h1>Acesso</h1>
+        </div>
+        <div class="carteirinha-corpo">
+          <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
+          
+          <form id="form-login" onsubmit="return false;" novalidate>
+            <div class="campo">
+              <label for="input-ra">RA</label>
+              <input 
+                id="input-ra" 
+                name="ra" 
+                type="text" 
+                data-mono="true" 
+                autocomplete="off" 
+                required 
+              />
+            </div>
+            
+            <div class="campo">
+              <label for="input-email">E-mail</label>
+              <input 
+                id="input-email" 
+                name="email" 
+                type="email" 
+                autocomplete="off" 
+                required 
+              />
+            </div>
+            
+            <button type="submit" class="btn-primario">Entrar</button>
+          </form>
+          
+          <p id="aviso-login" class="aviso-login oculto"></p>
+        </div>
+      </div>
 
-      if (botao) {
-        botao.disabled = true;
-        botao.textContent = 'Entrando…';
-      }
+    </div>
+  `;
 
-      try {
-        let logouComoCoordenador = false;
+  // Captura o formulário diretamente após a renderização
+  const form = container.querySelector('#form-login');
+  const aviso = container.querySelector('#aviso-login');
 
-        // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
-        try {
-          await TI.sessao.entrar(email, senha);
-          logouComoCoordenador = true;
-        } catch (authErr) {
-          // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
-        }
+  if (!form) return;
 
-        if (logouComoCoordenador) {
-          if (typeof opcoes.aoEntrar === 'function') {
-            await opcoes.aoEntrar();
-          }
-          return;
-        }
+  // Associa o evento de envio (Submit)
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    
+    const ra = form.ra ? form.ra.value.trim() : '';
+    const email = form.email ? form.email.value.trim() : '';
 
-        // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
-        const { data: funcionarios, error: dbErr } = await TI.db
-          .rpc('verificar_login_funcionario', {
-            p_email: email,
-            p_senha: senha
-          });
+    if (!campoObrigatorioPreenchido(ra) || !campoObrigatorioPreenchido(email)) {
+      exibirAvisoLogin(aviso, 'Informe RA e e-mail.');
+      return;
+    }
 
-        const funcionario = funcionarios && funcionarios.length > 0 ? funcionarios[0] : null;
+    const resultado = await autenticar(ra, email);
 
-        if (dbErr || !funcionario) {
-          throw new Error('E-mail ou senha incorretos (ou conta inativa).');
-        }
+    if (!resultado) {
+      exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Nada foi aberto — confira os dados com a coordenação.');
+      return;
+    }
 
-        // Define o funcionário na sessão local
-        TI.sessao.funcionario = funcionario;
+    if (aviso) aviso.classList.add('oculto');
 
-        if (aviso) aviso.classList.add('oculto');
-
-        // Executa a navegação via callback
-        if (typeof opcoes.aoEntrar === 'function') {
-          await opcoes.aoEntrar(funcionario);
-        }
-
-      } catch (err) {
-        exibirAvisoLogin(aviso, err.message || 'Erro ao efetuar login.');
-        if (botao) {
-          botao.disabled = false;
-          botao.textContent = 'Entrar';
-        }
-      }
-    });
-
-    const inputEmail = container.querySelector('#input-email');
-    if (inputEmail) inputEmail.focus();
-  }
-};
+    // Executa a navegação via callback para o main.js
+    if (typeof callbackSucesso === 'function') {
+      callbackSucesso(resultado);
+    }
+  });
+}
 
 /**
  * Exibe mensagens de alerta na interface de login

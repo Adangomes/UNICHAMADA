@@ -1,0 +1,27 @@
+/* base/base.css — cores (variáveis), fonte e regras gerais. Carregado em TODAS as telas. */
+
+:root {
+  --ti-navy: #1f2a4d;          /* azul-marinho do menu e botões principais */
+  --ti-fundo: #f2f0ec;         /* fundo creme das telas */
+  --ti-branco: #ffffff;        /* cartões */
+  --ti-tinta: #1b2547;         /* texto principal */
+  --ti-suave: #5b6585;         /* texto secundário */
+  --ti-linha: #e3e0d9;         /* bordas dos cartões */
+  --ti-linha-2: #eeebe4;       /* linhas finas dentro dos cartões */
+  --ti-acento: #2f55c4;        /* links e destaques */
+  --ti-alta-bg: #fbe1d9;  --ti-alta: #9c2f17;    /* prioridade alta */
+  --ti-media-bg: #fcecc0; --ti-media: #7a4f00;   /* prioridade média */
+  --ti-baixa-bg: #dcefe7; --ti-baixa: #1b5e4b;   /* prioridade baixa */
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Figtree', system-ui, sans-serif;
+  font-size: 14.5px;
+  color: var(--ti-tinta);
+  background: var(--ti-fundo);
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, p { margin: 0; }
+a { color: var(--ti-acento); text-decoration: none; }
+.ti-mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }

@@ -1,0 +1,17 @@
+/* desenvolvimento/quadro_de_demandas.css — quadro Backlog → No ar (js/desenvolvimento/quadro/).
+   Também é carregado pelas telas de Banco de dados e Power BI, que reaproveitam o quadro. */
+
+.ti-kanban-wrap { overflow-x: auto; padding-bottom: 6px; }
+.ti-kanban { display: flex; gap: 14px; min-width: 1180px; align-items: flex-start; }
+.ti-coluna { flex: 1 1 0; min-width: 0; background: #ebe8e1; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ti-coluna-cab { display: flex; justify-content: space-between; padding: 4px 6px 6px; font-size: 14px; font-weight: 700; }
+.ti-coluna-cab span:last-child { color: var(--ti-suave); }
+.ti-ficha {
+  width: 100%; text-align: left; cursor: pointer;
+  background: var(--ti-branco); border: 1px solid var(--ti-linha); border-radius: 12px;
+  padding: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.ti-ficha:hover { border-color: #b9c4ea; }
+.ti-ficha-titulo { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
+.ti-ficha-nota { font-size: 12.5px; color: var(--ti-suave); }
+.ti-coluna-vazia { font-size: 13px; color: var(--ti-suave); padding: 8px 6px; }

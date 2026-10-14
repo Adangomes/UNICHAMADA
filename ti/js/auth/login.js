@@ -1,6 +1,6 @@
 /**
  * js/login/login.js
- * Componente da Tela de Login do TI (Split Screen idêntico ao padrão do sistema)
+ * Componente da Tela de Login do TI (Com ícone de olho integrado e padrão Split Screen)
  */
 window.TI = window.TI || {};
 
@@ -14,7 +14,6 @@ TI.telas.login = {
       ajuda: 'Precisa de ajuda? Contacte a coordenação.' 
     };
 
-    // Elemento de aviso/erro formatado com a classe do sistema (.aviso-login)
     const aviso = el('div', { class: 'aviso-login ' + (opcoes.mensagem ? '' : 'oculto'), role: 'alert' }, [opcoes.mensagem || '']);
     const mostrarErro = (texto) => {
       aviso.textContent = texto;
@@ -25,7 +24,6 @@ TI.telas.login = {
       }
     };
 
-    // Campos do formulário de TI
     const email = el('input', { 
       id: 'input-email',
       name: 'email',
@@ -44,20 +42,24 @@ TI.telas.login = {
       required: true 
     });
     
-    // Botão de mostrar/ocultar senha integrado no estilo de campos
-    const olho = el('button', { 
+    // Ícones SVG para o olho (Mostrar / Ocultar)
+    const iconeOlhoFechado = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+    const iconeOlhoAberto = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+
+    const btnOlho = el('button', { 
       type: 'button', 
-      style: 'background: none; border: none; font-size: 0.75rem; color: #1b313a; cursor: pointer; font-weight: 600; float: right; margin-top: 4px;',
+      class: 'btn-olho-senha',
+      'aria-label': 'Mostrar senha',
+      innerHTML: iconeOlhoFechado,
       onClick: () => {
         const mostrar = senha.type === 'password';
         senha.type = mostrar ? 'text' : 'password';
-        olho.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+        btnOlho.innerHTML = mostrar ? iconeOlhoAberto : iconeOlhoFechado;
       } 
-    }, ['Mostrar']);
+    });
 
     const botao = el('button', { type: 'submit', class: 'btn-primario' }, ['Entrar']);
 
-    // Formulário de submissão com a lógica de autenticação original do TI
     const form = el('form', { 
       id: 'form-login', 
       novalidate: true, 
@@ -78,12 +80,11 @@ TI.telas.login = {
         try {
           let logouComoCoordenador = false;
 
-          // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
           try {
             await TI.sessao.entrar(valEmail, valSenha);
             logouComoCoordenador = true;
           } catch (authErr) {
-            // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
+            // Ignora erro do Auth e tenta RPC
           }
 
           if (logouComoCoordenador) {
@@ -91,7 +92,6 @@ TI.telas.login = {
             return;
           }
 
-          // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
           const { data: funcionarios, error: dbErr } = await TI.db
             .rpc('verificar_login_funcionario', {
               p_email: valEmail,
@@ -101,10 +101,9 @@ TI.telas.login = {
           const funcionario = funcionarios && funcionarios.length > 0 ? funcionarios[0] : null;
 
           if (dbErr || !funcionario) {
-            throw new Error('E-mail ou senha incorretos (ou conta inativa).');
+            throw new Error('E-mail ou incorretos (ou conta inativa).');
           }
 
-          // Define o funcionário comum na sessão local ativa
           TI.sessao.funcionario = funcionario;
           await opcoes.aoEntrar();
 
@@ -122,17 +121,14 @@ TI.telas.login = {
       el('div', { class: 'campo' }, [
         el('label', { for: 'input-senha' }, ['Senha']),
         senha,
-        olho
+        btnOlho
       ]),
       botao,
       aviso
     ]);
 
-    // Montagem exata da estrutura Split Screen visual ("UNI CHAMADAS") idêntica à outra tela
     const estruturaHTML = el('div', { id: 'tela-login' }, [
       el('div', { class: 'login-wrapper' }, [
-        
-        // Lado Esquerdo: Banner com a marca e os arcos decorativos rotativos
         el('div', { class: 'login-banner' }, [
           el('div', { class: 'arco-decorativo arco-topo' }),
           el('div', { class: 'login-brand' }, [
@@ -141,8 +137,6 @@ TI.telas.login = {
           ]),
           el('div', { class: 'arco-decorativo arco-base' })
         ]),
-
-        // Lado Direito: Carteirinha de Acesso com o topo decorado e identificação do Painel TI
         el('div', { class: 'carteirinha-login' }, [
           el('div', { class: 'carteirinha-topo' }, [
             el('span', { class: 'selo' }, ['Painel TI']),
@@ -153,7 +147,6 @@ TI.telas.login = {
             form
           ])
         ])
-
       ])
     ]);
 

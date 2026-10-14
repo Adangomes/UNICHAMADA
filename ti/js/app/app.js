@@ -17,23 +17,34 @@ TI.app = {
     if (TI.dbErro) { this.raiz.append(TI.ui.erro(TI.dbErro)); return; }
 
     try {
-      const veioDeConvite = /type=(invite|recovery)/.test(TI.config.hashInicial);
+      const veioDeConvite = /type=(invite|recovery)/.test(TI.config.hashInicial || window.location.hash);
       if (veioDeConvite) {
-        // o Supabase transforma o link do e-mail em sessão; esperamos isso terminar
         await TI.db.auth.getSession();
         await TI.estilos.carregar(TI.estilos.GRUPOS.login);
         TI.telas.primeiroAcesso.render(this.raiz, { aoConcluir: () => this._depoisDoConvite() });
         return;
       }
-      if (await TI.sessao.iniciar()) await this.mostrarPainel();
-      else await this.mostrarLogin();
+
+      // Tenta iniciar sessão (lê cache local instantâneo + valida Supabase)
+      const logado = await TI.sessao.iniciar();
+      if (logado) {
+        await this.mostrarPainel();
+      } else {
+        await this.mostrarLogin();
+      }
     } catch (err) {
-      await this.mostrarLogin(err.message);
+      console.warn('[TI] Erro ao restaurar sessão:', err);
+      // Se houver funcionário em memória (cache local), não desloga abruptamente no F5
+      if (TI.sessao.funcionario) {
+        await this.mostrarPainel();
+      } else {
+        await this.mostrarLogin('Sessão expirada. Faça login novamente.');
+      }
     }
   },
 
   async _depoisDoConvite() {
-    history.replaceState(null, '', window.location.pathname);   // tira o "#..." da barra de endereço
+    history.replaceState(null, '', window.location.pathname);
     await TI.sessao.iniciar();
     await this.mostrarPainel();
   },
@@ -54,13 +65,27 @@ TI.app = {
     };
     this.ctx = ctx;
     this.layout = TI.layout.montar(this.raiz, ctx);
-    await this.navegar(TI.rotas.padrao(f));
+
+    // Pega a rota da Hash da URL se existir, senão usa a padrão do funcionário
+    const hashRota = window.location.hash.replace('#', '').trim();
+    const rotaInicial = (hashRota && TI.rotas.permitida(hashRota, f)) ? hashRota : TI.rotas.padrao(f);
+
+    await this.navegar(rotaInicial);
   },
 
   async navegar(rota, params) {
     const f = TI.sessao.funcionario;
+    if (!f) return this.mostrarLogin();
+
     const def = TI.rotas.tabela[rota];
-    if (!def || !TI.rotas.permitida(rota, f)) { rota = TI.rotas.padrao(f); params = {}; }
+    if (!def || !TI.rotas.permitida(rota, f)) { 
+      rota = TI.rotas.padrao(f); 
+      params = {}; 
+    }
+
+    // Atualiza a Hash na URL para o F5 não perder a tela
+    window.location.hash = rota;
+
     const alvo = TI.rotas.tabela[rota];
     const tela = TI.telas[alvo.tela];
     const conteudo = this.layout.conteudo;
@@ -68,7 +93,7 @@ TI.app = {
     conteudo.replaceChildren(TI.ui.carregando());
     window.scrollTo(0, 0);
     try {
-      await TI.estilos.carregar(alvo.css);   // só o CSS da seção desta tela
+      await TI.estilos.carregar(alvo.css);
       conteudo.replaceChildren();
       await tela.render(conteudo, this.ctx, params || {});
     } catch (err) {

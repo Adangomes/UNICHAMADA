@@ -1,6 +1,6 @@
 /**
  * js/login/login.js
- * Componente da Tela de Login do TI (Espelhado no formato de Coordenador/Professor)
+ * Componente da Tela de Login (Split Screen "UNI CHAMADAS")
  */
 
 /**
@@ -11,7 +11,7 @@
 function renderizarTelaLogin(container, callbackSucesso) {
   if (!container) return;
 
-  // Monta o HTML exato exigido pelo login.css no padrão do sistema
+  // Monta o HTML exato exigido pelo login.css
   container.innerHTML = `
     <div class="login-wrapper">
       
@@ -28,8 +28,8 @@ function renderizarTelaLogin(container, callbackSucesso) {
       <!-- LADO DIREITO: CARD DE LOGIN -->
       <div class="carteirinha-login">
         <div class="carteirinha-topo">
-          <span class="selo">Painel TI</span>
-          <h1>Acesso Geral</h1>
+          <span class="selo">Sistema Acadêmico</span>
+          <h1>Acesso</h1>
         </div>
         <div class="carteirinha-corpo">
           <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
@@ -74,7 +74,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
 
   if (!form) return;
 
-  // Associa o evento de envio (Submit) exatamente igual ao padrão do professor
+  // Associa o evento de envio (Submit)
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     

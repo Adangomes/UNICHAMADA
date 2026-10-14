@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LOGIN.CSS — Tela de acesso estilo Split Screen com Marca "UNI CHAMADAS" (TI)
+   LOGIN.CSS — Tela de acesso estilo Split Screen (Painel TI)
    ========================================================================== */
 
 #tela-login {
@@ -157,6 +157,7 @@
 
 #form-login .campo {
   margin-bottom: 1.1em;
+  position: relative;
 }
 
 #form-login label {
@@ -167,10 +168,10 @@
   color: #333;
 }
 
-/* Inputs padronizados e idênticos aos da coordenação */
 #form-login input {
   width: 100%;
   padding: 0.75em;
+  padding-right: 40px; /* Espaço para o ícone do olho */
   border: 1px solid #ccc;
   border-radius: 6px;
   box-sizing: border-box;
@@ -183,6 +184,26 @@
 #form-login input:focus {
   border-color: #1b313a;
   box-shadow: 0 0 0 2px rgba(27, 49, 58, 0.1);
+}
+
+/* Botão do Olho embutido dentro do input de senha */
+.btn-olho-senha {
+  position: absolute;
+  right: 12px;
+  top: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.btn-olho-senha:hover {
+  color: #1b313a;
 }
 
 #form-login .btn-primario {
@@ -216,7 +237,6 @@
   display: none !important; 
 }
 
-/* Responsividade */
 @media (max-width: 768px) {
   .login-wrapper {
     flex-direction: column;

@@ -4,11 +4,21 @@
  */
 window.TI = window.TI || {};
 
+TI.telas = TI.telas || {};
+
 TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
-  render(raiz, opcoes) {
+  render(raiz, opcoes = {}) {
+    if (!raiz) return;
+
     const { el } = TI.dom;
-    const L = TI.K.login;
+
+    // PROTEÇÃO AQUI: Garante que se TI.K.login não existir, o sistema não trava!
+    const L = (window.TI && window.TI.K && window.TI.K.login) ? window.TI.K.login : {
+      titulo: 'Acesso',
+      subtitulo: 'Informe suas credenciais profissionais para acessar o painel.',
+      ajuda: 'Precisa de ajuda? Contate a coordenação.'
+    };
 
     const erro = el('div', { class: 'ti-login-erro', role: 'alert' }, [opcoes.mensagem || '']);
     erro.hidden = !opcoes.mensagem;
@@ -46,14 +56,18 @@ TI.telas.login = {
 
         // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
         try {
-          await TI.sessao.entrar(valEmail, valSenha);
-          logouComoCoordenador = true;
+          if (TI.sessao && typeof TI.sessao.entrar === 'function') {
+            await TI.sessao.entrar(valEmail, valSenha);
+            logouComoCoordenador = true;
+          }
         } catch (authErr) {
           // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
         }
 
         if (logouComoCoordenador) {
-          await opcoes.aoEntrar();
+          if (typeof opcoes.aoEntrar === 'function') {
+            await opcoes.aoEntrar();
+          }
           return;
         }
 
@@ -76,7 +90,9 @@ TI.telas.login = {
 
         // Define o funcionário comum na sessão local ativa
         TI.sessao.funcionario = funcionario;
-        await opcoes.aoEntrar();
+        if (typeof opcoes.aoEntrar === 'function') {
+          await opcoes.aoEntrar();
+        }
 
       } catch (err) {
         mostrarErro(err.message || 'Erro ao efetuar login.');

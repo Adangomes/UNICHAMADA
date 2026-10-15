@@ -30,6 +30,15 @@ const ABAS_COORDENADOR = [
     chave: 'relatorios',
     rotulo: 'Relatórios',
     render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
+  },
+  {
+    // Módulo de Suporte (IT Tickets)
+    chave: 'suporte',
+    rotulo: 'Suporte',
+    render: async (container, coord) => {
+      elementoConteudoCoordenador.innerHTML = '';
+      await montarSuporte(elementoConteudoCoordenador, { tipo: 'coordenador', usuario: coord, tela: 'Painel do coordenador' });
+    }
   }
 ];
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.

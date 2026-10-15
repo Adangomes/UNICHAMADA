@@ -68,6 +68,15 @@ const ABAS_PROFESSOR = [
       pararAssinaturaAbaProfessor = () => { if (window.ChatDados) window.ChatDados.cancelar(); };
       await iniciarChatProfessor('chat-professor-root');
     }
+  },
+  {
+    // Suporte: abrir chamado para a equipe de TI (js/professor/suporte/)
+    chave: 'suporte',
+    rotulo: 'Suporte',
+    render: async (container, prof) => {
+      container.innerHTML = '';
+      await montarSuporte(container, { tipo: 'professor', usuario: prof, tela: 'Painel do professor' });
+    }
   }
 ];
 

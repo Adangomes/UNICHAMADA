@@ -37,12 +37,20 @@ const ABAS_COORDENADOR = [
     render: async () => {
       elementoConteudoCoordenador.innerHTML = '';
       
-      // Pega o objeto do usuário logado na sessão atual do coordenador
-      const usuarioLogado = window.sessaoAtual || window.coordenadorLogado; 
+      // Pega a sessão atual ou o objeto do coordenador logado
+      const usuarioSessao = window.sessaoAtual || window.coordenadorLogado || {};
       
+      // Garante que o objeto passado tenha o .id preenchido (usando email ou id, o que existir)
+      const usuarioFormatado = {
+        id: usuarioSessao.id || usuarioSessao.email || usuarioSessao.codigo || 'coordenador_geral',
+        nome: usuarioSessao.nome || 'Coordenador',
+        email: usuarioSessao.email || 'coordenador@sistema.local'
+      };
+
       await montarSuporte(elementoConteudoCoordenador, { 
         tipo: 'coordenador', 
-        usuario: usuarioLogado 
+        usuario: usuarioFormatado, 
+        tela: 'Painel do coordenador' 
       });
     }
   }

@@ -15,9 +15,9 @@ window.Suporte = window.Suporte || {};
 (function () {
   const S = window.Suporte;
   const padrao = {
-    supabaseUrl: 'COLE_AQUI_A_URL_DO_SUPABASE',
-    supabaseAnonKey: 'COLE_AQUI_A_CHAVE_ANON',
-    cliente: null
+    supabaseUrl: 'https://xultvypwxwyxhxfzwqdw.supabase.co',
+    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iJlcDI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY',
+    cliente: () => window.supabaseClient
   };
   const pronto = (v) => !!v && String(v).indexOf('COLE_AQUI') !== 0;
 

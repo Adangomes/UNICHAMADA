@@ -1,0 +1,25 @@
+/* css/suporte/novo_chamado.css — aba Suporte: a janela "Abrir chamado" (janela, campos e botões). */
+
+.su-modal-fundo {
+  position: fixed; inset: 0; z-index: 1000; background: rgba(20, 28, 56, .55);
+  display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; overflow-y: auto;
+}
+.su-modal { width: 100%; max-width: 540px; background: #ffffff; border-radius: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); color: #1b2547; font-size: 14.5px; }
+.su-modal * { box-sizing: border-box; }
+.su-modal-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 6px; }
+.su-modal-cab h2 { margin: 0; font-size: 19px; }
+.su-modal-x { border: 0; background: transparent; font-size: 18px; cursor: pointer; color: #5b6585; padding: 4px 8px; }
+.su-modal-corpo { padding: 10px 22px 6px; display: flex; flex-direction: column; gap: 14px; }
+.su-modal-rodape { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 12px 22px 20px; }
+
+.su-campo { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #5b6585; }
+.su-input, .su-select, .su-textarea {
+  width: 100%; border: 1px solid #d6d3ca; border-radius: 10px; background: #fbfaf8;
+  padding: 0 14px; height: 44px; font: inherit; font-weight: 400; color: #1b2547;
+}
+.su-select { background: #ffffff; padding: 0 10px; }
+.su-textarea { height: auto; min-height: 96px; padding: 12px 14px; line-height: 1.5; resize: vertical; }
+.su-input:focus, .su-select:focus, .su-textarea:focus { outline: 2px solid #2f55c4; outline-offset: 1px; }
+.su-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.su-grade[hidden] { display: none; }
+@media (max-width: 520px) { .su-grade { grid-template-columns: 1fr; } }

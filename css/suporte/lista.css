@@ -1,0 +1,13 @@
+/* css/suporte/lista.css — aba Suporte: a lista "Meus chamados". */
+
+.su-linha {
+  width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 14px 20px; border: 0; border-top: 1px solid #eeebe4; background: transparent;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+}
+.su-linha:hover { background: #faf9f6; }
+.su-linha-texto { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.su-linha-titulo { font-weight: 600; font-size: 15px; }
+.su-linha-sub { font-size: 13px; color: #5b6585; }
+.su-linha-quando { font-size: 12.5px; color: #5b6585; white-space: nowrap; }
+.su-linha-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }

@@ -18,7 +18,7 @@
    ========================================================================== */
 const CHAMY_CONFIG = {
   // URL de PRODUÇÃO do nó Webhook do n8n (para outros computadores precisa ser um endereço público https)
-webhookUrl: 'https://nat-specifies-genome-fails.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+webhookUrl: 'https://coordinates-prefix-republican-edges.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   // Chave simples conferida pelo nó IF do n8n (precisa ser IDÊNTICA à que está lá).
   // Fica no código público do site: só barra abuso casual.
   token: 'chamy-7Hk29xQpLw83mZ4vTb',

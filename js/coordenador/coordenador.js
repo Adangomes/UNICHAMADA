@@ -32,12 +32,18 @@ const ABAS_COORDENADOR = [
     render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
   },
   {
-    // Módulo de Suporte (IT Tickets)
     chave: 'suporte',
     rotulo: 'Suporte',
-    render: async (container, coord) => {
+    render: async () => {
       elementoConteudoCoordenador.innerHTML = '';
-      await montarSuporte(elementoConteudoCoordenador, { tipo: 'coordenador', usuario: coord, tela: 'Painel do coordenador' });
+      
+      // Pega o objeto do usuário logado na sessão atual do coordenador
+      const usuarioLogado = window.sessaoAtual || window.coordenadorLogado; 
+      
+      await montarSuporte(elementoConteudoCoordenador, { 
+        tipo: 'coordenador', 
+        usuario: usuarioLogado 
+      });
     }
   }
 ];

@@ -70,12 +70,18 @@ const ABAS_PROFESSOR = [
     }
   },
   {
-    // Suporte: abrir chamado para a equipe de TI (js/professor/suporte/)
     chave: 'suporte',
     rotulo: 'Suporte',
     render: async (container, prof) => {
       container.innerHTML = '';
-      await montarSuporte(container, { tipo: 'professor', usuario: prof, tela: 'Painel do professor' });
+      
+      // Garante que 'prof' ou a sessão global está sendo passada
+      const usuarioLogado = prof || window.sessaoAtual;
+
+      await montarSuporte(container, { 
+        tipo: 'professor', 
+        usuario: usuarioLogado 
+      });
     }
   }
 ];

@@ -75,12 +75,18 @@ const ABAS_PROFESSOR = [
     render: async (container, prof) => {
       container.innerHTML = '';
       
-      // Garante que 'prof' ou a sessão global está sendo passada
-      const usuarioLogado = prof || window.sessaoAtual;
+      const usuarioSessao = prof || window.sessaoAtual || {};
+      
+      const usuarioFormatado = {
+        id: usuarioSessao.id || usuarioSessao.email || usuarioSessao.ra || 'professor_padrao',
+        nome: usuarioSessao.nome || 'Professor',
+        email: usuarioSessao.email || 'professor@sistema.local'
+      };
 
       await montarSuporte(container, { 
         tipo: 'professor', 
-        usuario: usuarioLogado 
+        usuario: usuarioFormatado, 
+        tela: 'Painel do professor' 
       });
     }
   }

@@ -111,15 +111,10 @@ function renderizarTelaLogin(container, callbackSucesso) {
     }
   });
 
-  // Associa o clique do Acesso Colaboradores (Módulo de Suporte/TI) de forma segura
+  // Associa o clique do Acesso Colaboradores redirecionando para a página de TI
   if (btnColaboradores) {
     btnColaboradores.addEventListener('click', () => {
-      if (typeof window.abrirPainelSuporte === 'function') {
-        window.abrirPainelSuporte();
-      } else if (typeof callbackSucesso === 'function') {
-        // Envia os dados de colaborador/TI para o orquestrador (main.js)
-        callbackSucesso({ papel: 'ti', tipo: 'colaborador' });
-      }
+      window.location.href = 'https://adangomes.github.io/UNICHAMADA/ti/';
     });
   }
 }

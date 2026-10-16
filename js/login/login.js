@@ -5,8 +5,9 @@
 
 /**
  * Renderiza a estrutura HTML da tela de login e configura a submissão.
- * @param {HTMLElement} container - O elemento #tela-login
- * @param {Function} callbackSucesso - Função executada quando o login for válido
+ * 
+ * @param {HTMLElement} container O elemento #tela-login
+ * @param {Function} callbackSucesso Função executada quando o login for válido
  */
 function renderizarTelaLogin(container, callbackSucesso) {
   if (!container) return;
@@ -19,7 +20,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
       <div class="login-banner">
         <div class="arco-decorativo arco-topo"></div>
         <div class="login-brand">
-          <h1 class="logo-uni">UNI</h1>
+          <h1 class="logo-uni"><span class="u-destaque">U</span>NI</h1>
           <span class="logo-sub">CHAMADAS</span>
         </div>
         <div class="arco-decorativo arco-base"></div>
@@ -28,11 +29,11 @@ function renderizarTelaLogin(container, callbackSucesso) {
       <!-- LADO DIREITO: CARD DE LOGIN -->
       <div class="carteirinha-login">
         <div class="carteirinha-topo">
-          <span class="selo">Sistema Acadêmico</span>
+          <span class="selo"></span>
           <h1>Acesso</h1>
         </div>
         <div class="carteirinha-corpo">
-          <p class="instrucao">Informe suas credenciais para acessar o painel.</p>
+          <p class="instrucao"></p>
           
           <form id="form-login" onsubmit="return false;" novalidate>
             <div class="campo">
@@ -60,6 +61,15 @@ function renderizarTelaLogin(container, callbackSucesso) {
             
             <button type="submit" class="btn-primario">Entrar</button>
           </form>
+
+          <!-- DIVISOR "OU" & ACESSO COLABORADORES (SUPORTE / TI) -->
+          <div class="divisor-login">
+            <span>ou</span>
+          </div>
+
+          <button type="button" id="btn-colaboradores" class="btn-colaborador">
+            Acessar UniChamada Colaboradores
+          </button>
           
           <p id="aviso-login" class="aviso-login oculto"></p>
         </div>
@@ -68,13 +78,14 @@ function renderizarTelaLogin(container, callbackSucesso) {
     </div>
   `;
 
-  // Captura o formulário diretamente após a renderização
+  // Captura os elementos diretamente após a renderização
   const form = container.querySelector('#form-login');
   const aviso = container.querySelector('#aviso-login');
+  const btnColaboradores = container.querySelector('#btn-colaboradores');
 
   if (!form) return;
 
-  // Associa o evento de envio (Submit)
+  // Associa o evento de envio (Submit do Aluno/Professor)
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     
@@ -95,11 +106,22 @@ function renderizarTelaLogin(container, callbackSucesso) {
 
     if (aviso) aviso.classList.add('oculto');
 
-    // Executa a navegação via callback para o main.js
     if (typeof callbackSucesso === 'function') {
       callbackSucesso(resultado);
     }
   });
+
+  // Associa o clique do Acesso Colaboradores (Módulo de Suporte/TI) de forma segura
+  if (btnColaboradores) {
+    btnColaboradores.addEventListener('click', () => {
+      if (typeof window.abrirPainelSuporte === 'function') {
+        window.abrirPainelSuporte();
+      } else if (typeof callbackSucesso === 'function') {
+        // Envia os dados de colaborador/TI para o orquestrador (main.js)
+        callbackSucesso({ papel: 'ti', tipo: 'colaborador' });
+      }
+    });
+  }
 }
 
 /**

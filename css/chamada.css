@@ -383,14 +383,16 @@
   min-width: 190px;
   border-right: 1px solid var(--linha);
   display: flex;
-  align-items: center; /* Alinha a foto e o bloco de texto verticalmente no centro */
+  align-items: flex-start; /* MUDOU AQUI: Alinha tudo rigidamente no topo */
   gap: .6em;
+  padding-top: .8em;
+  padding-bottom: .8em;
 }
 
 .freq-td-aluno > div {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .freq-td-aluno strong { 
@@ -404,7 +406,6 @@
   color: var(--grafite-suave); 
   margin-top: 2px;
 }
-
 .celula-foto-mini {
   width: 30px;
   height: 30px;

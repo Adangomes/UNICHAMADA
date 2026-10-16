@@ -374,19 +374,6 @@
 .freq-tabela tr:last-child td { border-bottom: none; }
 
 .freq-th-aluno,
-.freq-td-aluno {
-  text-align: left;
-  position: sticky;
-  left: 0;
-  background: var(--papel-cartao);
-  z-index: 1;
-  min-width: 190px;
-  border-right: 1px solid var(--linha);
-  display: flex;
-  align-items: center;
-  gap: .6em;
-}
-
 /* Garante que o container de texto interno alinhe tudo estritamente à esquerda */
 .freq-td-aluno > div {
   display: flex;

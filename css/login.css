@@ -340,3 +340,34 @@ html, body {
   color: #0369a1;
   text-decoration: underline;
 }
+/* ==========================================================================
+   ESTILO DO BOTÃO DO OLHO PARA O CAMPO DE E-MAIL (ALINHAMENTO IDÊNTICO AO TI)
+   ========================================================================== */
+
+#form-login .campo {
+  position: relative; /* Garante que o botão se posicione em relação ao input */
+}
+
+#input-email {
+  padding-right: 45px; /* Espaço para o texto não ficar por baixo do ícone */
+}
+
+#btn-olho-email {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-25%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+#btn-olho-email:hover {
+  color: #0284c7; /* Azul ciano no hover */
+}

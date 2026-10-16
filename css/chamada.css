@@ -382,14 +382,28 @@
   z-index: 1;
   min-width: 190px;
   border-right: 1px solid var(--linha);
-}
-.freq-td-aluno {
   display: flex;
-  align-items: center;
+  align-items: center; /* Alinha a foto e o bloco de texto verticalmente no centro */
   gap: .6em;
 }
-.freq-td-aluno strong { display: block; font-size: .86rem; }
-.freq-ra { font-size: .72rem; color: var(--grafite-suave); }
+
+.freq-td-aluno > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.freq-td-aluno strong { 
+  display: block; 
+  font-size: .86rem; 
+  line-height: 1.25; 
+}
+
+.freq-ra { 
+  font-size: .72rem; 
+  color: var(--grafite-suave); 
+  margin-top: 2px;
+}
 
 .celula-foto-mini {
   width: 30px;

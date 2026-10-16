@@ -1,38 +1,374 @@
-/* login/login.css — TUDO do login do TI começa aqui: variáveis de cor, página e cartão.
-   O painel animado está em painel_animado.css e o formulário em formulario.css (mesma pasta). */
+/* ==========================================================================
+   LOGIN.CSS — Design Fluido estilo Portal Ulife (Paleta Oceano & Ciano Executivo)
+   ========================================================================== */
 
-:root {
-  --ti-lg-acento: #2f55c4;          /* botão "Entrar", links e marca */
-  --ti-lg-acento-escuro: #1f3f9e;   /* botão ao passar o mouse */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
 }
 
-/* ---- página: fundo quadriculado claro ---- */
-.ti-lg-pagina {
+#tela-login {
   min-height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
-  background-color: #eceae6;
-  background-image:
-    linear-gradient(#dedbd5 1px, transparent 1px),
-    linear-gradient(90deg, #dedbd5 1px, transparent 1px);
-  background-size: 38px 38px;
+  /* Fundo Off-White idêntico às telas do sistema */
+  background: var(--papel, #fdfbf7);
+  padding: 0;
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
-/* ---- cartão grande e arredondado ---- */
-.ti-lg-cartao {
-  width: 100%;
-  max-width: 1180px;
-  min-height: 660px;
+/* Container Split-Screen em Tela Cheia */
+.login-wrapper {
   display: flex;
-  background: #ffffff;
-  border-radius: 40px;
-  padding: 16px;
-  box-shadow: 0 30px 80px rgba(15, 23, 60, .18);
+  width: 100%;
+  min-height: 100vh;
+  background: var(--papel, #fdfbf7);
+  overflow: hidden;
+  position: relative;
+  border: none;
+  box-shadow: none;
 }
 
+/* ================= LADO ESQUERDO: BANNER COM CURVA HARMONIOSA ================= */
+.login-banner {
+  flex: 1.25;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  overflow: hidden;
+  /* Gradiente Sofisticado: Azul Marinho -> Azul Oceano -> Ciano Acadêmico */
+  background: linear-gradient(125deg, #0f172a 0%, #1e3a8a 35%, #0284c7 75%, #38bdf8 100%);
+  /* Corte oval curvo cortando para a direita no estilo Ulife */
+  clip-path: ellipse(85% 100% at 15% 50%);
+  z-index: 2;
+}
+
+/* Animação de rotação contínua para o arco */
+@keyframes girarArco {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Arco Curvo Decorativo Ciano Vibrante */
+.arco-decorativo {
+  position: absolute;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.arco-topo {
+  display: block;
+  width: 110vh;
+  height: 110vh;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  border-top-color: #38bdf8;
+  border-left-color: #0284c7;
+  border-bottom-color: rgba(56, 189, 248, 0.2);
+  top: 50%;
+  left: 8%;
+  transform: translate(-50%, -50%);
+  opacity: 0.9;
+  z-index: 3;
+  animation: girarArco 40s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+}
+
+.arco-base {
+  display: none;
+}
+
+/* Marca UNI CHAMADAS */
+.login-brand {
+  text-align: center;
+  z-index: 5;
+  user-select: none;
+}
+
+.logo-uni {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 8.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Destaque Ciano Celeste no 'U' (Acolhedor e Tecnológico) */
+.logo-uni .u-destaque {
+  color: #38bdf8;
+  display: inline-block;
+  text-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+  position: relative;
+}
+
+/* Detalhe geométrico elegante acima do U */
+.logo-uni .u-destaque::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 8px;
+  background: #38bdf8;
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+}
+
+.logo-sub {
+  display: block;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.4em;
+  margin-top: 14px;
+  margin-left: 10px;
+  text-transform: uppercase;
+  opacity: 0.95;
+}
+
+/* Sombra suave de transição entre a curva e o formulário */
+.login-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 90% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ================= LADO DIREITO: FORMULÁRIO COM TOM DO SISTEMA ================= */
+.carteirinha-login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 80px 60px 50px;
+  background: var(--papel, #fdfbf7);
+  z-index: 1;
+}
+
+.carteirinha-topo {
+  background: transparent;
+  padding: 0 0 1.5em 0;
+  width: 100%;
+  max-width: 380px;
+}
+
+.carteirinha-topo .selo {
+  font-family: var(--fonte-mono, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.carteirinha-topo h1 {
+  color: #0f172a;
+  font-size: 2.1rem;
+  margin: 0.2em 0 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.carteirinha-topo::after {
+  display: none;
+}
+
+.carteirinha-corpo {
+  padding: 0;
+  width: 100%;
+  max-width: 380px;
+}
+
+.carteirinha-corpo .instrucao {
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 1.8em;
+}
+
+#form-login .campo {
+  margin-bottom: 1.2em;
+}
+
+#form-login label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5em;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+#form-login input {
+  width: 100%;
+  padding: 0.9em 1.1em;
+  border: 1.5px solid var(--linha, #e2e8f0);
+  border-radius: 10px;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: var(--papel-cartao, #ffffff);
+  transition: all 0.2s ease;
+}
+
+#form-login input:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+  background: #ffffff;
+}
+
+#form-login .btn-primario {
+  width: 100%;
+  margin-top: 1em;
+  font-size: 1rem;
+  background: #0f172a; /* Botão no mesmo azul marinho sofisticado da marca */
+  color: #ffffff;
+  padding: 0.95em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+}
+
+#form-login .btn-primario:hover {
+  background: #1e293b;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
+}
+
+#form-login .btn-primario:active {
+  transform: scale(0.98);
+}
+
+.aviso-login {
+  margin-top: 1.2em;
+  padding: 0.85em 1em;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  border-left: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+}
+
+.aviso-login.oculto { 
+  display: none !important; 
+}
+
+/* Responsividade Mobile */
 @media (max-width: 900px) {
-  .ti-lg-pagina { padding: 14px; }
-  .ti-lg-cartao { min-height: 0; border-radius: 28px; padding: 6px; }
+  .login-wrapper {
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .login-banner {
+    flex: none;
+    padding: 60px 20px;
+    clip-path: ellipse(120% 80% at 50% 0%);
+  }
+  .logo-uni {
+    font-size: 4.5rem;
+  }
+  .carteirinha-login {
+    padding: 40px 24px;
+    align-items: center;
+  }
+  .arco-topo {
+    display: none;
+  }
+}
+
+.divisor-login {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.8em 0 1.2em;
+  width: 100%;
+}
+
+.divisor-login::before,
+.divisor-login::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.divisor-login span {
+  padding: 0 12px;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.btn-colaborador {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #0284c7;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.6em 0;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-colaborador:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   ESTILO APENAS PARA O BOTÃO DO OLHO (VISIBILIDADE DA SENHA)
+   ========================================================================== */
+
+#form-login .campo {
+  position: relative; /* Garante que o botão se posicione em relação ao input */
+}
+
+#input-senha {
+  padding-right: 45px; /* Espaço para o texto não ficar por baixo do ícone */
+}
+
+#btn-olho-senha {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-25%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+#btn-olho-senha:hover {
+  color: #0284c7; /* Azul ciano no hover */
 }

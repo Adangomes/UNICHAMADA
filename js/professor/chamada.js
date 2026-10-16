@@ -227,9 +227,20 @@ async function abrirModalChamada(turma, professor) {
 
   btnEncerrar.addEventListener('click', async () => {
     if (!confirmarAcao('Encerrar esta chamada? Alunos não vão mais conseguir confirmar presença por ela.')) return;
+    
+    // 1. Marca como inativa no banco de dados
     await dbAtualizar('chamadas', chamada.id, { ativa: false });
-    mostrarToast('Chamada encerrada.', 'sucesso');
+    mostrarToast('Chamada encerrada com sucesso.', 'sucesso');
+    
+    // 2. Fecha o modal
     fecharModal();
+
+    // 3. Notifica o painel do professor para atualizar a lista e sumir com o card "em andamento"
+    if (typeof window.renderizarPainelProfessor === 'function') {
+      await window.renderizarPainelProfessor();
+    } else {
+      window.location.reload();
+    }
   });
 }
 

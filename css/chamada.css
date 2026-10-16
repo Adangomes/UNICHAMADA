@@ -383,27 +383,29 @@
   min-width: 190px;
   border-right: 1px solid var(--linha);
   display: flex;
-  align-items: flex-start; /* MUDOU AQUI: Alinha tudo rigidamente no topo */
+  align-items: center;
   gap: .6em;
-  padding-top: .8em;
-  padding-bottom: .8em;
 }
 
+/* Garante que o container de texto interno alinhe tudo estritamente à esquerda */
 .freq-td-aluno > div {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  align-items: flex-start; /* ESSA É A CHAVE: força alinhar à esquerda */
+  text-align: left;
+  justify-content: center;
 }
 
 .freq-td-aluno strong { 
   display: block; 
   font-size: .86rem; 
-  line-height: 1.25; 
+  text-align: left;
 }
 
 .freq-ra { 
   font-size: .72rem; 
   color: var(--grafite-suave); 
+  text-align: left !important; /* Força o RA colar na esquerda */
   margin-top: 2px;
 }
 .celula-foto-mini {

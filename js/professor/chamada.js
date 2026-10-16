@@ -25,14 +25,14 @@ const ROTULOS_STATUS_PRESENCA = {
 
 async function obterOuCriarChamadaAtiva(turmaId, professorId) {
   const chamadas = await dbListar('chamadas');
-  const existente = chamadas.find((c) => {
+  
+  // Procura se já existe UMA chamada ativa para esta turma para evitar duplicações
+  let existente = chamadas.find((c) => {
     const tId = c.turma_id || c.turmaId;
-    return tId === turmaId && c.ativa;
+    return tId === turmaId && c.ativa === true;
   });
   
   if (existente) {
-    // Se a chamada antiga já existe mas está sem latitude/longitude, 
-    // tenta atualizar caso o navegador permita agora.
     if (!existente.latitude || !existente.longitude) {
       try {
         const pos = await obterPosicaoAtualAsync();
@@ -49,7 +49,6 @@ async function obterOuCriarChamadaAtiva(turmaId, professorId) {
     return existente;
   }
 
-  // Tenta capturar a localização atual do professor via GPS antes de salvar
   let latitude = null;
   let longitude = null;
   try {
@@ -73,7 +72,6 @@ async function obterOuCriarChamadaAtiva(turmaId, professorId) {
   });
 }
 
-// Função auxiliar baseada em Promise para capturar o GPS facilmente com async/await
 function obterPosicaoAtualAsync() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -174,22 +172,34 @@ async function abrirModalChamada(turma, professor) {
   }
 
   async function renderizarLista() {
-    areaLista.innerHTML = '';
     const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
     const presencas = await dbListar('presencas');
+
+    // Limpa por completo a área para evitar empilhamento duplicado
+    areaLista.innerHTML = '';
 
     if (alunosDaTurma.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado nesta turma ainda.']));
       return;
     }
 
+    // Mapa de segurança visual para garantir que cada aluno seja injetado apenas uma vez
+    const alunosRenderizados = new Map();
+
     for (const aluno of alunosDaTurma) {
-      const presenca = presencas.find((p) => {
-        const cId = p.chamada_id || p.chamadaId;
-        const aId = p.aluno_id || p.alunoId;
-        return cId === chamada.id && aId === aluno.id;
-      });
-      areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
+      if (aluno && aluno.id && !alunosRenderizados.has(aluno.id)) {
+        alunosRenderizados.set(aluno.id, aluno);
+
+        const presenca = presencas.find((p) => {
+          const cId = p.chamada_id || p.chamadaId;
+          const aId = p.aluno_id || p.alunoId;
+          return cId === chamada.id && aId === aluno.id;
+        });
+
+        areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => {
+          await renderizarLista();
+        }));
+      }
     }
   }
 
@@ -233,10 +243,25 @@ function abrirJanelaTelao(chamadaId) {
 async function alunosMatriculadosNaTurma(turmaId) {
   const matriculas = await dbListar('matriculas');
   const alunos = await dbListar('alunos');
-  const idsAlunos = matriculas
-    .filter((m) => (m.turma_id || m.turmaId) === turmaId)
-    .map((m) => m.aluno_id || m.alunoId);
-  return alunos.filter((a) => idsAlunos.includes(a.id));
+  
+  // Remove IDs duplicados com Set
+  const idsAlunos = [...new Set(
+    matriculas
+      .filter((m) => (m.turma_id || m.turmaId) === turmaId)
+      .map((m) => m.aluno_id || m.alunoId)
+  )];
+
+  const alunosDaTurma = alunos.filter((a) => idsAlunos.includes(a.id));
+
+  // Blindagem rigorosa de unicidade por ID
+  const mapaUnicos = new Map();
+  alunosDaTurma.forEach((aluno) => {
+    if (aluno && aluno.id && !mapaUnicos.has(aluno.id)) {
+      mapaUnicos.set(aluno.id, aluno);
+    }
+  });
+
+  return Array.from(mapaUnicos.values());
 }
 
 function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {

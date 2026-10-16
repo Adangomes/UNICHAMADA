@@ -9,7 +9,7 @@ async function renderSecaoAlunos(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Alunos']),
-      criarElemento('p', {}, ['Cadastre alunos com RA, e-mail e foto do rosto (câmera ou galeria).'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

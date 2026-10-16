@@ -9,7 +9,7 @@ async function renderSecaoTurmas(container) {
   const cabecalho = criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Turmas']),
-      criarElemento('p', {}, ['Crie turmas vinculando curso, disciplina, professor e turno.'])
+      criarElemento('p', {}, [''])
     ])
   ]);
 

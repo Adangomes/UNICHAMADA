@@ -34,11 +34,19 @@
     const { aluno, totais, grupos } = d, A = window.MAPA_BANCO.alunos;
     const f = pct(totais.presencas, totais.total);
     const corpo = grupos.length
-      ? grupos.map((g) => `<section class="al-curso"><h2>${esc(g.curso)}</h2>${g.disciplinas.map(disciplina).join("")}</section>`).join("")
+      ? grupos.map((g) => `<section class="al-curso"><h2>${esc(g.curso)}</h2>${g.disciplinas.map(disciplina).join("")}`).join("")
       : `<p class="al-estado">Você ainda não está matriculado em nenhuma disciplina.</p>`;
     raiz().innerHTML = `
-      <header class="al-topo"><div><strong>UniChamada</strong><span>Área do aluno</span></div>
-        <div class="al-acoes"><button class="al-btn sec" data-acao="atualizar">Atualizar</button><button class="al-btn sec" data-acao="sair">Sair</button></div></header>
+      <header class="al-topo">
+        <div class="al-identidade-marca">
+          <strong>UniChamada</strong>
+          <span>Área do aluno</span>
+        </div>
+        <div class="al-acoes">
+          <button class="al-btn sec" data-acao="atualizar">Atualizar</button>
+          <button class="al-btn sec" data-acao="sair">Sair</button>
+        </div>
+      </header>
       <main class="al-main">
         <section class="al-ola"><h1>Olá, ${esc(aluno[A.nome])}</h1><p>RA ${esc(aluno[A.ra])} · ${esc(aluno[A.email])}</p></section>
         <section class="al-resumo">
@@ -55,7 +63,7 @@
     const login = document.getElementById("tela-login");
     if (login) login.classList.add("oculto");
     el.classList.remove("oculto");
-    el.innerHTML = `<p class="al-estado">Carregando…</p>`;
+    el.innerHTML = `<header class="al-topo"><div class="al-identidade-marca"><strong>UniChamada</strong><span>Área do aluno</span></div></header><p class="al-estado">Carregando dados acadêmicos...</p>`;
     try { desenhar(await window.DadosAluno.carregar(aluno)); }
     catch (e) {
       console.error(e);
@@ -69,7 +77,6 @@
     if (acao === "atualizar" && atual) abrir(atual);
   }
 
-  // Chame no login: devolve true se RA + e-mail forem de um aluno
   async function entrar(ra, email) {
     const aluno = await window.DadosAluno.autenticar(ra, email);
     if (!aluno) return false;
@@ -77,11 +84,21 @@
     abrir(aluno);
     return true;
   }
-  // Chame no main.js: reabre a tela se o aluno já estava logado
+
   function restaurar() {
-    try { const s = sessionStorage.getItem(CHAVE); if (!s) return false; abrir(JSON.parse(s)); return true; }
+    try { 
+      const s = sessionStorage.getItem(CHAVE); 
+      if (!s) return false; 
+      abrir(JSON.parse(s)); 
+      return true; 
+    }
     catch { return false; }
   }
 
   window.PainelAluno = { entrar, restaurar, abrir };
+
+  // Tenta restaurar a sessão automaticamente ao carregar a página
+  window.addEventListener('DOMContentLoaded', () => {
+    restaurar();
+  });
 })();

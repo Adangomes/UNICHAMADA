@@ -36,6 +36,7 @@
     const corpo = grupos.length
       ? grupos.map((g) => `<section class="al-curso"><h2>${esc(g.curso)}</h2>${g.disciplinas.map(disciplina).join("")}`).join("")
       : `<p class="al-estado">Você ainda não está matriculado em nenhuma disciplina.</p>`;
+    
     raiz().innerHTML = `
       <header class="al-topo">
         <div class="al-identidade-marca">
@@ -48,7 +49,9 @@
         </div>
       </header>
       <main class="al-main">
-        <section class="al-ola"><h1>Olá, ${esc(aluno[A.nome])}</h1><p>RA ${esc(aluno[A.ra])} · ${esc(aluno[A.email])}</p></section>
+        <section class="al-ola">
+          <h1>Olá, ${esc(aluno[A.nome])}</h1>
+        </section>
         <section class="al-resumo">
           <div><b>${totais.presencas}</b><span>Presenças</span></div>
           <div><b>${totais.faltas}</b><span>Faltas</span></div>

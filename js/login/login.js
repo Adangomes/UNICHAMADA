@@ -3,15 +3,9 @@
  * Componente da Tela de Login (Split Screen "UNI CHAMADAS")
  */
 
-/**
- * Renderiza a estrutura HTML da tela de login e configura a submissão.
- * @param {HTMLElement} container O elemento #tela-login
- * @param {Function} callbackSucesso Função executada quando o login for válido
- */
 function renderizarTelaLogin(container, callbackSucesso) {
   if (!container) return;
 
-  // Monta o HTML com o campo de e-mail adaptado para receber o botão de olho funcional
   container.innerHTML = `
     <div class="login-wrapper">
       
@@ -65,7 +59,9 @@ function renderizarTelaLogin(container, callbackSucesso) {
               </button>
             </div>
             
-            <button type="submit" class="btn-primario">Entrar</button>
+            <button type="submit" id="btn-submit" class="btn-primario" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span>Entrar</span>
+            </button>
           </form>
 
           <!-- DIVISOR "OU" & ACESSO COLABORADORES (SUPORTE / TI) -->
@@ -84,17 +80,16 @@ function renderizarTelaLogin(container, callbackSucesso) {
     </div>
   `;
 
-  // Captura os elementos diretamente após a renderização
   const form = container.querySelector('#form-login');
   const emailInput = container.querySelector('#input-email');
   const olhoBtn = container.querySelector('#btn-olho-email');
   const iconeOlho = container.querySelector('#icone-olho-email');
   const aviso = container.querySelector('#aviso-login');
   const btnColaboradores = container.querySelector('#btn-colaboradores');
+  const btnSubmit = container.querySelector('#btn-submit');
 
   if (!form) return;
 
-  // Comportamento interativo do ícone de olho no campo de e-mail
   if (olhoBtn && emailInput && iconeOlho) {
     olhoBtn.addEventListener('click', () => {
       const mostrar = emailInput.type === 'password';
@@ -112,7 +107,6 @@ function renderizarTelaLogin(container, callbackSucesso) {
     });
   }
 
-  // Submissão do login unificado (Professor / Coordenador / Aluno)
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     
@@ -124,30 +118,55 @@ function renderizarTelaLogin(container, callbackSucesso) {
       return;
     }
 
-    // 1. Tenta autenticar como Professor/Coordenador
-    let resultado = await autenticar(ra, email);
-
-    // 2. Se não for colaborador, tenta autenticar na nova estrutura em js/aluno-unichamada/
-    if (!resultado && typeof PainelAluno !== 'undefined') {
-      const alunoLogado = await PainelAluno.entrar(ra, email);
-      if (alunoLogado) {
-        resultado = { tipo: 'aluno', dados: alunoLogado };
-      }
-    }
-
-    if (!resultado) {
-      exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Nada foi aberto — confira os dados com a coordenação.');
-      return;
-    }
-
+    // Esconde avisos anteriores e ativa o estado de loading no botão (Spinner)
     if (aviso) aviso.classList.add('oculto');
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+      </svg>
+      <span>Verificando...</span>
+    `;
 
-    if (typeof callbackSucesso === 'function') {
-      callbackSucesso(resultado);
+    // Injeta estilo CSS rápido para a animação do spinner rodar liso
+    if (!document.getElementById('spinner-style')) {
+      const style = document.createElement('style');
+      style.id = 'spinner-style';
+      style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+      document.head.appendChild(style);
+    }
+
+    try {
+      // 1. Tenta autenticar como Professor/Coordenador
+      let resultado = await autenticar(ra, email);
+
+      // 2. Se não for colaborador, tenta autenticar como Aluno
+      if (!resultado && typeof PainelAluno !== 'undefined') {
+        const alunoLogado = await PainelAluno.entrar(ra, email);
+        if (alunoLogado) {
+          resultado = { tipo: 'aluno', dados: alunoLogado };
+        }
+      }
+
+      if (!resultado) {
+        // Restaura o botão e exibe o aviso apenas se falhar de verdade
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<span>Entrar</span>`;
+        exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Confira os dados informados.');
+        return;
+      }
+
+      if (typeof callbackSucesso === 'function') {
+        callbackSucesso(resultado);
+      }
+    } catch (e) {
+      console.error(e);
+      btnSubmit.disabled = false;
+      btnSubmit.innerHTML = `<span>Entrar</span>`;
+      exibirAvisoLogin(aviso, 'Ocorreu um erro ao conectar com o servidor.');
     }
   });
 
-  // Clique do Acesso Colaboradores
   if (btnColaboradores) {
     btnColaboradores.addEventListener('click', () => {
       window.location.href = 'https://adangomes.github.io/UNICHAMADA/ti/';
@@ -155,9 +174,6 @@ function renderizarTelaLogin(container, callbackSucesso) {
   }
 }
 
-/**
- * Exibe mensagens de alerta na interface de login
- */
 function exibirAvisoLogin(aviso, mensagem) {
   if (!aviso) return;
   aviso.textContent = mensagem;

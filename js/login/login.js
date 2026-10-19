@@ -97,25 +97,22 @@ function renderizarTelaLogin(container, callbackSucesso) {
   // Comportamento interativo do ícone de olho no campo de e-mail
   if (olhoBtn && emailInput && iconeOlho) {
     olhoBtn.addEventListener('click', () => {
-      // Como o input começa como type="password" para ocultar, alternamos para "text" para mostrar
       const mostrar = emailInput.type === 'password';
       emailInput.type = mostrar ? 'text' : 'password';
       olhoBtn.setAttribute('aria-pressed', String(mostrar));
       olhoBtn.setAttribute('aria-label', mostrar ? 'Ocultar e-mail' : 'Mostrar e-mail');
 
       if (mostrar) {
-        // Olho aberto (mostrando o texto)
         iconeOlho.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
         olhoBtn.style.color = '#0284c7';
       } else {
-        // Olho fechado/cortado (ocultando o texto)
         iconeOlho.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
         olhoBtn.style.color = '#64748b';
       }
     });
   }
 
-  // Associa o evento de envio (Submit unificado: Professor, Coordenador ou Aluno)
+  // Submissão do login unificado (Professor / Coordenador / Aluno)
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     
@@ -127,10 +124,10 @@ function renderizarTelaLogin(container, callbackSucesso) {
       return;
     }
 
-    // 1. Tenta autenticar como Professor ou Coordenador
+    // 1. Tenta autenticar como Professor/Coordenador
     let resultado = await autenticar(ra, email);
 
-    // 2. Se não for colaborador, tenta autenticar diretamente na tabela de alunos do Supabase
+    // 2. Se não for colaborador, tenta autenticar na nova estrutura em js/aluno-unichamada/
     if (!resultado && typeof PainelAluno !== 'undefined') {
       const alunoLogado = await PainelAluno.entrar(ra, email);
       if (alunoLogado) {
@@ -150,7 +147,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
     }
   });
 
-  // Associa o clique do Acesso Colaboradores redirecionando para a página de TI
+  // Clique do Acesso Colaboradores
   if (btnColaboradores) {
     btnColaboradores.addEventListener('click', () => {
       window.location.href = 'https://adangomes.github.io/UNICHAMADA/ti/';

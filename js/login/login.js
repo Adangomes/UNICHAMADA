@@ -116,15 +116,15 @@ function renderizarTelaLogin(container, callbackSucesso) {
     if (!campoObrigatorioPreenchido(ra) || !campoObrigatorioPreenchido(email)) {
       if (aviso) {
         aviso.textContent = 'Informe RA e e-mail.';
-        aviso.classList.remove('oculto');
+        aviso.className = 'aviso-login'; // Remove 'oculto' e força aparecer
       }
       return;
     }
 
-    // Zera e esconde o aviso imediatamente ao submeter
+    // FORÇA O AVISO A SUMIR TOTALMENTE (limpa o texto e esconde a classe)
     if (aviso) {
       aviso.textContent = '';
-      aviso.classList.add('oculto');
+      aviso.className = 'aviso-login oculto';
     }
 
     // Transforma o botão em estado de carregamento com spinner
@@ -148,32 +148,32 @@ function renderizarTelaLogin(container, callbackSucesso) {
 
       // 1. Tenta autenticar como Professor ou Coordenador
       if (typeof autenticar === 'function') {
-        resultado = await autenticar(ra, email);
+        resultado = await autenticar(ra, email).catch(() => null);
       }
 
-      // 2. Se não for colaborador, tenta autenticar como Aluno
+      // 2. Se não for colaborador, tenta autenticar como Aluno no Supabase
       if (!resultado && typeof PainelAluno !== 'undefined') {
-        const alunoLogado = await PainelAluno.entrar(ra, email);
+        const alunoLogado = await PainelAluno.entrar(ra, email).catch(() => null);
         if (alunoLogado) {
           resultado = { tipo: 'aluno', dados: alunoLogado };
         }
       }
 
-      // 3. Se falhou em tudo, restaura o botão e mostra o erro
+      // 3. Se falhou em absoluto, aí sim exibe o erro
       if (!resultado) {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>Entrar</span>`;
         if (aviso) {
           aviso.textContent = 'RA ou e-mail não encontrados. Confira os dados informados.';
-          aviso.classList.remove('oculto');
+          aviso.className = 'aviso-login'; // Mostra o aviso de erro real
         }
         return;
       }
 
-      // Se deu bom, garante que o aviso continua oculto e chama o sucesso
+      // Se deu certo, garante que o aviso continua oculto antes de chamar o sucesso
       if (aviso) {
         aviso.textContent = '';
-        aviso.classList.add('oculto');
+        aviso.className = 'aviso-login oculto';
       }
 
       if (typeof callbackSucesso === 'function') {
@@ -185,11 +185,10 @@ function renderizarTelaLogin(container, callbackSucesso) {
       btnSubmit.innerHTML = `<span>Entrar</span>`;
       if (aviso) {
         aviso.textContent = 'Ocorreu um erro ao conectar com o servidor.';
-        aviso.classList.remove('oculto');
+        aviso.className = 'aviso-login';
       }
     }
   });
-
   if (btnColaboradores) {
     btnColaboradores.addEventListener('click', () => {
       window.location.href = 'https://adangomes.github.io/UNICHAMADA/ti/';

@@ -4,16 +4,20 @@
 
 #tela-aluno {
   --az: #2563eb;
-  --tx: #0f172a;
-  --mu: #64748b;
-  --bd: #e2e8f0;
-  --ok: #16a34a;
-  --rk: #dc2626;
-  --tinta: #1f2d50; /* Cor padrão do header dos outros painéis */
+  --tx: #2B2B27; /* Sincronizado com a cor de texto padrão (--grafite) */
+  --mu: #6B6B63; /* Sincronizado com a cor de texto secundário (--grafite-suave) */
+  --bd: #DAD5C6; /* Sincronizado com a cor de linha padrão (--linha) */
+  --ok: #3E7C5A; /* Sincronizado com o verde aprovado do sistema */
+  --rk: #D65B4A; /* Sincronizado com a cor coral/perigo do sistema */
+  --tinta: #1F2D50; /* Azul-tinta profundo padrão do painel */
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--papel, #F6F4EE); /* Fundo idêntico ao do coordenador/professor */
+  background-image: 
+    radial-gradient(circle at 12% -10%, rgba(31, 45, 80, 0.06), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(214, 91, 74, 0.05), transparent 35%);
+  background-attachment: fixed;
   color: var(--tx);
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--fonte-corpo, 'IBM Plex Sans', sans-serif);
 }
 
 #tela-aluno.oculto {
@@ -37,7 +41,7 @@
   height: 60px !important;
   background: var(--tinta);
   color: #fff;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(31, 45, 80, 0.08);
   box-sizing: border-box;
 }
 
@@ -57,7 +61,7 @@
 .al-topo span {
   font-size: .74rem;
   color: rgba(255, 255, 255, 0.75);
-  font-family: monospace;
+  font-family: var(--fonte-mono, monospace);
 }
 
 .al-acoes {
@@ -100,14 +104,8 @@
 .al-ola h1 {
   margin: 0;
   font-size: 1.5rem;
+  font-family: var(--fonte-display, 'Space Grotesk', sans-serif);
   color: var(--tinta);
-}
-
-.al-ola p {
-  margin: 4px 0 18px;
-  color: var(--mu);
-  font-size: .85rem;
-  word-break: break-all;
 }
 
 .al-resumo {
@@ -118,17 +116,18 @@
 }
 
 .al-resumo div {
-  background: #fff;
+  background: var(--papel-cartao, #FFFFFF);
   border: 1px solid var(--bd);
   border-radius: 10px;
   padding: 14px;
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 10px rgba(31, 45, 80, 0.08);
 }
 
 .al-resumo b {
   display: block;
   font-size: 1.8rem;
+  font-family: var(--fonte-display, 'Space Grotesk', sans-serif);
   color: var(--tinta);
 }
 
@@ -143,6 +142,7 @@
 .al-curso h2 {
   margin: 0 0 10px;
   font-size: .85rem;
+  font-family: var(--fonte-display, 'Space Grotesk', sans-serif);
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--mu);
@@ -153,11 +153,11 @@
 }
 
 .al-disc {
-  background: #fff;
+  background: var(--papel-cartao, #FFFFFF);
   border: 1px solid var(--bd);
   border-radius: 10px;
   margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 10px rgba(31, 45, 80, 0.08);
 }
 
 .al-disc summary {
@@ -236,7 +236,7 @@
   align-items: center;
   padding: 9px 0;
   font-size: .85rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--bd);
 }
 
 .al-aulas li:last-child {
@@ -251,13 +251,13 @@
 }
 
 .al-tag.p {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(62, 124, 90, 0.12);
+  color: var(--ok);
 }
 
 .al-tag.f {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(214, 91, 74, 0.12);
+  color: var(--rk);
 }
 
 .al-vazio {

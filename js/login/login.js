@@ -118,8 +118,12 @@ function renderizarTelaLogin(container, callbackSucesso) {
       return;
     }
 
-    // Esconde avisos anteriores e ativa o estado de loading no botão (Spinner)
-    if (aviso) aviso.classList.add('oculto');
+    // Limpa qualquer aviso anterior e ativa o spinner no botão
+    if (aviso) {
+      aviso.classList.add('oculto');
+      aviso.textContent = '';
+    }
+
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
@@ -128,7 +132,6 @@ function renderizarTelaLogin(container, callbackSucesso) {
       <span>Verificando...</span>
     `;
 
-    // Injeta estilo CSS rápido para a animação do spinner rodar liso
     if (!document.getElementById('spinner-style')) {
       const style = document.createElement('style');
       style.id = 'spinner-style';
@@ -137,8 +140,12 @@ function renderizarTelaLogin(container, callbackSucesso) {
     }
 
     try {
-      // 1. Tenta autenticar como Professor/Coordenador
-      let resultado = await autenticar(ra, email);
+      let resultado = null;
+
+      // 1. Tenta autenticar como Professor ou Coordenador
+      if (typeof autenticar === 'function') {
+        resultado = await autenticar(ra, email);
+      }
 
       // 2. Se não for colaborador, tenta autenticar como Aluno
       if (!resultado && typeof PainelAluno !== 'undefined') {
@@ -148,13 +155,16 @@ function renderizarTelaLogin(container, callbackSucesso) {
         }
       }
 
+      // 3. Se nenhum dos dois funcionou, exibe o aviso de erro
       if (!resultado) {
-        // Restaura o botão e exibe o aviso apenas se falhar de verdade
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>Entrar</span>`;
         exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Confira os dados informados.');
         return;
       }
+
+      // Se deu certo, esconde o aviso por garantia e chama o sucesso
+      if (aviso) aviso.classList.add('oculto');
 
       if (typeof callbackSucesso === 'function') {
         callbackSucesso(resultado);

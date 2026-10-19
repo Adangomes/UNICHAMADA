@@ -115,7 +115,7 @@ function renderizarTelaLogin(container, callbackSucesso) {
     });
   }
 
-  // Associa o evento de envio (Submit do Aluno/Professor)
+  // Associa o evento de envio (Submit unificado: Professor, Coordenador ou Aluno)
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     
@@ -127,7 +127,16 @@ function renderizarTelaLogin(container, callbackSucesso) {
       return;
     }
 
-    const resultado = await autenticar(ra, email);
+    // 1. Tenta autenticar como Professor ou Coordenador
+    let resultado = await autenticar(ra, email);
+
+    // 2. Se não for colaborador, tenta autenticar diretamente na tabela de alunos do Supabase
+    if (!resultado && typeof PainelAluno !== 'undefined') {
+      const alunoLogado = await PainelAluno.entrar(ra, email);
+      if (alunoLogado) {
+        resultado = { tipo: 'aluno', dados: alunoLogado };
+      }
+    }
 
     if (!resultado) {
       exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Nada foi aberto — confira os dados com a coordenação.');

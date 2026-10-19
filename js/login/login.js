@@ -114,16 +114,20 @@ function renderizarTelaLogin(container, callbackSucesso) {
     const email = form.email ? form.email.value.trim() : '';
 
     if (!campoObrigatorioPreenchido(ra) || !campoObrigatorioPreenchido(email)) {
-      exibirAvisoLogin(aviso, 'Informe RA e e-mail.');
+      if (aviso) {
+        aviso.textContent = 'Informe RA e e-mail.';
+        aviso.classList.remove('oculto');
+      }
       return;
     }
 
-    // Limpa qualquer aviso anterior e ativa o spinner no botão
+    // Zera e esconde o aviso imediatamente ao submeter
     if (aviso) {
-      aviso.classList.add('oculto');
       aviso.textContent = '';
+      aviso.classList.add('oculto');
     }
 
+    // Transforma o botão em estado de carregamento com spinner
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
@@ -155,16 +159,22 @@ function renderizarTelaLogin(container, callbackSucesso) {
         }
       }
 
-      // 3. Se nenhum dos dois funcionou, exibe o aviso de erro
+      // 3. Se falhou em tudo, restaura o botão e mostra o erro
       if (!resultado) {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<span>Entrar</span>`;
-        exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Confira os dados informados.');
+        if (aviso) {
+          aviso.textContent = 'RA ou e-mail não encontrados. Confira os dados informados.';
+          aviso.classList.remove('oculto');
+        }
         return;
       }
 
-      // Se deu certo, esconde o aviso por garantia e chama o sucesso
-      if (aviso) aviso.classList.add('oculto');
+      // Se deu bom, garante que o aviso continua oculto e chama o sucesso
+      if (aviso) {
+        aviso.textContent = '';
+        aviso.classList.add('oculto');
+      }
 
       if (typeof callbackSucesso === 'function') {
         callbackSucesso(resultado);
@@ -173,7 +183,10 @@ function renderizarTelaLogin(container, callbackSucesso) {
       console.error(e);
       btnSubmit.disabled = false;
       btnSubmit.innerHTML = `<span>Entrar</span>`;
-      exibirAvisoLogin(aviso, 'Ocorreu um erro ao conectar com o servidor.');
+      if (aviso) {
+        aviso.textContent = 'Ocorreu um erro ao conectar com o servidor.';
+        aviso.classList.remove('oculto');
+      }
     }
   });
 
@@ -182,10 +195,4 @@ function renderizarTelaLogin(container, callbackSucesso) {
       window.location.href = 'https://adangomes.github.io/UNICHAMADA/ti/';
     });
   }
-}
-
-function exibirAvisoLogin(aviso, mensagem) {
-  if (!aviso) return;
-  aviso.textContent = mensagem;
-  aviso.classList.remove('oculto');
 }

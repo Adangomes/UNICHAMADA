@@ -1,6 +1,5 @@
 /**
- * textos.js — todos os rótulos da aba Suporte (categorias, situações, frases). Mude os textos AQUI.
- * Os VALORES das categorias e das situações precisam ser os mesmos do banco (ti-tabelas.sql).
+ * textos.js — todos os rótulos da aba Suporte.
  */
 window.Suporte = window.Suporte || {};
 
@@ -10,7 +9,6 @@ window.Suporte.T = {
 
   quem: { professor: 'Professor(a)', coordenador: 'Coordenação' },
 
-  // o que a pessoa escolhe ao abrir um chamado
   categorias: [
     { valor: 'acesso_login', rotulo: 'Não consigo entrar / problema de acesso' },
     { valor: 'erro_sistema', rotulo: 'Algo não funciona no sistema' },
@@ -20,7 +18,6 @@ window.Suporte.T = {
     { valor: 'infraestrutura', rotulo: 'Equipamento ou rede (projetor, computador, internet)' }
   ],
 
-  // como a pessoa vê a situação do chamado
   status: {
     aberto: 'Recebido',
     em_atendimento: 'Em atendimento',

@@ -8,43 +8,52 @@ TI.sessao = {
 
   /** Tenta carregar do localStorage imediatamente e valida com o Supabase Auth */
   async iniciar() {
-    // 1. Tenta restaurar do cache local para resposta instantânea na UI
-    const salvo = localStorage.getItem('unichamada_ti_user');
-    if (salvo) {
-      try {
-        this.funcionario = JSON.parse(salvo);
-      } catch (e) {
-        localStorage.removeItem('unichamada_ti_user');
-      }
+  const salvo = localStorage.getItem('unichamada_ti_user');
+  if (salvo) {
+    try {
+      this.funcionario = JSON.parse(salvo);
+    } catch (e) {
+      localStorage.removeItem('unichamada_ti_user');
+    }
+  }
+
+  try {
+    if (!TI.db || !TI.db.auth || typeof TI.db.auth.getSession !== 'function') {
+      this.sairLocal();
+      return false;
     }
 
-    // 2. Revalida a sessão real com o Supabase Auth em background
-    try {
-      const resp = await TI.db.auth.getSession();
-      const session = TI.dados.tratar(resp)?.session || (resp && resp.data ? resp.data.session : null);
-      
-      if (!session) {
-        this.sairLocal();
-        return false;
-      }
-      return await this._carregar(session.user);
-    } catch (err) {
-      if (!this.funcionario) return false;
-      return true;
+    const resp = await TI.db.auth.getSession();
+    const session = resp?.data?.session || null;
+
+    if (!session || !session.user || !session.user.id) {
+      this.sairLocal();
+      return false;
     }
-  },
+
+    return await this._carregar(session.user);
+  } catch (err) {
+    if (!this.funcionario) return false;
+    return true;
+  }
+},
 
   async _carregar(user) {
-    const f = await TI.dados.funcionarios.buscarPorAuth(user.id);
-    if (!f || !f.ativo) {
-      await this.sair();
-      throw new Error('Esta conta não tem acesso ao painel de TI.');
-    }
-    this.funcionario = f;
-    // Grava no cache local para persistir no F5
-    localStorage.setItem('unichamada_ti_user', JSON.stringify(f));
-    return true;
-  },
+  if (!user || !user.id) {
+    this.sairLocal();
+    return false;
+  }
+
+  const f = await TI.dados.funcionarios.buscarPorAuth(user.id);
+  if (!f || !f.ativo) {
+    await this.sair();
+    throw new Error('Esta conta não tem acesso ao painel de TI.');
+  }
+
+  this.funcionario = f;
+  localStorage.setItem('unichamada_ti_user', JSON.stringify(f));
+  return true;
+},
 
   async entrar(email, senha) {
     const { data, error } = await TI.db.auth.signInWithPassword({ email: String(email).trim(), password: senha });

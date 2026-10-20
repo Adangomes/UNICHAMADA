@@ -24,8 +24,21 @@ TI.app = {
         TI.telas.primeiroAcesso.render(this.raiz, { aoConcluir: () => this._depoisDoConvite() });
         return;
       }
-      if (await TI.sessao.iniciar()) await this.mostrarPainel();
-      else await this.mostrarLogin();
+
+      // Garante que o Supabase buscou a sessão armazenada no navegador antes de validar
+      await TI.db.auth.getSession();
+
+      // Tenta iniciar a sessão; se falhar de primeira, aguarda 300ms e tenta de novo (evita falso negativo no F5)
+      if (await TI.sessao.iniciar()) {
+        await this.mostrarPainel();
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        if (await TI.sessao.iniciar()) {
+          await this.mostrarPainel();
+        } else {
+          await this.mostrarLogin();
+        }
+      }
     } catch (err) {
       await this.mostrarLogin(err.message);
     }

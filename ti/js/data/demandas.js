@@ -7,11 +7,13 @@ TI.dados.demandas = {
     const d = TI.dados.tratar(resp);
     return d || [];
   },
+
   async buscar(id) {
     const resp = await TI.db.rpc('buscar_demanda_por_id', { demanda_id: id });
     const d = TI.dados.tratar(resp);
     return Array.isArray(d) ? d[0] || null : d;
   },
+
   async criar(dados) {
     const f = TI.sessao.funcionario;
     const resp = await TI.db.rpc('criar_demanda', {
@@ -26,11 +28,17 @@ TI.dados.demandas = {
     const d = TI.dados.tratar(resp);
     return Array.isArray(d) ? d[0] : d;
   },
+
   async atualizar(id, campos) {
     const resp = await TI.db.rpc('atualizar_demanda', {
       p_id: id,
-      p_status: campos.status || null,
-      p_responsavel_id: campos.responsavel_id !== undefined ? campos.responsavel_id : null
+      p_status: campos.status ?? null,
+      p_responsavel_id:
+        campos.responsavel_id == null ||
+        campos.responsavel_id === 'undefined' ||
+        campos.responsavel_id === ''
+          ? null
+          : String(campos.responsavel_id)
     });
     const d = TI.dados.tratar(resp);
     return Array.isArray(d) ? d[0] : d;

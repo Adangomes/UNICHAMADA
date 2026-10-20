@@ -9,16 +9,16 @@ window.Suporte = window.Suporte || {};
 (function () {
   const S = window.Suporte;
 
-  // ---- CSS: js/<professor|coordenador>/suporte/base.js  →  css/suporte/ ----
+  // ---- CSS: CORRIGIDO PARA ESCAPAR AS BARRAS / \/
   const origem = document.currentScript ? document.currentScript.src : '';
   const dentroDePasta = /\/js\/(?:professor|coordenador)\/suporte\//.test(origem);
-  S.pastaCss = dentroDePasta ? origem.replace(/\/js\/(?:professor|coordenador)\/suporte\/.*$/, '/css/suporte/') : '';
+  S.pastaCss = dentroDePasta ? origem.replace(/\/js\/(?:professor|coordenador)\/suporte\/.*/, '/css/suporte/') : '';
   S.arquivosCss = ['base.css', 'lista.css', 'novo_chamado.css', 'detalhe.css'];
   S._css = null;
 
-  /** Carrega os 4 CSS da aba (uma vez só). Se você já colocou <link> no index.html, ele não repete. */
+  /** Carrega os 4 CSS da aba (uma vez só). */
   S.carregarCss = function () {
-    if (S._css) return S._css;
+    if (S._//css) return S._css;
     S._css = Promise.all(S.arquivosCss.map((arq) => new Promise((resolve) => {
       if (!S.pastaCss || document.querySelector('link[href$="suporte/' + arq + '"]')) { resolve(); return; }
       const link = document.createElement('link');
@@ -26,22 +26,22 @@ window.Suporte = window.Suporte || {};
       link.href = S.pastaCss + arq;
       link.onload = resolve;
       link.onerror = () => { console.warn('[Suporte] CSS não encontrado: ' + link.href); resolve(); };
-      setTimeout(resolve, 4000);                 // nunca trava a tela esperando um arquivo
+      setTimeout(resolve, 4000);
       document.head.append(link);
     }))).then(() => undefined);
     return S._css;
   };
 
-  /** Cria um elemento HTML (texto sempre como texto: nada de innerHTML com dados do banco). */
+  /** Cria um elemento HTML. */
   S.el = function (tag, attrs, filhos) {
     const no = document.createElement(tag);
     let valor;
     Object.entries(attrs || {}).forEach(([k, v]) => {
       if (v === undefined || v === null || v === false) return;
       if (k === 'class') no.className = v;
-      else if (k === 'value') valor = v;                                  // depois dos filhos (serve para <select>)
+      else if (k === 'value') valor = v;
       else if (k.startsWith('on') && typeof v === 'function') no.addEventListener(k.slice(2).toLowerCase(), v);
-      else if (k in no && typeof no[k] === 'boolean') no[k] = !!v;        // hidden, disabled...
+      else if (k in no && typeof no[k] === 'boolean') no[k] = !!v;
       else no.setAttribute(k, v === true ? '' : v);
     });
     [].concat(filhos === undefined ? [] : filhos).forEach((f) => {
@@ -52,7 +52,6 @@ window.Suporte = window.Suporte || {};
   };
 
   S.util = {
-    /** "agora há pouco", "há 5 min", "há 2h", "há 3 dias" */
     idade(iso) {
       if (!iso) return '';
       const min = Math.max(0, Math.floor((Date.now() - new Date(iso)) / 60000));
@@ -67,20 +66,20 @@ window.Suporte = window.Suporte || {};
       return iso ? new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
     },
     primeiroNome(nome) { return String(nome || '').trim().split(/\s+/)[0] || ''; },
-    /** Ex.: "Chrome em macOS" (para a equipe de TI saber de onde veio o chamado). */
+    
+    // CORRIGIDO: Escapando as barras nas Regex de navegador
     navegador() {
       const ua = navigator.userAgent || '';
-      const nav = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox'
-        : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Navegador';
-      const so = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad|iPod/.test(ua) ? 'iOS'
+      const nav = /\/Edg\//.test(ua) ? 'Edge' : /\/OPR\//.test(ua) ? 'Opera' : /\/Firefox\//.test(ua) ? 'Firefox'
+        : /\/Chrome\//.test(ua) ? 'Chrome' : /\/Safari\//.test(ua) ? 'Safari' : 'Navegador';
+      const so = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad|iPod|Mobile/i.test(ua) ? 'iOS'
         : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : '';
       return so ? nav + ' em ' + so : nav;
     },
     aparelho() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') ? 'Celular' : 'Computador'; },
-    /** O que vai junto no chamado, sem a pessoa precisar explicar. */
     contexto(e) {
       return {
-        Perfil: S.T.quem[e.tipo] || e.tipo,
+        Perfil: S.T.quem[e.tipo] || e.//tipo,
         Tela: (e.opcoes && e.opcoes.tela) || 'Aba Suporte',
         Navegador: S.util.navegador(),
         Aparelho: S.util.aparelho()
@@ -90,13 +89,11 @@ window.Suporte = window.Suporte || {};
 
   S.carregando = () => S.el('div', { class: 'su-carregando' }, ['Carregando…']);
 
-  /** Mensagem de erro com botão "Tentar de novo". */
   S.erroBloco = (mensagem, aoTentar) => S.el('div', { class: 'su-erro-bloco', role: 'alert' }, [
     S.el('p', {}, [mensagem]),
     aoTentar ? S.el('button', { class: 'su-btn su-btn-secundario', type: 'button', onClick: aoTentar }, ['Tentar de novo']) : null
   ]);
 
-  /** Aviso rápido no canto da tela. */
   S.toast = function (mensagem, tipo) {
     let area = document.querySelector('.su-toast-area');
     if (!area) { area = S.el('div', { class: 'su-toast-area', 'aria-live': 'polite' }); document.body.append(area); }
@@ -105,7 +102,6 @@ window.Suporte = window.Suporte || {};
     setTimeout(() => t.remove(), 4500);
   };
 
-  /** Janela (modal). Fecha com Esc, clicando fora ou no ✕. */
   S.modal = function ({ titulo, corpo, botoes }) {
     const fundo = S.el('div', { class: 'su-modal-fundo', onClick: (ev) => { if (ev.target === fundo) fechar(); } });
     function tecla(ev) { if (ev.key === 'Escape') fechar(); }
@@ -124,7 +120,6 @@ window.Suporte = window.Suporte || {};
     return { fechar };
   };
 
-  /** Botão que se desativa enquanto a ação roda e mostra o erro em aviso. */
   S.botao = function (texto, { tipo, onClick, desabilitado } = {}) {
     return S.el('button', {
       class: 'su-btn su-btn-' + (tipo || 'secundario'), type: 'button', disabled: !!desabilitado,

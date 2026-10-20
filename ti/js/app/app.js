@@ -19,7 +19,6 @@ TI.app = {
     try {
       const veioDeConvite = /type=(invite|recovery)/.test(TI.config.hashInicial);
       if (veioDeConvite) {
-        // o Supabase transforma o link do e-mail em sessão; esperamos isso terminar
         await TI.db.auth.getSession();
         await TI.estilos.carregar(TI.estilos.GRUPOS.login);
         TI.telas.primeiroAcesso.render(this.raiz, { aoConcluir: () => this._depoisDoConvite() });
@@ -33,13 +32,14 @@ TI.app = {
   },
 
   async _depoisDoConvite() {
-    history.replaceState(null, '', window.location.pathname);   // tira o "#..." da barra de endereço
+    history.replaceState(null, '', window.location.pathname);
     await TI.sessao.iniciar();
     await this.mostrarPainel();
   },
 
   async mostrarLogin(mensagem) {
     this.layout = null;
+    sessionStorage.removeItem('ti_ultima_rota');
     await TI.estilos.carregar(TI.estilos.GRUPOS.login);
     TI.telas.login.render(this.raiz, { mensagem, aoEntrar: () => this.mostrarPainel() });
   },
@@ -54,13 +54,22 @@ TI.app = {
     };
     this.ctx = ctx;
     this.layout = TI.layout.montar(this.raiz, ctx);
-    await this.navegar(TI.rotas.padrao(f));
+    
+    // Recupera a última rota salva ou usa a padrão do cargo
+    const rotaSalva = sessionStorage.getItem('ti_ultima_rota');
+    const rotaInicial = (rotaSalva && TI.rotas.permitida(rotaSalva, f)) ? rotaSalva : TI.rotas.padrao(f);
+    
+    await this.navegar(rotaInicial);
   },
 
   async navegar(rota, params) {
     const f = TI.sessao.funcionario;
     const def = TI.rotas.tabela[rota];
     if (!def || !TI.rotas.permitida(rota, f)) { rota = TI.rotas.padrao(f); params = {}; }
+    
+    // Salva a rota atual no sessionStorage para persistir em caso de F5
+    sessionStorage.setItem('ti_ultima_rota', rota);
+
     const alvo = TI.rotas.tabela[rota];
     const tela = TI.telas[alvo.tela];
     const conteudo = this.layout.conteudo;
@@ -68,7 +77,7 @@ TI.app = {
     conteudo.replaceChildren(TI.ui.carregando());
     window.scrollTo(0, 0);
     try {
-      await TI.estilos.carregar(alvo.css);   // só o CSS da seção desta tela
+      await TI.estilos.carregar(alvo.css);
       conteudo.replaceChildren();
       await tela.render(conteudo, this.ctx, params || {});
     } catch (err) {

@@ -12,14 +12,37 @@ TI.telas.infra = {
     c.replaceChildren(ui.carregando());
 
     let chamados, equipe;
-    try { [chamados, equipe] = await Promise.all([TI.dados.chamados.listar(), TI.dados.funcionarios.listar()]); }
+    try { 
+      // ALTERAÇÃO: Agora buscamos a lista já filtrada pelo banco de dados (RPC)
+      // Passamos o tipo do usuário e o ID dele para o banco fazer o filtro pesado
+      const meusChamados = await window.Suporte.dados.rpc('ti_listar_meus_chamados', { 
+        p_tipo: ctx.f.tipo || 'ti', 
+        p_id: ctx.f.id 
+      });
+      
+      // Buscamos todos os chamados para preencher a lista de "Disponíveis" e "Locais"
+      // e a equipe para as fichas
+      const [todosChamados, equipe] = await Promise.all([
+        TI.dados.chamados.listar(), 
+        TI.dados.funcionarios.listar()
+      ]);
+
+      chamados = todosChamados;
+      // Sobrescrevemos a lista local com o que veio do RPC blindado do banco
+      ctx.meusChamados = meusChamados; 
+    } 
     catch (e) { c.replaceChildren(ui.erro(e.message)); return; }
 
     const f = ctx.f;
     const recarregar = () => TI.telas.infra.render(c, ctx);
+    
+    // Filtros locais simplificados (apenas para status e grupo)
     const abertos = chamados.filter((x) => x.grupo_destino === 'infraestrutura' && !K.chamadoEncerrado.includes(x.status));
-    const meus = abertos.filter((x) => x.responsavel_id === f.id);
+    
+    // AQUI ESTAVA O ERRO: Substituímos o filter manual pela lista vinda do RPC
+    const meus = ctx.meusChamados || []; 
     const livres = abertos.filter((x) => !x.responsavel_id);
+    
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
     meus.sort(prazoOrdem); livres.sort(prazoOrdem);
 

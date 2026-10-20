@@ -34,7 +34,7 @@ TI.telas.detalheBlocos.conversa = function (e) {
         el('div', { class: 'ti-msg-meta' }, m.interno
           ? [el('strong', {}, ['Nota interna']), el('span', {}, ['só o TI vê · ' + m.autor_nome + ' · ' + fmt.dataHoraCompleta(m.criado_em)])]
           : [el('strong', {}, [m.autor_nome]), el('span', {}, [(m.autor_tipo === 'ti' ? 'TI' : 'Solicitante') + ' · ' + fmt.dataHoraCompleta(m.criado_em)])]),
-        el('div', { class: 'ti-bolha' + (m.interno ? ' interna' : (m.autor_tipo === 'ti' ? ' ti' : '')) }, [m.texto])
+        el('div', { class: 'ti-bolha' + (m.interno ? ' interna' : (m.autor_tipo === 'ti' ? ' ti' : '')) }, [m.texto || m.mensagem || m.conteudo || ''])
       ])
     ]));
   });

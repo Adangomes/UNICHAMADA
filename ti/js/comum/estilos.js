@@ -24,7 +24,7 @@ TI.estilos = {
       'comum/componentes/modal_e_aviso.css'
     ],
     layout: ['comum/layout/menu_lateral.css', 'comum/layout/conteudo.css', 'comum/layout/grades.css'],
-    login: ['login/login.css', 'login/painel_animado.css', 'login/formulario.css']
+    login: ['login/login.css']
   },
 
   /** Fonte + CSS que todas as telas usam. */

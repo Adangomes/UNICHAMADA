@@ -18,7 +18,7 @@ window.Suporte = window.Suporte || {};
 
   /** Carrega os 4 CSS da aba (uma vez só). */
   S.carregarCss = function () {
-    if (S._//css) return S._css;
+    if (S._css) return S._css;
     S._css = Promise.all(S.arquivosCss.map((arq) => new Promise((resolve) => {
       if (!S.pastaCss || document.querySelector('link[href$="suporte/' + arq + '"]')) { resolve(); return; }
       const link = document.createElement('link');
@@ -79,7 +79,7 @@ window.Suporte = window.Suporte || {};
     aparelho() { return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '') ? 'Celular' : 'Computador'; },
     contexto(e) {
       return {
-        Perfil: S.T.quem[e.tipo] || e.//tipo,
+        Perfil: S.T.quem[e.tipo] || e.tipo,
         Tela: (e.opcoes && e.opcoes.tela) || 'Aba Suporte',
         Navegador: S.util.navegador(),
         Aparelho: S.util.aparelho()

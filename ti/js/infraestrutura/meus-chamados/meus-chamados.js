@@ -1,8 +1,3 @@
-/**
- * meus-chamados.js — tela da infraestrutura: chamados físicos (projetor, rede, mouse, formatar PC).
- * Carrega os dados e monta a página; o cartão de cada chamado vem de ficha.js.
- * Tabelas: ti_chamados, ti_funcionarios, ti_auditoria (escrita).
- */
 window.TI = window.TI || {};
 
 TI.telas.infra = {
@@ -17,13 +12,16 @@ TI.telas.infra = {
 
     const f = ctx.f;
     const recarregar = () => TI.telas.infra.render(c, ctx);
-    const abertos = chamados.filter((x) => x.grupo_destino === 'infraestrutura' && !K.chamadoEncerrado.includes(x.status));
+    
+    // CORREÇÃO AQUI: Agora filtra pelo grupo do funcionário logado, não mais fixo em 'infraestrutura'
+    const meuGrupo = K.grupoDoSetor(f.setor);
+    const abertos = chamados.filter((x) => (x.grupo_destino === meuGrupo || x.responsavel_id === f.id) && !K.chamadoEncerrado.includes(x.status));
+    
     const meus = abertos.filter((x) => x.responsavel_id === f.id);
     const livres = abertos.filter((x) => !x.responsavel_id);
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
     meus.sort(prazoOrdem); livres.sort(prazoOrdem);
 
-    /** Grava a mudança, registra na auditoria e recarrega a tela. */
     async function mudar(x, campos, acao, mensagem) {
       await TI.dados.chamados.atualizar(x.id, campos);
       await TI.dados.auditoria.registrar(acao, 'chamado', x.id, campos);
@@ -32,7 +30,6 @@ TI.telas.infra = {
     }
     const ficha = (x) => TI.telas.infraBlocos.ficha(x, { f, ctx, mudar });
 
-    // agenda: chamados meus com prazo hoje
     const agenda = meus.filter((x) => fmt.ehHoje(x.prazo_em));
     const locais = {};
     abertos.forEach((x) => { const l = x.local_texto || 'Sem local'; locais[l] = (locais[l] || 0) + 1; });

@@ -20,15 +20,24 @@ window.Suporte.dados.chamados = {
     return data || [];
   },
 
-  async ver(tipo, id, chamadoId) {
+  async ver(tipo, id, chamadoIdOuCodigo) {
     const supabase = window.supabaseClient || window.supabase;
     if (!supabase) return null;
 
-    const { data, error } = await supabase
-      .from('ti_chamados')
-      .select('*')
-      .eq('id', chamadoId)
-      .maybeSingle();
+    const valorBusca = String(chamadoIdOuCodigo || '').trim();
+    if (!valorBusca) return null;
+
+    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valorBusca);
+
+    let query = supabase.from('ti_chamados').select('*');
+
+    if (ehUuid) {
+      query = query.eq('id', valorBusca);
+    } else {
+      query = query.or(`codigo.eq.${valorBusca},codigo.eq.CH-${valorBusca.replace('CH-', '')}`);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error('[UNICHAMADAS] Erro ao buscar detalhe do chamado:', error);

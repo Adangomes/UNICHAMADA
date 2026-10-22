@@ -73,6 +73,10 @@ TI.telas.infraBlocos.ficha = function (x, contexto) {
   // Regra de negócio: Só habilita ações de fluxo se o chamado estiver ATIVO
   const estaFinalizado = STATUS_FINALIZADOS.has(x.status?.toLowerCase());
 
+  // Verifica se o funcionário logado pertence estritamente ao setor de infraestrutura
+  const funcionarioLogado = f || window.FuncionarioLogado || window.UsuarioLogado || {};
+  const ehInfraestrutura = funcionarioLogado.setor === 'infraestrutura';
+
   if (!estaFinalizado) {
     if (!x.responsavel_id) {
       acoes.push(
@@ -91,12 +95,16 @@ TI.telas.infraBlocos.ficha = function (x, contexto) {
         })
       );
     } else {
-        acoes.push(
-          ui.botao('Aguardando material', {
-            pequeno: true,
-            onClick: () => mudar(x, { status: 'aguardando_usuario' }, 'chamado.aguardando', 'Chamado colocado em espera.')
-          })
-        );
+        // O botão "Aguardando material" agora aparece APENAS para funcionários do setor de infraestrutura
+        if (ehInfraestrutura) {
+          acoes.push(
+            ui.botao('Aguardando material', {
+                pequeno: true,
+                onClick: () => mudar(x, { status: 'aguardando_usuario' }, 'chamado.aguardando', 'Chamado colocado em espera.')
+            })
+          );
+        }
+
       acoes.push(
         ui.botao('Marcar como resolvido', {
           tipo: 'primario',

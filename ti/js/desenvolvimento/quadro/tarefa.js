@@ -1,7 +1,6 @@
 /**
- * tarefa.js — janela de uma demanda: detalhes e o próximo passo (assumir, direcionar, enviar para revisão...).
- * Tabelas: ti_demandas, ti_revisoes (leitura), ti_auditoria.
- * Fica dentro de TI.telas.dev (carregue depois de quadro.js).
+ * tarefa.js — janela de uma demanda: detalhes e o próximo passo.
+ * Fica dentro de TI.telas.dev.
  */
 window.TI = window.TI || {};
 
@@ -9,93 +8,88 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   const { el } = TI.dom;
   const { ui, fmt, K } = TI;
   const f = ctx.f;
+  
   const coord = f.papel === 'coordenador_ti';
   const doGrupo = demanda.grupo_destino === K.grupoDoSetor(f.setor);
-  
-  // CORREÇÃO AQUI: Convertendo ambos para String para garantir que o botão apareça para o Diego
   const ehMinha = String(demanda.responsavel_id) === String(f.id);
 
   let ajuste = null;
   try {
     const revisoes = await TI.dados.revisoes.listarDaDemanda(demanda.id);
-    if (revisoes.length && revisoes[0].decisao === 'ajustes') ajuste = revisoes[0];
-  } catch (e) { /* sem acesso às revisões: segue sem elas */ }
+    if (revisoes && revisoes.length > 0 && revisoes[0].decisao === 'ajustes') {
+      ajuste = revisoes[0];
+    }
+  } catch (e) { /* ignora erro de revisões */ }
 
-  async function mover(campos, acao, mensagem) {
+  // 1. Primeiro definimos a função de mover (ela usará o modal que criamos abaixo)
+  const mover = async (campos, acao, mensagem) => {
     await TI.dados.demandas.atualizar(demanda.id, campos);
     await TI.dados.auditoria.registrar(acao, 'demanda', demanda.id, campos);
     ui.toast(mensagem);
-    modal.fechar();
+    if (window.currentTiModal) window.currentTiModal.fechar();
     if (aoMudar) await aoMudar();
-  }
+  };
 
-  const botoes = [ui.botao('Fechar', { onClick: () => modal.fechar() })];
+  const botoes = [];
 
-  // 1. COORDENADOR: Direcionar a demanda do backlog para um funcionário da equipa
+  // 2. Lógica de botões
   if (demanda.status === 'backlog' && coord) {
-    let funcionariosEquipa = [];
+    let funcionarios = [];
     try {
-      const respFuncs = await TI.dados.funcionarios.listar();
-      funcionariosEquipa = (respFuncs || []).filter(item => item.papel !== 'coordenador_ti');
-    } catch (err) {
-      funcionariosEquipa = [];
-    }
+      const lista = await TI.dados.funcionarios.listar();
+      funcionarios = (lista || []).filter(i => i.papel !== 'coordenador_ti');
+    } catch (e) { funcionarios = []; }
 
-    const selectFunc = el('select', { 
-      id: 'select-direcionar-resp',
+    const select = el('select', { 
+      id: 'select-resp',
       style: 'padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; margin-right: 8px;'
     }, [
       el('option', { value: '' }, ['Selecionar funcionário...']),
-      ...funcionariosEquipa.map(func => el('option', { value: func.id }, [func.nome]))
+      ...funcionarios.map(func => el('option', { value: func.id }, [func.nome]))
     ]);
 
-    botoes.push(selectFunc);
+    botoes.push(select);
     botoes.push(ui.botao('Direcionar', {
       tipo: 'primario',
       onClick: async () => {
-        const funcionarioId = selectFunc.value;
-        if (!funcionarioId) {
-          ui.toast('Selecione um funcionário para direcionar a demanda.', 'erro');
-          return;
-        }
-        await mover(
-          { responsavel_id: funcionarioId, status: 'desenvolvendo' },
-          'demanda.direcionada',
-          'Demanda direcionada com sucesso!'
-        );
+        if (!select.value) return ui.toast('Selecione um funcionário.', 'erro');
+        await mover({ responsavel_id: select.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Direcionada com sucesso!');
       }
     }));
   } 
-  // 2. FUNCIONÁRIO: Assumir uma demanda sem responsável do backlog
   else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
-      onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu ' + demanda.codigo + '.') 
+      onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu a demanda!') 
     }));
   }
 
-  // 3. FLUXO DE DESENVOLVIMENTO: Enviar para revisão da coordenação
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
-    botoes.push(ui.botao('Enviar para revisão', { 
+    botoes.push(ui.botao('Concluí / Enviar para revisão', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Enviada para a revisão da coordenação.') 
+      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Enviada para a coordenação!') 
     }));
   }
 
-  // 4. FLUXO DE REVISÃO E APROVAÇÃO (Apenas Coordenador)
   if (demanda.status === 'em_revisao' && coord) {
-    botoes.push(ui.botao('Abrir revisão', { 
+    botoes.push(ui.botao('Analisar Revisão', { 
       tipo: 'primario', 
-      onClick: () => { modal.fechar(); ctx.navegar('aprovacao', { id: demanda.id }); } 
+      onClick: () => { 
+        if (window.currentTiModal) window.currentTiModal.fechar(); 
+        ctx.navegar('aprovacao', { id: demanda.id }); 
+      } 
     }));
   }
   if (demanda.status === 'aprovado' && coord) {
     botoes.push(ui.botao('Marcar como no ar', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Demanda no ar.') 
+      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicada com sucesso!') 
     }));
   }
 
+  botoes.push(ui.botao('Fechar', { onClick: () => { if (window.currentTiModal) window.currentTiModal.fechar(); } }));
+
+  // 3. Finalmente, criamos o modal e salvamos a referência global
   const modal = ui.modal({
     titulo: demanda.codigo + ' — ' + demanda.titulo,
     corpo: [
@@ -105,12 +99,14 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
       el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
-      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['Ajustes pedidos pela coordenação: ' + (ajuste.comentario || '(sem comentário)')]) : null,
-      ui.par('Pedido por', demanda.solicitante_nome),
+      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '(sem comentário)')]) : null,
+      ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],
     botoes
   });
+
+  window.currentTiModal = modal;
 };

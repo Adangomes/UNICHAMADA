@@ -1,34 +1,40 @@
 /**
- * detalhe/conversa.js — bloco da conversa do chamado: o pedido original e as mensagens, em ordem.
- * Parte da tela de detalhe (veja detalhe.js). Dados: tabela ti_chamados_comentarios (sem notas internas).
+ * conversa.js — Versão com TRAVA DE PRIVACIDADE.
+ * Garante que notas internas nunca apareçam para o solicitante.
  */
 window.Suporte = window.Suporte || {};
 window.Suporte.detalheBlocos = window.Suporte.detalheBlocos || {};
 
-/**
- * @param {Object} chamado      o chamado (descricao, solicitante_nome, criado_em)
- * @param {Object[]} comentarios  mensagens: { autor_tipo, autor_nome, texto, criado_em }
- * @returns {HTMLElement}
- */
 window.Suporte.detalheBlocos.conversa = function (chamado, comentarios) {
   const S = window.Suporte;
   const { el } = S;
 
-  const mensagem = (quem, meta, texto, classe) => el('div', { class: 'su-msg' }, [
-    el('span', { class: 'su-avatar' }, [quem.charAt(0).toUpperCase()]),
-    el('div', { class: 'su-msg-corpo' }, [
-      el('div', { class: 'su-msg-meta' }, [el('strong', {}, [quem]), el('span', {}, [meta])]),
-      el('div', { class: 'su-bolha ' + classe }, [texto])
-    ])
-  ]);
+  const quemAbriu = chamado.solicitante_tipo === 'professor' ? 'Professor(a)' : chamado.solicitante_tipo === 'coordenador' ? 'Coordenação' : 'TI';
 
-  const itens = [mensagem('Você', S.util.dataHora(chamado.criado_em), chamado.descricao || '(sem descrição)', 'eu')];
+  const mensagens = [
+    el('div', { class: 'ti-msg' }, [
+      S.el('span', { class: 'su-avatar' }, [chamado.solicitante_nome.charAt(0).toUpperCase()]),
+      el('div', { class: 'ti-msg-corpo' }, [
+        el('div', { class: 'ti-msg-meta' }, [el('strong', {}, [chamado.solicitante_nome]), el('span', {}, [quemAbriu + ' · ' + S.util.dataHora(chamado.criado_em)])]),
+        el('div', { class: 'ti-bolha' }, [chamado.descricao || '(sem descrição)'])
+      ])
+    ])
+  ];
+
   comentarios.forEach((m) => {
-    if (m.autor_tipo === 'ti') {
-      itens.push(mensagem(S.util.primeiroNome(m.autor_nome) + ' · Equipe de TI', S.util.dataHora(m.criado_em), m.texto, 'ti'));
-    } else {
-      itens.push(mensagem('Você', S.util.dataHora(m.criado_em), m.texto, 'eu'));
-    }
+    // TRAVA DE OURO: Se a mensagem for interna, ela SÓ aparece se o autor for da TI 
+    // E se o usuário logado também for da TI. 
+    // Como este arquivo é usado pelo SOLICITANTE, a regra é simples: SE FOR INTERNO, NÃO MOSTRA.
+    if (m.interno) return; 
+
+    mensagens.push(el('div', { class: 'ti-msg' }, [
+      S.el('span', { class: 'su-avatar' }, [m.autor_nome.charAt(0).toUpperCase()]),
+      el('div', { class: 'ti-msg-corpo' }, [
+        el('div', { class: 'ti-msg-meta' }, [el('strong', {}, [m.autor_nome]), el('span', {}, [(m.autor_tipo === 'ti' ? 'TI' : 'Solicitante') + ' · ' + S.util.dataHora(m.criado_em)])]),
+        el('div', { class: 'ti-bolha' + (m.autor_tipo === 'ti' ? ' ti' : '') }, [m.texto || ''])
+      ])
+    ]));
   });
-  return el('div', { class: 'su-conversa' }, itens);
+
+  return el('div', { class: 'su-conversa' }, mensagens);
 };

@@ -29,46 +29,34 @@ let contadorAnteriorNotificacoes = 0;
  */
 async function buscarNotificacoesProfessor(professorId) {
   try {
-    const relacoes = await dbListar('notificacao_professores') || [];
-    const notificacoes = await dbListar('notificacoes_coordenador') || [];
+    const supabase = window.supabaseClient || window.supabase;
+    if (!supabase) return { pendentes: [], todas: [] };
 
-    // Mapeia os vínculos de leitura direcionados a este professor
-    const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
-    const relacoesMap = new Map(minhasRelacoes.map(r => [r.notificacao_id || r.notificacaoId, r]));
+    // Consulta unificada fazendo join entre notificacao_professores e notificacoes
+    const { data, error } = await supabase
+      .from('notificacao_professores')
+      .select('*, notificacoes(*)')
+      .eq('professor_id', professorId);
 
-    // Filtra avisos destinados a "todos" ou especificamente ao professor de forma ultra-resiliente
-    const minhasNotificacoes = notificacoes.filter(n => {
-      let dests = n.destinatarios;
+    if (error) {
+      console.error('[professor/notificacao.js] Erro ao buscar do Supabase:', error);
+      return { pendentes: [], todas: [] };
+    }
 
-      // Trata e normaliza os destinatários caso venham como string JSON ou texto puro
-      if (typeof dests === 'string') {
-        try { 
-          dests = JSON.parse(dests); 
-        } catch (e) { 
-          dests = [dests]; 
-        }
-      }
-
-      // Se destinatários estiver vazio/nulo, assume como notificação pública/global
-      if (!dests) return true;
-
-      const arrayDests = Array.isArray(dests) ? dests : [dests];
-      
-      const ehParaTodos = arrayDests.some(d => String(d).toLowerCase() === 'todos');
-      const ehParaEsteProfessor = arrayDests.some(d => String(d).trim() === String(professorId).trim());
-
-      return ehParaTodos || ehParaEsteProfessor;
-    }).map(n => {
-      const rel = relacoesMap.get(n.id);
+    const minhasNotificacoes = (data || []).map(item => {
+      const notif = item.notificacoes || {};
       return {
-        ...n,
-        relacaoId: rel ? rel.id : null,
-        lida: rel ? Boolean(rel.lida) : false
+        ...notif,
+        id: notif.id || item.notificacao_id,
+        relacaoId: item.id,
+        lida: Boolean(item.lida),
+        lida_em: item.lida_em,
+        criado_em: notif.criado_em || item.criado_em
       };
     });
 
     // Ordenação decrescente por data de criação (mais recentes primeiro)
-    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data || 0) - new Date(a.criado_em || a.criadoEm || a.data || 0));
+    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || 0) - new Date(a.criado_em || 0));
 
     const pendentes = minhasNotificacoes.filter(n => !n.lida);
 
@@ -78,7 +66,6 @@ async function buscarNotificacoesProfessor(professorId) {
     return { pendentes: [], todas: [] };
   }
 }
-
 /**
  * Injeta o componente do sino no cabeçalho do painel do professor.
  *

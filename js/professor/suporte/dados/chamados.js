@@ -14,7 +14,7 @@ window.Suporte.dados.chamados = {
       .order('criado_em', { ascending: false });
 
     if (error) {
-      console.error('[UNICHAMADAS] Erro ao listar chamados:', error);
+      console.error('[UNICHAMADAS] Erro ao listar chamados do professor:', error);
       return [];
     }
     return data || [];

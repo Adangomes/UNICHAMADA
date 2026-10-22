@@ -1,6 +1,6 @@
 /**
- * tarefa.js — janela de uma demanda: detalhes e o próximo passo.
- * Fica dentro de TI.telas.dev.
+ * tarefa.js — janela de uma demanda.
+ * Versão Simplificada para eliminar erros de sintaxe.
  */
 window.TI = window.TI || {};
 
@@ -19,20 +19,24 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     if (revisoes && revisoes.length > 0 && revisoes[0].decisao === 'ajustes') {
       ajuste = revisoes[0];
     }
-  } catch (e) { /* ignora erro */ }
+  } catch (e) { }
 
-  const mover = async (campos, acao, mensagem, nota = null) => {
-    // Se houver nota, salvamos nos detalhes da auditoria (JSON)
-    const detalhes = nota ? { observacao: nota } : {};
-    await TI.dados.demandas.atualizar(demanda.id, campos);
-    await TI.dados.auditoria.registrar(acao, 'demanda', demanda.id, { ...campos, ...detalhes });
-    ui.toast(mensagem);
-    if (window.currentTiModal) window.currentTiModal.fechar();
-    if (aoMudar) await aoMudar();
+  // Função de movimentação
+  const mover = async (campos, acao, mensagem) => {
+    try {
+      await TI.dados.demandas.atualizar(demanda.id, campos);
+      await TI.dados.auditoria.registrar(acao, 'demanda', demanda.id, campos);
+      ui.toast(mensagem);
+      if (window.currentTiModal) window.currentTiModal.fechar();
+      if (aoMudar) await aoMudar();
+    } catch (err) {
+      ui.toast(err.message, 'erro');
+    }
   };
 
   const botoes = [];
 
+  // 1. COORDENADOR: Direcionar
   if (demanda.status === 'backlog' && coord) {
     let funcionarios = [];
     try {
@@ -56,29 +60,24 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         await mover({ responsavel_id: select.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Direcionada com sucesso!');
       }
     }));
-  } else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
+  } 
+  // 2. FUNCIONÁRIO: Assumir
+  else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
       onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu a demanda!') 
     }));
   }
 
-  // CORREÇÃO PROFISSIONAL: Modal para escrever o que foi feito
+  // 3. ENVIAR PARA REVISÃO
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
     botoes.push(ui.botao('Concluí / Enviar para revisão', { 
       tipo: 'primario', 
-      onClick: () => {
-        const txt = ui.prompt('Envio para Revisão', 'Descreva brevemente o que foi feito ou os ajustes realizados:', async (nota) => {
-          if (nota) {
-            await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviada para a coordenação!', nota);
-          } else {
-            ui.toast('Por favor, descreva o que foi feito.', 'erro');
-          }
-        });
-      } 
+      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Enviada para a coordenação!') 
     }));
   }
 
+  // 4. APROVAÇÕES
   if (demanda.status === 'em_revisao' && coord) {
     botoes.push(ui.botao('Analisar Revisão', { 
       tipo: 'primario', 
@@ -112,7 +111,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],
-    botoes
+    botoes: botoes
   });
 
   window.currentTiModal = modal;

@@ -11,8 +11,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   const f = ctx.f;
   const coord = f.papel === 'coordenador_ti';
   const doGrupo = demanda.grupo_destino === K.grupoDoSetor(f.setor);
-  
-  // CORREÇÃO: Comparação robusta de IDs (converte ambos para string para evitar erro de tipo UUID vs String)
   const ehMinha = String(demanda.responsavel_id) === String(f.id);
 
   let ajuste = null;
@@ -21,25 +19,24 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     if (revisoes.length && revisoes[0].decisao === 'ajustes') ajuste = revisoes[0];
   } catch (e) { /* sem acesso às revisões: segue sem elas */ }
 
-  async function mover(campos, acao, mensagem) {
+  // Definimos a função mover primeiro, mas ela usa a variável 'modal' que será criada abaixo
+  const mover = async (campos, acao, mensagem) => {
     await TI.dados.demandas.atualizar(demanda.id, campos);
     await TI.dados.auditoria.registrar(acao, 'demanda', demanda.id, campos);
     ui.toast(mensagem);
-    modal.fechar();
+    if (window.currentTiModal) window.currentTiModal.fechar();
     if (aoMudar) await aoMudar();
-  }
+  };
 
   const botoes = [];
 
-  // 1. COORDENADOR: Direcionar a demanda do backlog para um funcionário da equipa
+  // 1. COORDENADOR: Direcionar a demanda do backlog
   if (demanda.status === 'backlog' && coord) {
     let funcionariosEquipa = [];
     try {
       const respFuncs = await TI.dados.funcionarios.listar();
       funcionariosEquipa = (respFuncs || []).filter(item => item.papel !== 'coordenador_ti');
-    } catch (err) {
-      funcionariosEquipa = [];
-    }
+    } catch (err) { funcionariosEquipa = []; }
 
     const selectFunc = el('select', { 
       id: 'select-direcionar-resp',
@@ -58,15 +55,11 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
           ui.toast('Selecione um funcionário para direcionar a demanda.', 'erro');
           return;
         }
-        await mover(
-          { responsavel_id: funcionarioId, status: 'desenvolvendo' },
-          'demanda.direcionada',
-          'Demanda direcionada com sucesso!'
-        );
+        await mover({ responsavel_id: funcionarioId, status: 'desenvolvendo' }, 'demanda.direcionada', 'Demanda direcionada com sucesso!');
       }
     }));
   } 
-  // 2. FUNCIONÁRIO: Assumir uma demanda sem responsável do backlog
+  // 2. FUNCIONÁRIO: Assumir demanda do backlog
   else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
@@ -74,20 +67,22 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
 
-  // 3. FLUXO DE DESENVOLVIMENTO: Enviar para revisão da coordenação
-  // Corrigido: Agora usa a comparação robusta ehMinha e texto mais claro
+  // 3. FLUXO DE DESENVOLVIMENTO: Enviar para revisão
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
     botoes.push(ui.botao('Concluí / Enviar para revisão', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Trabalho concluído! Enviada para a revisão da coordenação.') 
+      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Trabalho concluído! Enviada para revisão.') 
     }));
   }
 
-  // 4. FLUXO DE REVISÃO E APROVAÇÃO (Apenas Coordenador)
+  // 4. FLUXO de APROVAÇÃO (Apenas Coordenador)
   if (demanda.status === 'em_revisao' && coord) {
     botoes.push(ui.botao('Analisar Revisão', { 
       tipo: 'primario', 
-      onClick: () => { modal.fechar(); ctx.navegar('aprovacao', { id: demanda.id }); } 
+      onClick: () => { 
+        if (window.currentTiModal) window.currentTiModal.fechar(); 
+        ctx.navegar('aprovacao', { id: demanda.id }); 
+      } 
     }));
   }
   if (demanda.status === 'aprovado' && coord) {
@@ -97,8 +92,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
 
-  // Botão Fechar sempre ao final
-  botoes.push(ui.botao('Fechar', { onClick: () => modal.fechar() }));
+  botoes.push(ui.botao('Fechar', { onClick: () => { if (window.currentTiModal) window.currentTiModal.fechar(); } }));
 
   const modal = ui.modal({
     titulo: demanda.codigo + ' — ' + demanda.titulo,
@@ -117,4 +111,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     ],
     botoes
   });
+
+  // Salva a referência do modal globalmente para que a função 'mover' consiga fechá-lo
+  window.currentTiModal = modal;
 };

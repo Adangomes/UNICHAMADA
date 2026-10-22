@@ -4,12 +4,11 @@
  * Este módulo gerencia o ciclo de vida da interface gráfica e funcionalidades
  * do painel do professor, incluindo:
  *  - Montagem e inicialização do cabeçalho com indicador de notificações (sino/badge);
- *  - Roteamento interno entre abas ("Chamadas", "Minhas turmas" e "Chat");
+ *  - Roteamento interno entre abas ("Chamadas" e "Minhas turmas");
  *  - Geração e acompanhamento de chamadas em tempo real com barreira anti-duplicação;
  *  - Tabela de frequência mensal (aluno x data) por turma, no lugar de uma lista
  *    infinita de cartões — evita que o histórico cresça sem controle ao longo do tempo;
- *  - Visualização de turmas e listagem de alunos matriculados;
- *  - Chat em tempo real com os coordenadores (js/professor/chat/chat.js).
+ *  - Visualização de turmas e listagem de alunos matriculados.
  * 
  * @module PainelProfessor
  * @requires dbListar
@@ -57,39 +56,7 @@ let professorLogado = null;
  */
 const ABAS_PROFESSOR = [
   { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
-  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
-  {
-    // Chat com os coordenadores (js/professor/chat/chat.js)
-    chave: 'chat',
-    rotulo: 'Chat',
-    render: async (container) => {
-      container.innerHTML = '<div id="chat-professor-root"></div>';
-      // Ao trocar de aba, renderizarAbaAtivaProfessor() chama esta função e desliga o tempo real
-      pararAssinaturaAbaProfessor = () => { if (window.ChatDados) window.ChatDados.cancelar(); };
-      await iniciarChatProfessor('chat-professor-root');
-    }
-  },
-  {
-    chave: 'suporte',
-    rotulo: 'Suporte',
-    render: async (container, prof) => {
-      container.innerHTML = '';
-      
-      const usuarioSessao = prof || window.sessaoAtual || {};
-      
-      const usuarioFormatado = {
-        id: usuarioSessao.id || usuarioSessao.email || usuarioSessao.ra || 'professor_padrao',
-        nome: usuarioSessao.nome || 'Professor',
-        email: usuarioSessao.email || 'professor@sistema.local'
-      };
-
-      await montarSuporte(container, { 
-        tipo: 'professor', 
-        usuario: usuarioFormatado, 
-        tela: 'Painel do professor' 
-      });
-    }
-  }
+  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) }
 ];
 
 /**
@@ -160,9 +127,6 @@ async function montarPainelProfessor(sessao) {
   corpo.append(nav, elementoConteudoProfessor);
   tela.appendChild(corpo);
 
-  if (typeof inicializarChamyProfessor === 'function') {
-        inicializarChamyProfessor(cabecalho, professorLogado);
-    }
   // 4. Renderiza a aba ativa inicial
   await renderizarAbaAtivaProfessor();
 }
@@ -223,7 +187,7 @@ async function renderAbaChamadas(container, professor) {
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Chamadas']),
-      criarElemento('p', {}, [''])
+      criarElemento('p', {}, ['Gere a chamada de uma turma e acompanhe/ajuste a frequência de cada aluno.'])
     ])
   ]));
 
@@ -581,7 +545,7 @@ async function renderAbaTurmas(container, professor) {
   container.appendChild(criarElemento('div', { class: 'secao-cabecalho' }, [
     criarElemento('div', {}, [
       criarElemento('h2', {}, ['Minhas turmas']),
-      criarElemento('p', {}, [''])
+      criarElemento('p', {}, ['Disciplinas e turmas atribuídas a você pela coordenação.'])
     ])
   ]));
 
@@ -645,13 +609,17 @@ async function montarItemTurma(turma, professor) {
     class: 'btn-primario',
     onClick: () => abrirModalChamada(turma, professor)
   }, ['GERAR CHAMADA']);
+  const btnHistorico = criarElemento('button', {
+    class: 'btn-secundario',
+    onClick: () => abrirModalHistorico(turma, professor)
+  }, ['Histórico']);
 
   const cabecalho = criarElemento('div', { class: 'cabecalho-turma' }, [
     criarElemento('div', {}, [
       criarElemento('h4', {}, [`${turma.nome}${disciplina ? ' — ' + disciplina.nome : ''}`]),
       criarElemento('span', { class: 'tag' }, [`${turma.turno}${turma.periodo ? ' · ' + turma.periodo : ''}`])
     ]),
-    criarElemento('div', { class: 'turma-acoes' }, [btnGerarChamada])
+    criarElemento('div', { class: 'turma-acoes' }, [btnGerarChamada, btnHistorico])
   ]);
 
   const meta = criarElemento('p', { class: 'alunos-matriculados' }, [

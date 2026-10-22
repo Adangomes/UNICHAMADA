@@ -19,9 +19,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     if (revisoes && revisoes.length > 0 && revisoes[0].decisao === 'ajustes') {
       ajuste = revisoes[0];
     }
-  } catch (e) { /* ignora erro de revisões */ }
+  } catch (e) { /* ignora erro */ }
 
-  // 1. Primeiro definimos a função de mover (ela usará o modal que criamos abaixo)
   const mover = async (campos, acao, mensagem) => {
     await TI.dados.demandas.atualizar(demanda.id, campos);
     await TI.dados.auditoria.registrar(acao, 'demanda', demanda.id, campos);
@@ -32,7 +31,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
 
   const botoes = [];
 
-  // 2. Lógica de botões
   if (demanda.status === 'backlog' && coord) {
     let funcionarios = [];
     try {
@@ -56,8 +54,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         await mover({ responsavel_id: select.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Direcionada com sucesso!');
       }
     }));
-  } 
-  else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
+  } else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
       onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu a demanda!') 
@@ -89,8 +86,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
 
   botoes.push(ui.botao('Fechar', { onClick: () => { if (window.currentTiModal) window.currentTiModal.fechar(); } }));
 
-  // 3. Finalmente, criamos o modal e salvamos a referência global
-  const modal = ui.modal({
+  // CONFIGURAÇÃO DO MODAL SEPARADA PARA EVITAR ERROS DE SINTAXE
+  const configModal = {
     titulo: demanda.codigo + ' — ' + demanda.titulo,
     corpo: [
       el('div', { class: 'ti-acoes' }, [
@@ -105,8 +102,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],
-    botoes
-  });
+    botoes: botoes
+  };
 
-  window.currentTiModal = modal;
+  window.currentTiModal = ui.modal(configModal);
 };

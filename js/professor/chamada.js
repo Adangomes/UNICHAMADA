@@ -14,7 +14,7 @@
  */
 
 let paradaAssinaturaChamada = null;
-let cronometroRotacaoCodigo = null; 
+const cronometrosRotacaoCodigo = new Map();
 
 const ROTULOS_STATUS_PRESENCA = {
   aguardando: 'Aguardando',
@@ -25,53 +25,100 @@ const ROTULOS_STATUS_PRESENCA = {
 
 async function obterOuCriarChamadaAtiva(turmaId, professorId) {
   const chamadas = await dbListar('chamadas');
-  
-  // Procura se já existe UMA chamada ativa para esta turma para evitar duplicações
-  let existente = chamadas.find((c) => {
+  const existente = chamadas.find((c) => {
     const tId = c.turma_id || c.turmaId;
-    return tId === turmaId && c.ativa === true;
+    return tId === turmaId && c.ativa;
   });
   
   if (existente) {
-    if (!existente.latitude || !existente.longitude) {
-      try {
-        const pos = await obterPosicaoAtualAsync();
-        await dbAtualizar('chamadas', existente.id, {
-          latitude: pos.latitude,
-          longitude: pos.longitude
-        });
-        existente.latitude = pos.latitude;
-        existente.longitude = pos.longitude;
-      } catch (e) {
-        console.warn('Não foi possível atualizar a geolocalização da chamada existente:', e);
-      }
+    const professorDaChamada = existente.professor_id || existente.professorId;
+    if (professorDaChamada !== professorId) {
+      throw new Error('Já existe uma chamada ativa para esta turma, aberta por outro professor.');
+    }
+
+    if (!coordenadasValidas(existente)) {
+      const posicao = await obterPosicaoAtualAsync();
+      const atualizada = await dbAtualizar('chamadas', existente.id, {
+        latitude: posicao.latitude,
+        longitude: posicao.longitude
+      });
+      existente.latitude = atualizada.latitude;
+      existente.longitude = atualizada.longitude;
+    }
+
+    const atualizadoEm = Date.parse(existente.atualizado_em || existente.atualizadoEm || '');
+    if (!Number.isFinite(atualizadoEm) || Date.now() - atualizadoEm >= INTERVALO_ROTACAO_MS) {
+      const codigoAtualizado = await dbAtualizar('chamadas', existente.id, {
+        codigo_anterior: existente.codigo_atual || existente.codigoAtual,
+        codigo_atual: gerarCodigoChamada(),
+        atualizado_em: new Date().toISOString()
+      });
+      existente.codigo_anterior = codigoAtualizado.codigo_anterior;
+      existente.codigo_atual = codigoAtualizado.codigo_atual;
+      existente.atualizado_em = codigoAtualizado.atualizado_em;
     }
     return existente;
   }
 
-  let latitude = null;
-  let longitude = null;
-  try {
-    const pos = await obterPosicaoAtualAsync();
-    latitude = pos.latitude;
-    longitude = pos.longitude;
-  } catch (erro) {
-    console.warn('Geolocalização do professor não obtida:', erro);
-  }
+  const posicao = await obterPosicaoAtualAsync();
 
   return await dbInserir('chamadas', {
     turma_id: turmaId,
     professor_id: professorId,
     codigo_atual: gerarCodigoChamada(),
     codigo_anterior: null,
-    latitude: latitude,
-    longitude: longitude,
+    latitude: posicao.latitude,
+    longitude: posicao.longitude,
     gerada_em: new Date().toISOString(),
     atualizado_em: new Date().toISOString(),
     ativa: true
   });
 }
 
+function iniciarRotacaoCodigo(chamadaId) {
+  if (cronometrosRotacaoCodigo.has(chamadaId)) return;
+
+  let rotacaoEmAndamento = false;
+  const cronometro = setInterval(async () => {
+    if (rotacaoEmAndamento) return;
+    rotacaoEmAndamento = true;
+
+    try {
+      const atual = await dbBuscarPorId('chamadas', chamadaId);
+      if (!atual || !atual.ativa) {
+        clearInterval(cronometro);
+        cronometrosRotacaoCodigo.delete(chamadaId);
+        return;
+      }
+
+      await dbAtualizar('chamadas', chamadaId, {
+        codigo_anterior: atual.codigo_atual || atual.codigoAtual,
+        codigo_atual: gerarCodigoChamada(),
+        atualizado_em: new Date().toISOString()
+      });
+    } catch (erro) {
+      console.error(`Falha ao rotacionar o código da chamada ${chamadaId}:`, erro);
+      mostrarToast('Não foi possível atualizar o código da chamada. Confira a conexão.', 'erro');
+    } finally {
+      rotacaoEmAndamento = false;
+    }
+  }, INTERVALO_ROTACAO_MS);
+
+  cronometrosRotacaoCodigo.set(chamadaId, cronometro);
+}
+
+function pararRotacaoCodigo(chamadaId) {
+  const cronometro = cronometrosRotacaoCodigo.get(chamadaId);
+  if (!cronometro) return;
+  clearInterval(cronometro);
+  cronometrosRotacaoCodigo.delete(chamadaId);
+}
+
+function coordenadasValidas(chamada) {
+  return Number.isFinite(chamada.latitude) && Number.isFinite(chamada.longitude);
+}
+
+// Função auxiliar baseada em Promise para capturar o GPS facilmente com async/await
 function obterPosicaoAtualAsync() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -94,7 +141,18 @@ function obterPosicaoAtualAsync() {
 }
 
 async function abrirModalChamada(turma, professor) {
-  const chamada = await obterOuCriarChamadaAtiva(turma.id, professor.id);
+  let chamada;
+  try {
+    chamada = await obterOuCriarChamadaAtiva(turma.id, professor.id);
+  } catch (erro) {
+    console.error('Não foi possível abrir a chamada:', erro);
+    mostrarToast(erro.message || 'Não foi possível abrir a chamada.', 'erro');
+    return;
+  }
+  if (!chamada) {
+    mostrarToast('O banco não confirmou a criação da chamada.', 'erro');
+    return;
+  }
   const idDisciplina = turma.disciplina_id || turma.disciplinaId;
   const disciplina = idDisciplina ? await dbBuscarPorId('disciplinas', idDisciplina) : null;
 
@@ -144,10 +202,16 @@ async function abrirModalChamada(turma, professor) {
   // eslint-disable-next-line no-undef
   new QRCode(areaQr, { text: linkConfirmacao, width: 168, height: 168, colorDark: '#1F2D50', colorLight: '#ffffff' });
 
+  let codigoRenderizado = '';
   async function renderizarCodigo() {
     const atual = await dbBuscarPorId('chamadas', chamada.id);
     if (!atual || !atual.ativa) return;
-    areaCodigo.textContent = atual.codigo_atual || atual.codigoAtual;
+    const codigo = atual.codigo_atual || atual.codigoAtual;
+    areaCodigo.textContent = codigo;
+    if (codigo !== codigoRenderizado) {
+      codigoRenderizado = codigo;
+      reiniciarBarraTempo();
+    }
   }
 
   function reiniciarBarraTempo() {
@@ -159,55 +223,30 @@ async function abrirModalChamada(turma, professor) {
     preenchimento.style.width = '0%';
   }
 
-  async function rotacionarCodigo() {
-    const atual = await dbBuscarPorId('chamadas', chamada.id);
-    if (!atual || !atual.ativa) return;
-    await dbAtualizar('chamadas', chamada.id, {
-      codigo_anterior: atual.codigo_atual || atual.codigoAtual,
-      codigo_atual: gerarCodigoChamada(),
-      atualizado_em: new Date().toISOString()
-    });
-    await renderizarCodigo();
-    reiniciarBarraTempo();
-  }
-
   async function renderizarLista() {
+    areaLista.innerHTML = '';
     const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
     const presencas = await dbListar('presencas');
-
-    // Limpa por completo a área para evitar empilhamento duplicado
-    areaLista.innerHTML = '';
 
     if (alunosDaTurma.length === 0) {
       areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado nesta turma ainda.']));
       return;
     }
 
-    // Mapa de segurança visual para garantir que cada aluno seja injetado apenas uma vez
-    const alunosRenderizados = new Map();
-
     for (const aluno of alunosDaTurma) {
-      if (aluno && aluno.id && !alunosRenderizados.has(aluno.id)) {
-        alunosRenderizados.set(aluno.id, aluno);
-
-        const presenca = presencas.find((p) => {
-          const cId = p.chamada_id || p.chamadaId;
-          const aId = p.aluno_id || p.alunoId;
-          return cId === chamada.id && aId === aluno.id;
-        });
-
-        areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => {
-          await renderizarLista();
-        }));
-      }
+      const presenca = presencas.find((p) => {
+        const cId = p.chamada_id || p.chamadaId;
+        const aId = p.aluno_id || p.alunoId;
+        return cId === chamada.id && aId === aluno.id;
+      });
+      areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
     }
   }
 
   await renderizarCodigo();
-  reiniciarBarraTempo();
   await renderizarLista();
 
-  cronometroRotacaoCodigo = setInterval(rotacionarCodigo, INTERVALO_ROTACAO_MS);
+  iniciarRotacaoCodigo(chamada.id);
   
   if (typeof dbAoAtualizar === 'function') {
     paradaAssinaturaChamada = dbAoAtualizar(async () => {
@@ -217,8 +256,8 @@ async function abrirModalChamada(turma, professor) {
   }
 
   function fecharModal() {
-    if (cronometroRotacaoCodigo) clearInterval(cronometroRotacaoCodigo);
     if (paradaAssinaturaChamada) paradaAssinaturaChamada();
+    paradaAssinaturaChamada = null;
     modal.remove();
   }
 
@@ -227,20 +266,16 @@ async function abrirModalChamada(turma, professor) {
 
   btnEncerrar.addEventListener('click', async () => {
     if (!confirmarAcao('Encerrar esta chamada? Alunos não vão mais conseguir confirmar presença por ela.')) return;
-    
-    // 1. Marca como inativa no banco de dados
-    await dbAtualizar('chamadas', chamada.id, { ativa: false });
-    mostrarToast('Chamada encerrada com sucesso.', 'sucesso');
-    
-    // 2. Fecha o modal
-    fecharModal();
-
-    // 3. Notifica o painel do professor para atualizar a lista e sumir com o card "em andamento"
-    if (typeof window.renderizarPainelProfessor === 'function') {
-      await window.renderizarPainelProfessor();
-    } else {
-      window.location.reload();
+    try {
+      await dbAtualizar('chamadas', chamada.id, { ativa: false });
+    } catch (erro) {
+      console.error('Não foi possível encerrar a chamada:', erro);
+      mostrarToast('Não foi possível encerrar a chamada. Confira a conexão.', 'erro');
+      return;
     }
+    pararRotacaoCodigo(chamada.id);
+    mostrarToast('Chamada encerrada.', 'sucesso');
+    fecharModal();
   });
 }
 
@@ -254,25 +289,10 @@ function abrirJanelaTelao(chamadaId) {
 async function alunosMatriculadosNaTurma(turmaId) {
   const matriculas = await dbListar('matriculas');
   const alunos = await dbListar('alunos');
-  
-  // Remove IDs duplicados com Set
-  const idsAlunos = [...new Set(
-    matriculas
-      .filter((m) => (m.turma_id || m.turmaId) === turmaId)
-      .map((m) => m.aluno_id || m.alunoId)
-  )];
-
-  const alunosDaTurma = alunos.filter((a) => idsAlunos.includes(a.id));
-
-  // Blindagem rigorosa de unicidade por ID
-  const mapaUnicos = new Map();
-  alunosDaTurma.forEach((aluno) => {
-    if (aluno && aluno.id && !mapaUnicos.has(aluno.id)) {
-      mapaUnicos.set(aluno.id, aluno);
-    }
-  });
-
-  return Array.from(mapaUnicos.values());
+  const idsAlunos = matriculas
+    .filter((m) => (m.turma_id || m.turmaId) === turmaId)
+    .map((m) => m.aluno_id || m.alunoId);
+  return alunos.filter((a) => idsAlunos.includes(a.id));
 }
 
 function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
@@ -297,14 +317,15 @@ function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
     });
 
     const timestamp = new Date().toISOString();
+    let resultado;
     if (existente) {
-      await dbAtualizar('presencas', existente.id, { 
+      resultado = await dbAtualizar('presencas', existente.id, {
         status: novoStatus, 
         origem: 'manual', 
         confirmado_em: timestamp 
       });
     } else {
-      await dbInserir('presencas', {
+      resultado = await dbInserir('presencas', {
         chamada_id: chamada.id, 
         turma_id: turma.id, 
         aluno_id: aluno.id,
@@ -312,6 +333,10 @@ function montarLinhaAlunoChamada(aluno, presenca, chamada, turma, aoAtualizar) {
         origem: 'manual', 
         confirmado_em: timestamp
       });
+    }
+    if (!resultado) {
+      mostrarToast('O banco não confirmou a alteração da presença.', 'erro');
+      return;
     }
     await aoAtualizar();
   }

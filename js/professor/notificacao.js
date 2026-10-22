@@ -2,8 +2,8 @@
  * @fileoverview js/professor/notificacao.js — Módulo de Notificações do Professor
  * 
  * Este módulo provê as rotinas de busca, cálculo de pendências, notificação sonora,
- * injeção resiliente do componente visual do sino no cabeçalho e exibição em dois níveis
- * de modais (listagem e leitura detalhada) com atualização em tempo real no Supabase.
+ * injeção resiliente do componente visual do sino no cabeçalho e exibição da janela
+ * modal com atualização automática de estado no PostgreSQL/Supabase.
  * 
  * @module NotificacoesProfessor
  * @requires dbListar
@@ -20,7 +20,7 @@
 let contadorAnteriorNotificacoes = 0;
 
 /**
- * Busca e cruza os registros das tabelas `notificacoes_coordenador` e `notificacao_professores` 
+ * Busca e cruza os registros das tabelas `notificacoes` e `notificacao_professores` 
  * para determinar quais avisos pertencem ao professor logado e qual o status de leitura.
  *
  * @async
@@ -28,44 +28,53 @@ let contadorAnteriorNotificacoes = 0;
  * @returns {Promise<{pendentes: Array<Object>, todas: Array<Object>}>} Coleções filtradas.
  */
 async function buscarNotificacoesProfessor(professorId) {
-  try {
-    const supabase = window.supabaseClient || window.supabase;
-    if (!supabase) return { pendentes: [], todas: [] };
+  const relacoes = await dbListar('notificacao_professores');
+  const notificacoes = await dbListar('notificacoes');
 
-    // Consulta unificada fazendo join entre notificacao_professores e notificacoes
-    const { data, error } = await supabase
-      .from('notificacao_professores')
-      .select('*, notificacoes(*)')
-      .eq('professor_id', professorId);
+  // Mapeia os vínculos de leitura direcionados a este professor
+  const minhasRelacoes = relacoes.filter(r => (r.professor_id || r.professorId) === professorId);
+  const relacoesMap = new Map(minhasRelacoes.map(r => [r.notificacao_id || r.notificacaoId, r]));
 
-    if (error) {
-      console.error('[professor/notificacao.js] Erro ao buscar do Supabase:', error);
-      return { pendentes: [], todas: [] };
+  // Filtra avisos destinados a "todos" ou especificamente ao professor
+  const minhasNotificacoes = notificacoes.filter(n => {
+    // 1. Se já existe relação criada para esta notificação no banco
+    if (relacoesMap.has(n.id)) return true;
+
+    // 2. Trata e normaliza os destinatários
+    let dests = n.destinatarios;
+    if (typeof dests === 'string') {
+      try {
+        dests = JSON.parse(dests);
+      } catch (e) {
+        dests = [dests];
+      }
     }
 
-    const minhasNotificacoes = (data || []).map(item => {
-      const notif = item.notificacoes || {};
-      return {
-        ...notif,
-        id: notif.id || item.notificacao_id,
-        relacaoId: item.id,
-        lida: Boolean(item.lida),
-        lida_em: item.lida_em,
-        criado_em: notif.criado_em || item.criado_em
-      };
-    });
+    // Se destinatários estiver vazio/nulo, assume como notificação pública/global
+    if (!dests) return true;
 
-    // Ordenação decrescente por data de criação (mais recentes primeiro)
-    minhasNotificacoes.sort((a, b) => new Date(b.criado_em || 0) - new Date(a.criado_em || 0));
+    if (Array.isArray(dests)) {
+      return dests.includes('todos') || dests.includes(professorId);
+    }
 
-    const pendentes = minhasNotificacoes.filter(n => !n.lida);
+    return dests === 'todos' || dests === professorId;
+  }).map(n => {
+    const rel = relacoesMap.get(n.id);
+    return {
+      ...n,
+      relacaoId: rel ? rel.id : null,
+      lida: rel ? Boolean(rel.lida) : false
+    };
+  });
 
-    return { pendentes, todas: minhasNotificacoes };
-  } catch (err) {
-    console.warn('[professor/notificacao.js] Erro na resolução de notificações:', err);
-    return { pendentes: [], todas: [] };
-  }
+  // Ordenação decrescente por data de criação (mais recentes primeiro)
+  minhasNotificacoes.sort((a, b) => new Date(b.criado_em || b.criadoEm || b.data) - new Date(a.criado_em || a.criadoEm || a.data));
+
+  const pendentes = minhasNotificacoes.filter(n => !n.lida);
+
+  return { pendentes, todas: minhasNotificacoes };
 }
+
 /**
  * Injeta o componente do sino no cabeçalho do painel do professor.
  *
@@ -113,7 +122,7 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
       badge.textContent = qtd > 99 ? '99+' : String(qtd);
       badge.style.display = 'block';
 
-      // Dispara efeito sonoro caso haja acréscimo de novas notificações em tempo real
+      // Dispara efeito sonoro caso haja acréscimo de novas notificações
       if (qtd > contadorAnteriorNotificacoes) {
         tocarSomNotificacao();
       }
@@ -127,46 +136,26 @@ async function inicializarSinoNotificacoes(cabecalhoElemento, professor) {
 
   await atualizarContador();
 
-  // Evento de clique no sino para abertura da listagem geral
+  // Evento de clique para abertura do modal
   containerSino.addEventListener('click', async () => {
     const { todas } = await buscarNotificacoesProfessor(professor.id);
-    abrirModalListaNotificacoes(todas, professor, atualizarContador);
+    abrirModalNotificacoesProfessor(todas, professor, atualizarContador);
   });
 
-  // Ancoragem resiliente com tentativas automáticas no DOM
-  const tentarInserir = () => {
-    if (document.querySelector('.container-sino-notificacao')) return true;
+  // Ancoragem resiliente no DOM (ao lado do botão "Sair" ou dentro da div do usuário)
+  const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button'));
+  const btnSair = todosBotoes.find(btn => btn.textContent.trim().toLowerCase().includes('sair') || btn.classList.contains('btn-sair'));
 
-    const todosBotoes = Array.from(document.querySelectorAll('header button, .painel-cabecalho button, #tela-professor button, .cabecalho-usuario button, button'));
-    const btnSair = todosBotoes.find(btn => {
-      const texto = btn.textContent.trim().toLowerCase();
-      return texto.includes('sair') || texto.includes('logout') || texto.includes('encerrar') || btn.classList.contains('btn-sair');
-    });
-
-    if (btnSair && btnSair.parentNode) {
-      btnSair.parentNode.style.display = 'flex';
-      btnSair.parentNode.style.alignItems = 'center';
-      btnSair.parentNode.insertBefore(containerSino, btnSair);
-      return true;
-    } 
-
-    const headerAlvo = cabecalhoElemento || document.querySelector('header') || document.querySelector('.painel-cabecalho') || document.querySelector('#tela-professor');
-    if (headerAlvo) {
-      const localInsercao = headerAlvo.querySelector('.cabecalho-usuario, .usuario-info, div:last-child') || headerAlvo;
-      localInsercao.appendChild(containerSino);
-      return true;
-    }
-
-    return false;
-  };
-
-  if (!tentarInserir()) {
-    setTimeout(tentarInserir, 300);
-    setTimeout(tentarInserir, 800);
-    setTimeout(tentarInserir, 1500);
+  if (btnSair && btnSair.parentNode) {
+    btnSair.parentNode.style.display = 'flex';
+    btnSair.parentNode.style.alignItems = 'center';
+    btnSair.parentNode.insertBefore(containerSino, btnSair);
+  } else if (cabecalhoElemento) {
+    const localInsercao = cabecalhoElemento.querySelector('.cabecalho-usuario, .usuario-info, div:last-child') || cabecalhoElemento;
+    localInsercao.appendChild(containerSino);
   }
 
-  // Assinatura reativa no banco para atualizar o sino em tempo real sem refresh
+  // Assinatura reativa no banco para atualizar o sino sem dar refresh
   if (typeof dbAoAtualizar === 'function') {
     dbAoAtualizar(async () => {
       await atualizarContador();
@@ -203,13 +192,14 @@ function tocarSomNotificacao() {
 }
 
 /**
- * Abre o primeiro modal com a listagem resumida de todas as notificações.
+ * Constrói e exibe a janela modal com a listagem de avisos e 
+ * executa a persistência de leitura (`lida = true`) no Supabase.
  *
- * @param {Array<Object>} listaNotificacoes - Lista de notificações.
- * @param {Object} professor - Dados do professor.
- * @param {Function} callbackAtualizar - Função para atualizar o badge do sino.
+ * @param {Array<Object>} listaNotificacoes - Coleção completa de notificações do professor.
+ * @param {Object} professor - Dados do professor autenticado.
+ * @param {Function} callbackAtualizar - Função para acionar a atualização do badge após leitura.
  */
-function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtualizar) {
+function abrirModalNotificacoesProfessor(listaNotificacoes, professor, callbackAtualizar) {
   const overlay = criarElemento('div', {
     class: 'modal-overlay',
     style: 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;'
@@ -240,12 +230,11 @@ function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtual
     listaNotificacoes.forEach(notif => {
       const item = criarElemento('div', {
         class: `modal-notificacao-item ${notif.lida ? 'lida' : ''}`,
-        style: `padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid ${notif.lida ? '#ccc' : '#007bff'}; background: ${notif.lida ? '#f9f9f9' : '#eef5ff'}; cursor: pointer; transition: background 0.2s;`
+        style: `padding: 12px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid ${notif.lida ? '#ccc' : '#007bff'}; background: ${notif.lida ? '#f9f9f9' : '#eef5ff'}; transition: background 0.2s;`
       });
 
       const titulo = criarElemento('h4', { style: 'margin: 0 0 5px 0; font-size: 1em; color: #222;' }, [notif.titulo]);
-      const resumoTexto = notif.mensagem && notif.mensagem.length > 90 ? notif.mensagem.substring(0, 90) + '...' : (notif.mensagem || '');
-      const mensagem = criarElemento('p', { style: 'margin: 0 0 8px 0; font-size: 0.85em; color: #555;' }, [resumoTexto]);
+      const mensagem = criarElemento('p', { style: 'margin: 0 0 8px 0; font-size: 0.9em; color: #555; white-space: pre-wrap;' }, [notif.mensagem]);
       
       const rawData = notif.criado_em || notif.criadoEm || notif.data;
       const dataFormatada = rawData ? new Date(rawData).toLocaleDateString('pt-BR') : '';
@@ -253,15 +242,47 @@ function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtual
 
       item.append(titulo, mensagem, rodape);
 
-      // Ao clicar no item da lista, abre o modal detalhado grande (segundo nível)
-      item.addEventListener('click', () => {
-        abrirModalDetalheNotificacao(notif, professor, async () => {
+      if (notif.anexo_url || notif.anexoUrl) {
+        const linkAnexo = criarElemento('a', {
+          href: notif.anexo_url || notif.anexoUrl,
+          target: '_blank',
+          style: 'display: block; margin-top: 5px; font-size: 0.8em; color: #007bff; text-decoration: underline;'
+        }, ['Ver Anexo']);
+        item.appendChild(linkAnexo);
+      }
+
+      // Ao interagir com o item, efetua o UPDATE/INSERT no banco de dados e zera o badge
+      if (!notif.lida) {
+        const marcarComoLida = async () => {
+          if (notif.lida) return;
           notif.lida = true;
           item.style.borderLeftColor = '#ccc';
           item.style.background = '#f9f9f9';
-          await callbackAtualizar();
-        });
-      });
+
+          try {
+            if (notif.relacaoId) {
+              await dbAtualizar('notificacao_professores', notif.relacaoId, {
+                lida: true,
+                lida_em: new Date().toISOString()
+              });
+            } else {
+              const res = await dbInserir('notificacao_professores', {
+                notificacao_id: notif.id,
+                professor_id: professor.id,
+                lida: true,
+                lida_em: new Date().toISOString()
+              });
+              if (res && res.id) notif.relacaoId = res.id;
+            }
+            await callbackAtualizar();
+          } catch (e) {
+            console.warn('[notificacao.js] Falha ao registrar confirmação de leitura:', e);
+          }
+        };
+
+        item.addEventListener('mouseenter', marcarComoLida, { once: true });
+        item.addEventListener('click', marcarComoLida, { once: true });
+      }
 
       corpoModal.appendChild(item);
     });
@@ -277,94 +298,5 @@ function abrirModalListaNotificacoes(listaNotificacoes, professor, callbackAtual
   document.body.appendChild(overlay);
 }
 
-/**
- * Abre o segundo modal (maior e expandido) para leitura completa da notificação,
- * efetuando a persistência de leitura (`lida = true`) no Supabase.
- *
- * @param {Object} notif - Objeto da notificação selecionada.
- * @param {Object} professor - Dados do professor autenticado.
- * @param {Function} callbackMarcadoLido - Função de callback para refletir a leitura na lista e no sino.
- */
-function abrirModalDetalheNotificacao(notif, professor, callbackMarcadoLido) {
-  const overlayDetalhe = criarElemento('div', {
-    class: 'modal-overlay-detalhe',
-    style: 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1100;'
-  });
-
-  const modalGrande = criarElemento('div', {
-    class: 'modal-cartao-grande',
-    style: 'background: #fff; width: 92%; max-width: 650px; max-height: 85vh; border-radius: 10px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.3);'
-  });
-
-  // Cabeçalho limpo apenas com o Título
-  const cabecalhoDetalhe = criarElemento('div', {
-    style: 'border-bottom: 2px solid #f0f0f0; padding-bottom: 12px; margin-bottom: 20px;'
-  }, [
-    criarElemento('h2', { style: 'margin: 0; font-size: 1.3em; color: #111;' }, [notif.titulo || 'Detalhes da Notificação'])
-  ]);
-
-  const corpoDetalhe = criarElemento('div', { style: 'overflow-y: auto; flex: 1; padding-right: 5px; line-height: 1.6;' });
-
-  // Exibição apenas da mensagem (informação de data removida)
-  const textoMensagem = criarElemento('div', { style: 'margin: 0 0 20px 0; font-size: 1em; color: #333; white-space: pre-wrap; word-break: break-word;' }, [notif.mensagem || '']);
-
-  corpoDetalhe.append(textoMensagem);
-
-  if (notif.anexo_url || notif.anexoUrl) {
-    const containerAnexo = criarElemento('div', { style: 'margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd;' }, [
-      criarElemento('a', {
-        href: notif.anexo_url || notif.anexoUrl,
-        target: '_blank',
-        style: 'display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #007bff; color: #fff; border-radius: 6px; text-decoration: none; font-size: 0.9em; font-weight: 500;'
-      }, ['📎 Abrir Arquivo / Anexo'])
-    ]);
-    corpoDetalhe.appendChild(containerAnexo);
-  }
-
-  const rodapeDetalhe = criarElemento('div', {
-    style: 'display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 15px; border-top: 1px solid #f0f0f0;'
-  }, [
-    criarElemento('button', {
-      style: 'background: #6c757d; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9em;',
-      onClick: () => overlayDetalhe.remove()
-    }, ['Fechar'])
-  ]);
-
-  modalGrande.append(cabecalhoDetalhe, corpoDetalhe, rodapeDetalhe);
-  overlayDetalhe.appendChild(modalGrande);
-
-  overlayDetalhe.addEventListener('click', (e) => {
-    if (e.target === overlayDetalhe) overlayDetalhe.remove();
-  });
-
-  document.body.appendChild(overlayDetalhe);
-
-  // Se a notificação ainda não estava lida, efetua a gravação no banco de dados agora que foi aberta no modo detalhado
-  if (!notif.lida) {
-    (async () => {
-      notif.lida = true;
-      try {
-        if (notif.relacaoId) {
-          await dbAtualizar('notificacao_professores', notif.relacaoId, {
-            lida: true,
-            lida_em: new Date().toISOString()
-          });
-        } else {
-          const res = await dbInserir('notificacao_professores', {
-            notificacao_id: notif.id,
-            professor_id: professor.id,
-            lida: true,
-            lida_em: new Date().toISOString()
-          });
-          if (res && res.id) notif.relacaoId = res.id;
-        }
-        await callbackMarcadoLido();
-      } catch (err) {
-        console.warn('[notificacao.js] Falha ao registrar leitura no modal detalhado:', err);
-      }
-    })();
-  }
-}
-
 // Exposição no escopo global
-window.inicializarSinoNotificacoes = inicializarSinoNotificacoes; 
+window.inicializarSinoNotificacoes = inicializarSinoNotificacoes;

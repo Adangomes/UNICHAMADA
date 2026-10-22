@@ -3,12 +3,6 @@
  * Nenhuma tela fala direto com o Supabase: todas passam pelos arquivos desta pasta.
  */
 window.TI = window.TI || {};
-window.TI.config = window.TI.config || {};
-
-// Configuração injetada diretamente
-window.TI.config.supabaseUrl = 'https://xultvypwxwyxhhxfzwqdw.supabase.co';
-window.TI.config.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
-
 TI.dados = TI.dados || {};
 TI.db = null;
 TI.dbErro = null;
@@ -19,13 +13,10 @@ TI.dbErro = null;
     TI.dbErro = 'A biblioteca do Supabase não carregou. Verifique a internet.';
     return;
   }
-  
-  // Validação corrigida: só bloqueia se estiver vazio ou com o texto de exemplo antigo
-  if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || String(cfg.supabaseUrl).includes('COLE_AQUI') || String(cfg.supabaseAnonKey).includes('COLE_AQUI')) {
-    TI.dbErro = 'Preencha a URL e a chave anon do Supabase.';
+  if (String(cfg.supabaseUrl).indexOf('https://xultvypwxwyxhhxfzwqdw.supabase.co') === 0 || String(cfg.supabaseAnonKey).indexOf('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY') === 0) {
+    TI.dbErro = 'Preencha a URL e a chave anon do Supabase em js/config/supabase-config.js.';
     return;
   }
-
   try {
     TI.db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -47,3 +38,8 @@ TI.dados.tratar = function (resposta) {
   }
   return resposta ? resposta.data : null;
 };
+
+
+
+
+

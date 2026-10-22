@@ -4,7 +4,7 @@ window.SuporteCoordenador.dados = window.SuporteCoordenador.dados || {};
 
 window.SuporteCoordenador.dados.chamados = {
   async abrir(tipo, id, dadosChamado) {
-    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964643';
     return window.Suporte.dados.rpc('ti_abrir_chamado', {
       p_tipo: tipo,
       p_id: uuidCoordenadorBanco,
@@ -18,7 +18,7 @@ window.SuporteCoordenador.dados.chamados = {
   },
 
   async listar(tipo, id) {
-    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964643';
     return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { 
       p_tipo: tipo, 
       p_id: uuidCoordenadorBanco 
@@ -26,7 +26,7 @@ window.SuporteCoordenador.dados.chamados = {
   },
 
   async ver(tipo, id, chamadoIdOuCodigo) {
-    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964643';
     return window.Suporte.dados.rpc('ti_ver_chamado', { 
       p_tipo: tipo, 
       p_id: uuidCoordenadorBanco, 

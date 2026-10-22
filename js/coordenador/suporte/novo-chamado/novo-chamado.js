@@ -44,7 +44,14 @@ window.Suporte.novoChamado = {
           if (!dados.categoria) { mostrarErro('Escolha o que está acontecendo.'); return; }
           if (dados.descricao.length < 5) { mostrarErro('Descreva o problema com um pouco mais de detalhe.'); return; }
           let codigo;
-          try { codigo = await S.dados.chamados.abrir(e.tipo, e.id, dados); }
+          try {
+            // Se for do tipo coordenador ou estiver na tela de coordenador, usa o serviço de coordenador
+            if (e && e.tipo === 'coordenador' && window.SuporteCoordenador?.dados?.chamados) {
+              codigo = await window.SuporteCoordenador.dados.chamados.abrir('coordenador', e.id, dados);
+            } else {
+              codigo = await S.dados.chamados.abrir(e.tipo, e.id, dados);
+            }
+          }
           catch (err) { mostrarErro(err.message); return; }
           modal.fechar();
           S.toast('Chamado ' + codigo + ' enviado. A equipe de TI responde por aqui.');
@@ -56,16 +63,15 @@ window.Suporte.novoChamado = {
   }
 };
 
-// Configurações de Suporte para coordenadores (COM UUID CORRIGIDO)
+// Configurações de Suporte para coordenadores (COM UUID E TIPO 'coordenador' FIXADOS)
 window.SuporteCoordenador = window.SuporteCoordenador || {};
 window.SuporteCoordenador.dados = window.SuporteCoordenador.dados || {};
 
 window.SuporteCoordenador.dados.chamados = {
   async abrir(tipo, id, dadosChamado) {
-    // ID completo copiado da tabela do Supabase (36 caracteres)
     const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964522';
     return window.Suporte.dados.rpc('ti_abrir_chamado', {
-      p_tipo: tipo,
+      p_tipo: 'coordenador', // Garante que o tipo enviado à procedure seja 'coordenador'
       p_id: uuidCoordenadorBanco,
       p_titulo: dadosChamado.titulo, 
       p_descricao: dadosChamado.descricao, 
@@ -79,7 +85,7 @@ window.SuporteCoordenador.dados.chamados = {
   async listar(tipo, id) {
     const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964522';
     return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { 
-      p_tipo: tipo, 
+      p_tipo: 'coordenador', 
       p_id: uuidCoordenadorBanco 
     })) || [];
   },
@@ -87,7 +93,7 @@ window.SuporteCoordenador.dados.chamados = {
   async ver(tipo, id, chamadoIdOuCodigo) {
     const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa3964522';
     return window.Suporte.dados.rpc('ti_ver_chamado', { 
-      p_tipo: tipo, 
+      p_tipo: 'coordenador', 
       p_id: uuidCoordenadorBanco, 
       p_codigo: chamadoIdOuCodigo 
     });

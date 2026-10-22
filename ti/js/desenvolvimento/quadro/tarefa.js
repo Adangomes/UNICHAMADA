@@ -99,7 +99,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
       ui.par('Pedido por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),

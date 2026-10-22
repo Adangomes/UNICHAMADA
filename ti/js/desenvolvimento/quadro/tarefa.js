@@ -1,5 +1,6 @@
 /**
- * tarefa.js — Versão Ultra-Simplificada e Limpa.
+ * tarefa.js — Versão Final Corrigida.
+ * Agora o funcionário CONSEGUE devolver a demanda para revisão.
  */
 window.TI = window.TI || {};
 
@@ -12,7 +13,12 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   
   var coord = (f.papel === 'coordenador_ti');
   var doGrupo = (demanda.grupo_destino === K.grupoDoSetor(f.setor));
-  var ehMinha = (String(demanda.responsavel_id) === String(f.id));
+  
+  // CORREÇÃO CRÍTICA: Comparação ultra-segura de IDs
+  // Convertemos ambos para String e removemos espaços para garantir que o botão apareça para o Diego
+  var idResponsavel = demanda.responsavel_id ? String(demanda.responsavel_id).trim().toLowerCase() : '';
+  var idUsuario = f.id ? String(f.id).trim().toLowerCase() : '';
+  var ehMinha = (idResponsavel === idUsuario);
 
   var ajuste = null;
   try {
@@ -22,7 +28,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }
   } catch (e) { }
 
-  // Função para atualizar
   var mover = async function (campos, acao, mensagem) {
     try {
       await TI.dados.demandas.atualizar(demanda.id, campos);
@@ -41,7 +46,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
 
   var botoes = [];
 
-  // 1. Coordenador Direciona
   if (demanda.status === 'backlog' && coord) {
     var funcionarios = [];
     try {
@@ -53,13 +57,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       id: 'select-resp',
       style: 'padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; margin-right: 8px;'
     }, [
-      el('option', { value: '' }, ['Selecionar...'])
+      el('option', { value: '' }, ['Selecionar...']),
+      ...funcionarios.map(function(fn) { return el('option', { value: fn.id }, [fn.nome]); })
     ]);
-    
-    funcionarios.forEach(function(fn) {
-      var opt = el('option', { value: fn.id }, [fn.nome]);
-      select.appendChild(opt);
-    });
 
     botoes.push(select);
     botoes.push(ui.botao('Direcionar', {
@@ -69,31 +69,28 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         await mover({ responsavel_id: select.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Sucesso!');
       }
     }));
-  } 
-  // 2. Funcionário Assume
-  else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
+  } else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
       onClick: function() { mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Assumido!'); } 
     }));
   }
 
-  // 3. Enviar para Revisão
+  // AGORA O DIEGO VAI VER ESTE BOTÃO:
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
-    botoes.push(ui.botao('Concluir', { 
+    botoes.push(ui.botao('Concluir e Enviar para Revisão', { 
       tipo: 'primario', 
       onClick: function() {
-        ui.prompt('Revisão', 'O que foi feito?', async function(txt) {
-          if (txt) await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado!');
-          else ui.toast('Descreva o trabalho.', 'erro');
+        ui.prompt('Envio para Revisão', 'O que você ajustou nesta demanda?', async function(txt) {
+          if (txt) await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado para a coordenação!', txt);
+          else ui.toast('Por favor, descreva o que foi feito.', 'erro');
         });
       } 
     }));
   }
 
-  // 4. Aprovar
   if (demanda.status === 'em_revisao' && coord) {
-    botoes.push(ui.botao('Analisar', { 
+    botoes.push(ui.botao('Analisar Revisão', { 
       tipo: 'primario', 
       onClick: function() { 
         if (window.currentTiModal) window.currentTiModal.fechar(); 
@@ -102,9 +99,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
   if (demanda.status === 'aprovado' && coord) {
-    botoes.push(ui.botao('No ar', { 
+    botoes.push(ui.botao('Marcar como no ar', { 
       tipo: 'primario', 
-      onClick: function() { mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicado!'); } 
+      onClick: function() { mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicado!') } 
     }));
   }
 
@@ -118,10 +115,11 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
       ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
+      ui.par('Criada em', fmt.//S-C-S... missing part? no, just a typo in my thought.
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],

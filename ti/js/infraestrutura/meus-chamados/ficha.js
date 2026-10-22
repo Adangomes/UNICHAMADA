@@ -91,12 +91,12 @@ TI.telas.infraBlocos.ficha = function (x, contexto) {
         })
       );
     } else {
-      acoes.push(
-        ui.botao('Aguardando material', {
-          pequeno: true,
-          onClick: () => mudar(x, { status: 'aguardando_usuario' }, 'chamado.aguardando', 'Chamado colocado em espera.')
-        })
-      );
+        acoes.push(
+          ui.botao('Aguardando material', {
+            pequeno: true,
+            onClick: () => mudar(x, { status: 'aguardando_usuario' }, 'chamado.aguardando', 'Chamado colocado em espera.')
+          })
+        );
       acoes.push(
         ui.botao('Marcar como resolvido', {
           tipo: 'primario',

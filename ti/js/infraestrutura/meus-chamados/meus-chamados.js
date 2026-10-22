@@ -1,5 +1,5 @@
 /**
- * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtro unificado blindado.
+ * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura corrigida para puxar do banco.
  */
 window.TI = window.TI || {};
 
@@ -21,25 +21,25 @@ TI.telas.infra = {
     }
 
     const f = ctx.f;
-    
-    // Garante que filtroAtual seja sempre uma string tratada (evita erro se vier o objeto ctx do roteador)
     const filtroAtual = typeof filtroParam === 'string' ? filtroParam : 'abertos_todos';
     
     const recarregar = (novoFiltro = filtroAtual) => 
       TI.telas.infra.render(c, ctx, novoFiltro);
     
-    // Desmembra o filtro unificado com segurança
     const [statusFiltro, periodoFiltro] = filtroAtual.split('_');
     const mostrarEncerrados = statusFiltro === 'todos';
     const filtroPeriodo = periodoFiltro || 'todos';
 
     const statusFechados = ['resolvido', 'fechado', 'concluido'];
     
-    // 1. Filtragem por setor e status encerrado
-    const baseSetor = chamados.filter((x) => {
-      const pertenceAoSetor = x.grupo_destino === 'infraestrutura' || x.grupo_destino === 'desenvolvimento' || !x.grupo_destino;
+    // 1. Filtragem robusta por setor e status encerrado (tolerante a maiúsculas/minúsculas)
+    const baseSetor = (chamados || []).filter((x) => {
+      const grupo = (x.grupo_destino || '').toLowerCase();
+      const pertenceAoSetor = grupo === 'infraestrutura' || grupo === 'desenvolvimento' || !x.grupo_destino;
+      const statusItem = (x.status || '').toLowerCase();
+      
       if (mostrarEncerrados) return pertenceAoSetor;
-      return pertenceAoSetor && !statusFechados.includes(x.status?.toLowerCase());
+      return pertenceAoSetor && !statusFechados.includes(statusItem);
     });
 
     // 2. Filtro Temporal Avançado
@@ -69,7 +69,8 @@ TI.telas.infra = {
       }
     });
 
-    const meus = abertos.filter((x) => String(x.responsavel_id) === String(f.id));
+    // Comparação flexível de ID do responsável (string ou número)
+    const meus = abertos.filter((x) => x.responsavel_id && f && String(x.responsavel_id).trim() === String(f.id).trim());
     const livres = abertos.filter((x) => !x.responsavel_id);
 
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
@@ -91,7 +92,7 @@ TI.telas.infra = {
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
       
-      // Barra de Ferramentas limpa com o seletor unificado
+      // Barra de Ferramentas com o seletor unificado funcional
       el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
         el('select', { 
           style: 'height: 38px; padding: 0 14px; border-radius: var(--raio-pequeno, 6px); border: 1.5px solid var(--ti-linha, #e3e0d9); font-size: 14px; font-family: inherit; font-weight: 500; background: var(--ti-branco, #fff); color: var(--ti-tinta, #1b2547); cursor: pointer; outline: none;',

@@ -1,6 +1,5 @@
 /**
- * tarefa.js — Versão Final Corrigida.
- * Agora o funcionário CONSEGUE devolver a demanda para revisão.
+ * tarefa.js — Versão Final Limpa e Corrigida.
  */
 window.TI = window.TI || {};
 
@@ -14,8 +13,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   var coord = (f.papel === 'coordenador_ti');
   var doGrupo = (demanda.grupo_destino === K.grupoDoSetor(f.setor));
   
-  // CORREÇÃO CRÍTICA: Comparação ultra-segura de IDs
-  // Convertemos ambos para String e removemos espaços para garantir que o botão apareça para o Diego
   var idResponsavel = demanda.responsavel_id ? String(demanda.responsavel_id).trim().toLowerCase() : '';
   var idUsuario = f.id ? String(f.id).trim().toLowerCase() : '';
   var ehMinha = (idResponsavel === idUsuario);
@@ -76,7 +73,6 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
 
-  // AGORA O DIEGO VAI VER ESTE BOTÃO:
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
     botoes.push(ui.botao('Concluir e Enviar para Revisão', { 
       tipo: 'primario', 
@@ -98,10 +94,11 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       } 
     }));
   }
+  
   if (demanda.status === 'aprovado' && coord) {
     botoes.push(ui.botao('Marcar como no ar', { 
       tipo: 'primario', 
-      onClick: function() { mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicado!') } 
+      onClick: function() { mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicado!'); } 
     }));
   }
 
@@ -115,11 +112,10 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
       ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
-      ui.par('Criada em', fmt.//S-C-S... missing part? no, just a typo in my thought.
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],

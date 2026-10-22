@@ -6,7 +6,6 @@ window.Suporte.dados.chamados = {
     const supabase = window.supabaseClient || window.supabase;
     if (!supabase) return [];
 
-    // Busca chamados abertos pelo professor logado
     const { data, error } = await supabase
       .from('ti_chamados')
       .select('*')
@@ -15,17 +14,33 @@ window.Suporte.dados.chamados = {
       .order('criado_em', { ascending: false });
 
     if (error) {
-      console.error('[UNICHAMADA] Erro ao listar chamados do professor:', error);
+      console.error('[UNICHAMADAS] Erro ao listar chamados:', error);
       return [];
     }
     return data || [];
+  },
+
+  async ver(tipo, id, chamadoId) {
+    const supabase = window.supabaseClient || window.supabase;
+    if (!supabase) return null;
+
+    const { data, error } = await supabase
+      .from('ti_chamados')
+      .select('*')
+      .eq('id', chamadoId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[UNICHAMADAS] Erro ao buscar detalhe do chamado:', error);
+      return null;
+    }
+    return data;
   },
 
   async abrir(tipo, id, dadosChamado) {
     const supabase = window.supabaseClient || window.supabase;
     if (!supabase) throw new Error('Supabase não inicializado.');
 
-    // Insere rigorosamente dentro do schema da tabela ti_chamados
     const payload = {
       titulo: dadosChamado.titulo,
       descricao: dadosChamado.descricao,
@@ -48,7 +63,7 @@ window.Suporte.dados.chamados = {
       .single();
 
     if (error) {
-      console.error('[UNICHAMADA] Erro ao inserir chamado:', error);
+      console.error('[UNICHAMADAS] Erro ao inserir chamado:', error);
       throw error;
     }
 

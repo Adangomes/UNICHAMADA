@@ -1,27 +1,57 @@
-/**
- * dados/chamados.js — tabela ti_chamados (SQL: banco-de-dados/suporte/02_ti_chamados.sql).
- * Professor e coordenador só enxergam e abrem chamados DELES. Quem pergunta é sempre (tipo, id) da pessoa logada.
- */
 window.Suporte = window.Suporte || {};
 window.Suporte.dados = window.Suporte.dados || {};
 
 window.Suporte.dados.chamados = {
-  /** Abre um chamado e devolve o código (ex.: "CH-0012"). */
-  async abrir(tipo, id, d) {
-    return window.Suporte.dados.rpc('ti_abrir_chamado', {
-      p_tipo: tipo, p_id: id,
-      p_titulo: d.titulo, p_descricao: d.descricao, p_categoria: d.categoria,
-      p_local: d.local || null, p_patrimonio: d.patrimonio || null, p_contexto: d.contexto || {}
-    });
-  },
-
-  /** Os chamados da pessoa, do mais recente para o mais antigo. */
   async listar(tipo, id) {
-    return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { p_tipo: tipo, p_id: id })) || [];
+    const supabase = window.supabaseClient || window.supabase;
+    if (!supabase) return [];
+
+    // Busca chamados abertos pelo professor logado
+    const { data, error } = await supabase
+      .from('ti_chamados')
+      .select('*')
+      .eq('solicitante_tipo', 'professor')
+      .eq('solicitante_id', id)
+      .order('criado_em', { ascending: false });
+
+    if (error) {
+      console.error('[UNICHAMADA] Erro ao listar chamados do professor:', error);
+      return [];
+    }
+    return data || [];
   },
 
-  /** Um chamado da pessoa (ou null se não for dela). */
-  async ver(tipo, id, codigo) {
-    return window.Suporte.dados.rpc('ti_ver_chamado', { p_tipo: tipo, p_id: id, p_codigo: codigo });
+  async abrir(tipo, id, dadosChamado) {
+    const supabase = window.supabaseClient || window.supabase;
+    if (!supabase) throw new Error('Supabase não inicializado.');
+
+    // Insere rigorosamente dentro do schema da tabela ti_chamados
+    const payload = {
+      titulo: dadosChamado.titulo,
+      descricao: dadosChamado.descricao,
+      grupo_destino: dadosChamado.grupo_destino,
+      categoria: dadosChamado.categoria,
+      local_texto: dadosChamado.local_texto || null,
+      patrimonio: dadosChamado.patrimonio || null,
+      solicitante_tipo: 'professor',
+      solicitante_id: id,
+      solicitante_nome: window.UsuarioLogado?.nome || 'Professor',
+      status: 'aberto',
+      prioridade: 'media',
+      contexto: dadosChamado.contexto || {}
+    };
+
+    const { data, error } = await supabase
+      .from('ti_chamados')
+      .insert([payload])
+      .select('codigo, numero')
+      .single();
+
+    if (error) {
+      console.error('[UNICHAMADA] Erro ao inserir chamado:', error);
+      throw error;
+    }
+
+    return data.codigo || `CH-${data.numero}`;
   }
 };

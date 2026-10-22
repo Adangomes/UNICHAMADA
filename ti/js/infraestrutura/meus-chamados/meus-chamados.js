@@ -1,10 +1,10 @@
 /**
- * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtro unificado.
+ * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtro unificado blindado.
  */
 window.TI = window.TI || {};
 
 TI.telas.infra = {
-  async render(c, ctx, filtroAtual = 'abertos_todos') {
+  async render(c, ctx, filtroParam = 'abertos_todos') {
     const { el } = TI.dom;
     const { ui, fmt, K } = TI;
     c.replaceChildren(ui.carregando());
@@ -21,10 +21,14 @@ TI.telas.infra = {
     }
 
     const f = ctx.f;
+    
+    // Garante que filtroAtual seja sempre uma string tratada (evita erro se vier o objeto ctx do roteador)
+    const filtroAtual = typeof filtroParam === 'string' ? filtroParam : 'abertos_todos';
+    
     const recarregar = (novoFiltro = filtroAtual) => 
       TI.telas.infra.render(c, ctx, novoFiltro);
     
-    // Desmembra o filtro unificado (ex: 'abertos_mes' -> status: abertos, periodo: mes)
+    // Desmembra o filtro unificado com segurança
     const [statusFiltro, periodoFiltro] = filtroAtual.split('_');
     const mostrarEncerrados = statusFiltro === 'todos';
     const filtroPeriodo = periodoFiltro || 'todos';
@@ -87,7 +91,7 @@ TI.telas.infra = {
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
       
-      // Barra de Ferramentas limpa com um único seletor inteligente unificando status e período
+      // Barra de Ferramentas limpa com o seletor unificado
       el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
         el('select', { 
           style: 'height: 38px; padding: 0 14px; border-radius: var(--raio-pequeno, 6px); border: 1.5px solid var(--ti-linha, #e3e0d9); font-size: 14px; font-family: inherit; font-weight: 500; background: var(--ti-branco, #fff); color: var(--ti-tinta, #1b2547); cursor: pointer; outline: none;',

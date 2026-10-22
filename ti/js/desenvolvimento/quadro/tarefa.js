@@ -11,7 +11,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   const f = ctx.f;
   const coord = f.papel === 'coordenador_ti';
   const doGrupo = demanda.grupo_destino === K.grupoDoSetor(f.setor);
-  const ehMinha = demanda.responsavel_id === f.id;
+  
+  // CORREÇÃO AQUI: Convertendo ambos para String para garantir que o botão apareça para o Diego
+  const ehMinha = String(demanda.responsavel_id) === String(f.id);
 
   let ajuste = null;
   try {
@@ -102,7 +104,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['Ajustes pedidos pela coordenação: ' + (ajuste.comentario || '(sem comentário)')]) : null,
       ui.par('Pedido por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),

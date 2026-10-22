@@ -223,17 +223,17 @@ function renderPassoLocalizacao(estado) {
     status.textContent = 'Obtendo sua localização atual via GPS...';
 
     // Pega as coordenadas da chamada do professor independentemente de como o banco as nomeou
-    const latProfessor = estado.chamada.latitude || estado.chamada.lat || estado.chamada.latitude_professor || estado.chamada.latProfessor;
-    const lonProfessor = estado.chamada.longitude || estado.chamada.lon || estado.chamada.lng || estado.chamada.longitude_professor || estado.chamada.lonProfessor;
+    const latProfessor = estado.chamada.latitude ?? estado.chamada.lat ?? estado.chamada.latitude_professor ?? estado.chamada.latProfessor;
+    const lonProfessor = estado.chamada.longitude ?? estado.chamada.lon ?? estado.chamada.lng ?? estado.chamada.longitude_professor ?? estado.chamada.lonProfessor;
 
-    if (!latProfessor || !lonProfessor) {
+    if (!Number.isFinite(Number(latProfessor)) || !Number.isFinite(Number(lonProfessor))) {
       status.textContent = 'Coordenadas da chamada inválidas ou ausentes.';
       btnVerificar.disabled = false;
       btnVerificar.textContent = 'Tentar novamente';
       return;
     }
 
-    const resultado = await verificarLocalizacaoAluno(latProfessor, lonProfessor);
+    const resultado = await verificarLocalizacaoAluno(Number(latProfessor), Number(lonProfessor));
 
     if (resultado.erro) {
       status.textContent = resultado.erro;
@@ -269,48 +269,65 @@ function renderPassoCodigo(estado) {
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const digitado = form.codigo.value.trim().toUpperCase();
-    const chamadaAtual = await dbBuscarPorId('chamadas', estado.chamada.id);
+    const botao = form.querySelector('button[type="submit"]');
+    botao.disabled = true;
 
-    if (!chamadaAtual || !chamadaAtual.ativa) {
-      exibirErroPasso(erro, 'Esta chamada foi encerrada pelo professor.');
-      return;
-    }
+    try {
+      const chamadaAtual = await dbBuscarPorId('chamadas', estado.chamada.id);
 
-    const codigoAtualBanco = chamadaAtual.codigo_atual || chamadaAtual.codigoAtual;
-    const codigoAnteriorBanco = chamadaAtual.codigo_anterior || chamadaAtual.codigoAnterior;
+      if (!chamadaAtual || !chamadaAtual.ativa) {
+        exibirErroPasso(erro, 'Esta chamada foi encerrada pelo professor.');
+        return;
+      }
 
-    const codigoValido = digitado === codigoAtualBanco || digitado === codigoAnteriorBanco;
-    if (!codigoValido) {
-      exibirErroPasso(erro, 'Código incorreto. Confira o código que está no telão e tente de novo.');
-      return;
-    }
+      const atualizadoEm = Date.parse(chamadaAtual.atualizado_em || chamadaAtual.atualizadoEm || '');
+      const idadeCodigo = Date.now() - atualizadoEm;
+      const dentroDaValidade = Number.isFinite(atualizadoEm)
+        && idadeCodigo >= -5000
+        && idadeCodigo <= INTERVALO_ROTACAO_MS;
+      const codigoAtualBanco = chamadaAtual.codigo_atual || chamadaAtual.codigoAtual;
+      const codigoAnteriorBanco = chamadaAtual.codigo_anterior || chamadaAtual.codigoAnterior;
 
-    const presencas = await dbListar('presencas');
-    const existente = presencas.find((p) => {
-      const cId = p.chamada_id || p.chamadaId;
-      const aId = p.aluno_id || p.alunoId;
-      return cId === estado.chamada.id && aId === estado.aluno.id;
-    });
+      const codigoValido = dentroDaValidade
+        && (digitado === codigoAtualBanco || digitado === codigoAnteriorBanco);
+      if (!codigoValido) {
+        exibirErroPasso(erro, 'Código incorreto ou expirado. Confira o telão e tente novamente.');
+        return;
+      }
 
-    const timestamp = new Date().toISOString();
-    if (existente) {
-      await dbAtualizar('presencas', existente.id, { 
-        status: 'presente', 
-        origem: 'qrcode', 
-        confirmado_em: timestamp 
+      const presencas = await dbListar('presencas');
+      const existente = presencas.find((p) => {
+        const cId = p.chamada_id || p.chamadaId;
+        const aId = p.aluno_id || p.alunoId;
+        return cId === estado.chamada.id && aId === estado.aluno.id;
       });
-    } else {
-      await dbInserir('presencas', {
-        chamada_id: estado.chamada.id,
-        turma_id: estado.turma.id,
-        aluno_id: estado.aluno.id,
-        status: 'presente',
-        origem: 'qrcode',
-        confirmado_em: timestamp
-      });
-    }
 
-    renderSucessoConfirmacao(estado);
+      const timestamp = new Date().toISOString();
+      const registro = existente
+        ? await dbAtualizar('presencas', existente.id, {
+          status: 'presente',
+          origem: 'qrcode',
+          confirmado_em: timestamp
+        })
+        : await dbInserir('presencas', {
+          chamada_id: estado.chamada.id,
+          turma_id: estado.turma.id,
+          aluno_id: estado.aluno.id,
+          status: 'presente',
+          origem: 'qrcode',
+          confirmado_em: timestamp
+        });
+
+      if (!registro) {
+        throw new Error('O banco não confirmou o registro de presença.');
+      }
+      renderSucessoConfirmacao(estado);
+    } catch (erroBanco) {
+      console.error('Falha ao registrar presença:', erroBanco);
+      exibirErroPasso(erro, 'Não foi possível registrar a presença. Verifique a conexão e tente novamente.');
+    } finally {
+      if (botao.isConnected) botao.disabled = false;
+    }
   });
 
   const conteudo = [

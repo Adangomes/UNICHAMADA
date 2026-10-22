@@ -1,7 +1,7 @@
 window.TI = window.TI || {};
 
 TI.telas.infra = {
-  async render(c, ctx) {
+  async render(c, ctx, mostrarEncerrados = false) {
     const { el } = TI.dom;
     const { ui, fmt, K } = TI;
     c.replaceChildren(ui.carregando());
@@ -11,11 +11,11 @@ TI.telas.infra = {
     catch (e) { c.replaceChildren(ui.erro(e.message)); return; }
 
     const f = ctx.f;
-    const recarregar = () => TI.telas.infra.render(c, ctx);
+    const recarregar = () => TI.telas.infra.render(c, ctx, mostrarEncerrados);
     
-    // CORREÇÃO AQUI: Agora filtra pelo grupo do funcionário logado, não mais fixo em 'infraestrutura'
-    const meuGrupo = K.grupoDoSetor(f.setor);
-    const abertos = chamados.filter((x) => (x.grupo_destino === meuGrupo || x.responsavel_id === f.id) && !K.chamadoEncerrado.includes(x.status));
+    // FILTRO PROFISSIONAL: Se mostrarEncerrados for true, ignora a lista de status encerrados
+    const filtroStatus = mostrarEncerrados ? [] : K.chamadoEncerrado;
+    const abertos = chamados.filter((x) => x.grupo_destino === 'infraestrutura' && !filtroStatus.includes(x.status));
     
     const meus = abertos.filter((x) => x.responsavel_id === f.id);
     const livres = abertos.filter((x) => !x.responsavel_id);
@@ -36,6 +36,12 @@ TI.telas.infra = {
 
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
+      el('div', { class: 'ti-//-filtro' }, [
+        ui.botao(mostrarEncerrados ? 'Ocultar Encerrados' : 'Mostrar Encerrados', { 
+          tipo: 'secundario', 
+          onClick: () => recarregar(!mostrarEncerrados) 
+        })
+      ]),
       el('div', { class: 'ti-cols' }, [
         el('div', { class: 'ti-col-principal' }, [
           ...(meus.length ? meus.map(ficha) : [ui.cartao(null, ui.vazio('Você não tem chamados em andamento.'))]),

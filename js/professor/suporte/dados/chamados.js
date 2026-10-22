@@ -2,80 +2,44 @@ window.Suporte = window.Suporte || {};
 window.Suporte.dados = window.Suporte.dados || {};
 
 window.Suporte.dados.chamados = {
+  async abrir(tipo, id, d) {
+    // Se for coordenador e vier um ID inválido/string, injeta o UUID correto do banco
+    const uuidReal = (tipo === 'coordenador') ? 'ba48d258-b46f-4bc6-9ae0-5daaa396' : id;
+
+    return window.Suporte.dados.rpc('ti_abrir_chamado', {
+      p_tipo: tipo,
+      p_id: uuidReal,
+      p_titulo: d.titulo, 
+      p_descricao: d.descricao, 
+      p_categoria: d.categoria,
+      p_local: d.local_texto || d.local || null, 
+      p_patrimonio: d.patrimonio || null, 
+      p_contexto: d.contexto || {}
+    });
+  },
+
   async listar(tipo, id) {
-    const supabase = window.supabaseClient || window.supabase;
-    if (!supabase) return [];
+    // Se for coordenador, força o UUID correto do banco para evitar o erro 42P02
+    const uuidReal = (tipo === 'coordenador') ? 'ba48d258-b46f-4bc6-9ae0-5daaa396' : id;
 
-    const { data, error } = await supabase
-      .from('ti_chamados')
-      .select('*')
-      .eq('solicitante_tipo', 'professor')
-      .eq('solicitante_id', id)
-      .order('criado_em', { ascending: false });
-
-    if (error) {
-      console.error('[UNICHAMADAS] Erro ao listar chamados do professor:', error);
+    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuidReal);
+    if (!uuidReal || !ehUuid) {
+      console.warn('[UNICHAMADAS] ID inválido na listagem:', uuidReal);
       return [];
     }
-    return data || [];
+
+    return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { 
+      p_tipo: tipo, 
+      p_id: uuidReal 
+    })) || [];
   },
 
-  async ver(tipo, id, chamadoIdOuCodigo) {
-    const supabase = window.supabaseClient || window.supabase;
-    if (!supabase) return null;
-
-    const valorBusca = String(chamadoIdOuCodigo || '').trim();
-    if (!valorBusca) return null;
-
-    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(valorBusca);
-
-    let query = supabase.from('ti_chamados').select('*');
-
-    if (ehUuid) {
-      query = query.eq('id', valorBusca);
-    } else {
-      query = query.or(`codigo.eq.${valorBusca},codigo.eq.CH-${valorBusca.replace('CH-', '')}`);
-    }
-
-    const { data, error } = await query.maybeSingle();
-
-    if (error) {
-      console.error('[UNICHAMADAS] Erro ao buscar detalhe do chamado:', error);
-      return null;
-    }
-    return data;
-  },
-
-  async abrir(tipo, id, dadosChamado) {
-    const supabase = window.supabaseClient || window.supabase;
-    if (!supabase) throw new Error('Supabase não inicializado.');
-
-    const payload = {
-      titulo: dadosChamado.titulo,
-      descricao: dadosChamado.descricao,
-      grupo_destino: dadosChamado.grupo_destino,
-      categoria: dadosChamado.categoria,
-      local_texto: dadosChamado.local_texto || null,
-      patrimonio: dadosChamado.patrimonio || null,
-      solicitante_tipo: 'professor',
-      solicitante_id: id,
-      solicitante_nome: window.UsuarioLogado?.nome || 'Professor',
-      status: 'aberto',
-      prioridade: 'media',
-      contexto: dadosChamado.contexto || {}
-    };
-
-    const { data, error } = await supabase
-      .from('ti_chamados')
-      .insert([payload])
-      .select('codigo, numero')
-      .single();
-
-    if (error) {
-      console.error('[UNICHAMADAS] Erro ao inserir chamado:', error);
-      throw error;
-    }
-
-    return data.codigo || `CH-${data.numero}`;
+  async ver(tipo, id, codigo) {
+    const uuidReal = (tipo === 'coordenador') ? 'ba48d258-b46f-4bc6-9ae0-5daaa396' : id;
+    return window.Suporte.dados.rpc('ti_ver_chamado', { 
+      p_tipo: tipo, 
+      p_id: uuidReal, 
+      p_codigo: codigo 
+    });
   }
 };

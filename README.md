@@ -25,8 +25,20 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta performance, baixo consumo de recursos e facilidade de deploy.
 
 - **Camada de Abstração:** Isolamento da lógica do SDK do Supabase através do modulo `db.js`, facilitando testes e futuras migrações.
-- **Segurança e RLS:** Proteção de rotas por estado de autenticação e suporte a *Row Level Security* (RLS) no banco relacional.
+- **Segurança:** O login da equipe usa Supabase Auth; políticas *Row Level Security* (RLS) por perfil ainda precisam estar configuradas no banco.
 - **UI/UX Produtiva:** Layout responsivo otimizado para operação diária, incluindo suporte a modo "Telão" para salas de aula.
+
+## Configuração do Supabase
+
+Antes de publicar, preencha `supabaseAnonKey` em `js/data/config.js` com a chave **anon/public** do projeto Supabase. A chave é pública no front-end; nunca use `service_role`. O arquivo de configuração está separado do cliente de dados para deixar explícito o valor que falta configurar.
+
+O login de coordenadores e professores usa código de e-mail do Supabase Auth. Configure o template de e-mail para exibir `{{ .Token }}` e crie políticas RLS por perfil antes de habilitar o acesso ao sistema.
+
+Para que o telão e a lista de presença recebam alterações feitas em outros dispositivos, habilite Realtime para as tabelas `chamadas` e `presencas` no projeto Supabase. A assinatura usada pelo front-end depende dessa publicação.
+
+O reconhecimento facial em `js/utils/reconhecimento-facial.js` ainda é somente uma simulação e não deve ser tratado como autenticação biométrica real. Para usar essa etapa em produção, é necessário integrar um serviço de verificação no servidor.
+
+O login de equipe confirma o e-mail por Supabase Auth e associa o usuário ao cadastro acadêmico pelo RA/e-mail. A página do aluno ainda usa RA/e-mail sem autenticação; com RLS habilitado, a confirmação precisa migrar para uma função/endpoint de servidor antes de operar com dados reais.
 
 ---
 
@@ -41,9 +53,9 @@ O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta perfor
 1. **Token Rotativo (TOTP Style):** Geração dinâmica de QR Code e código de 6 caracteres com expiração temporal para prevenir fraudes.
 2. **Modo Telão:** Janela secundária projetável (`window.open`) com rotação síncrona dos tokens para a sala de aula.
 3. **Geofencing (GPS):** Validação física do aluno por raio de tolerância de geolocalização do dispositivo.
-4. **Biometria Facial:** Captura e camada de validação facial para confirmação de identidade.
-5. **Dashboard em Tempo Real:** Sincronização ao vivo da lista de presenças via subscrição em tempo real do Supabase.
-6. **Auditoria:** Registro e alteração com justificativa de faltas em histórico auditável pelo docente.
+4. **Biometria Facial:** A captura existe, mas a comparação é uma simulação e não autentica a identidade.
+5. **Dashboard em Tempo Real:** O cliente assina alterações do Supabase; a publicação Realtime e as permissões precisam estar configuradas no projeto.
+6. **Histórico:** Consulta e edição manual de presenças por chamada. Auditoria detalhada das alterações ainda precisa ser implementada.
 
 ---
 
@@ -58,6 +70,7 @@ O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta perfor
 │   └── painel.css              # Layout e grids dos painéis administrativos
 └── js/
     ├── data/
+    │   ├── config.js           # URL e chave pública do Supabase
     │   └── db.js               # Camada de abstração e consultas de dados (Data Mapper)
     ├── auth/
     │   └── auth.js             # Gerenciamento de sessão e contexto do usuário

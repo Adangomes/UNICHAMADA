@@ -12,25 +12,6 @@
   <link rel="stylesheet" href="css/confirmar-presenca.css" />
   <link rel="stylesheet" href="css/telao.css" />
   <link rel="stylesheet" href="css/notificacao.css" />
-  <link rel="stylesheet" href="css/chat/coordenador.css" />
-  <link rel="stylesheet" href="css/chat/professor.css" />
-  <link rel="stylesheet" href="css/chat/config/menu-contexto.css" />
-  <link rel="stylesheet" href="css/chat/config/editar_msg.css" />
-  <link rel="stylesheet" href="css/chat/config/excluir.css" />
-  <link rel="stylesheet" href="css/chat/config/emojis.css" />
-  <link rel="stylesheet" href="css/chat/config/fotos-e-arquivos.css" />
-  <link rel="stylesheet" href="css/relatorios/relatorios.css" />
-  <link rel="stylesheet" href="css/chamy/chamy.css" />
-  <!------------------------- CSS do Suporte ----------------------->
-  <link rel="stylesheet" href="css/suporte/base.css" />
-  <link rel="stylesheet" href="css/suporte/lista.css" />
-  <link rel="stylesheet" href="css/suporte/novo_chamado.css" />
-  <link rel="stylesheet" href="css/suporte/detalhe.css" />
-
-    <!-- CSS do Aluno -->
-  <link rel="stylesheet" href="js/aluno-unichamada/css/aluno/aluno.css">
-  
-
   <!-- Bibliotecas Externas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -48,11 +29,10 @@
   <section id="tela-confirmar-presenca" class="oculto"></section>
   <!-- ================= TELÃO (janela separada, para projetar) ================= -->
   <section id="tela-telao" class="oculto"></section>
-
-  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth/login > chat > telas > main) ================= -->
+  <!-- ================= SCRIPTS (ordem importa: dados > utils > auth/login > telas > main) ================= -->
   <!-- Camada de Dados -->
+  <script src="js/data/config.js"></script>
   <script src="js/data/db.js"></script>
-
   <!-- Utilitários -->
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/camera.js"></script>
@@ -60,40 +40,9 @@
   <script src="js/utils/geolocalizacao.js"></script>
   <script src="js/utils/reconhecimento-facial.js"></script>
   <script src="js/utils/codigo-rotativo.js"></script>
-
   <!-- Autenticação & Módulo de Login -->
   <script src="js/login/login.js"></script>
   <script src="js/auth/auth.js"></script>
-
-  <!-- Chat: criptografia (antes do data/chat.js) -->
-  <script src="js/chat/cripto/criptografia.js"></script>
-
-  <!-- Chat: camada de dados (depende do db.js) -->
-  <script src="js/data/chat.js"></script>
-
-  <!-- Chat: recursos extras (config/) -->
-  <script src="js/coordenador/chat/config/menu-contexto.js"></script>
-  <script src="js/coordenador/chat/config/editar_msg.js"></script>
-  <script src="js/coordenador/chat/config/excluir.js"></script>
-  <script src="js/coordenador/chat/config/emojis.js"></script>
-  <script src="js/coordenador/chat/config/fotos-e-arquivos.js"></script>
-  <script src="js/professor/chat/config/menu-contexto.js"></script>
-  <script src="js/professor/chat/config/editar_msg.js"></script>
-  <script src="js/professor/chat/config/excluir.js"></script>
-  <script src="js/professor/chat/config/emojis.js"></script>
-  <script src="js/professor/chat/config/fotos-e-arquivos.js"></script>
-
-  <!-- Chat: telas (precisam vir depois do data/chat.js e do config/) -->
-  <script src="js/coordenador/chat/chat.js"></script>
-  <script src="js/professor/chat/chat.js"></script>
-
-   <!-- Relatórios (dashboard dos painéis) -->
-  <script src="js/relatorios/globo.js"></script>
-  <script src="js/relatorios/relatorios.js"></script>
-
-  <!-- CHAMY (robo) -->
-  <script src="js/professor/chamy/chamy.js"></script>
-
   <!-- Módulos do Coordenador -->
   <script src="js/coordenador/cursos.js"></script>
   <script src="js/coordenador/professores.js"></script>
@@ -103,47 +52,14 @@
   <script src="js/coordenador/matriculas.js"></script>
   <script src="js/coordenador/coordenador.js"></script>
   <script src="js/coordenador/notificacao.js"></script>
-  <script src="js/coordenador/suporte/base.js"></script>
-  <script src="js/coordenador/suporte/textos.js"></script>
-  <script src="js/coordenador/suporte/config.js"></script>
-  <script src="js/coordenador/suporte/dados/rpc.js"></script>
-  <script src="js/coordenador/suporte/dados/chamados.js"></script>
-  <script src="js/coordenador/suporte/dados/comentarios.js"></script>
-  <script src="js/coordenador/suporte/lista/lista.js"></script>
-  <script src="js/coordenador/suporte/novo-chamado/novo-chamado.js"></script>
-  <script src="js/coordenador/suporte/detalhe/conversa.js"></script>
-  <script src="js/coordenador/suporte/detalhe/resposta.js"></script>
-  <script src="js/coordenador/suporte/detalhe/detalhe.js"></script>
-  <script src="js/coordenador/suporte/suporte.js"></script>
-
   <!-- Módulos do Professor -->
   <script src="js/professor/chamada.js"></script>
   <script src="js/professor/historico.js"></script>
   <script src="js/professor/telao.js"></script>
   <script src="js/professor/professor.js"></script>
   <script src="js/professor/notificacao.js"></script>
-  <script src="js/professor/suporte/base.js"></script>
-  <script src="js/professor/suporte/textos.js"></script>
-  <script src="js/professor/suporte/config.js"></script>
-  <script src="js/professor/suporte/dados/rpc.js"></script>
-  <script src="js/professor/suporte/dados/chamados.js"></script>
-  <script src="js/professor/suporte/dados/comentarios.js"></script>
-  <script src="js/professor/suporte/lista/lista.js"></script>
-  <script src="js/professor/suporte/novo-chamado/novo-chamado.js"></script>
-  <script src="js/professor/suporte/detalhe/conversa.js"></script>
-  <script src="js/professor/suporte/detalhe/resposta.js"></script>
-  <script src="js/professor/suporte/detalhe/detalhe.js"></script>
-  <script src="js/professor/suporte/suporte.js"></script>
-   
-
   <!-- Módulos do Aluno -->
   <script src="js/aluno/confirmar-presenca.js"></script>
-
-  <!-- Módulos do Aluno-unichamada -->
-  <script src="js/aluno-unichamada/js/aluno/mapa-banco.js"></script>
-  <script src="js/aluno-unichamada/js/aluno/dados.js"></script>
-  <script src="js/aluno-unichamada/js/aluno/painel.js"></script>
-
   <!-- Main (Orquestrador) -->
   <script src="js/main.js"></script>
 </body>

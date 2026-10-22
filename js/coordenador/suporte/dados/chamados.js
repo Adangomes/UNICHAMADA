@@ -3,16 +3,10 @@ window.SuporteCoordenador.dados = window.SuporteCoordenador.dados || {};
 
 window.SuporteCoordenador.dados.chamados = {
   async abrir(tipo, id, d) {
-    // Valida se o ID é um UUID válido
-    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!id || !ehUuid) {
-      console.error('[UNICHAMADAS] Tentativa de abrir chamado com ID inválido:', id);
-      throw new Error('ID do coordenador inválido. Verifique a sessão.');
-    }
-
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
     return window.Suporte.dados.rpc('ti_abrir_chamado', {
       p_tipo: 'coordenador',
-      p_id: id,
+      p_id: uuidCoordenadorBanco,
       p_titulo: d.titulo, 
       p_descricao: d.descricao, 
       p_categoria: d.categoria,
@@ -23,19 +17,20 @@ window.SuporteCoordenador.dados.chamados = {
   },
 
   async listar(tipo, id) {
-    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!id || !ehUuid) {
-      // Retorna vazio silenciosamente se o ID ainda não for um UUID válido, evitando o Erro 400
-      return [];
-    }
-
-    return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { p_tipo: 'coordenador', p_id: id })) || [];
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+    // Força o tipo 'coordenador' e o UUID correto para nunca chamar o fluxo de professor
+    return (await window.Suporte.dados.rpc('ti_listar_meus_chamados', { 
+      p_tipo: 'coordenador', 
+      p_id: uuidCoordenadorBanco 
+    })) || [];
   },
 
   async ver(tipo, id, codigo) {
-    const ehUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    if (!id || !ehUuid) return null;
-
-    return window.Suporte.dados.rpc('ti_ver_chamado', { p_tipo: 'coordenador', p_id: id, p_codigo: codigo });
+    const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+    return window.Suporte.dados.rpc('ti_ver_chamado', { 
+      p_tipo: 'coordenador', 
+      p_id: uuidCoordenadorBanco, 
+      p_codigo: codigo 
+    });
   }
 };

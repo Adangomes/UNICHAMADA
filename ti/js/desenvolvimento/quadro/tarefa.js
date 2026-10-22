@@ -11,7 +11,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   const f = ctx.f;
   const coord = f.papel === 'coordenador_ti';
   const doGrupo = demanda.grupo_destino === K.grupoDoSetor(f.setor);
-  const ehMinha = demanda.responsavel_id === f.id;
+  
+  // CORREÇÃO: Comparação robusta de IDs (converte ambos para string para evitar erro de tipo UUID vs String)
+  const ehMinha = String(demanda.responsavel_id) === String(f.id);
 
   let ajuste = null;
   try {
@@ -27,7 +29,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     if (aoMudar) await aoMudar();
   }
 
-  const botoes = [ui.botao('Fechar', { onClick: () => modal.fechar() })];
+  const botoes = [];
 
   // 1. COORDENADOR: Direcionar a demanda do backlog para um funcionário da equipa
   if (demanda.status === 'backlog' && coord) {
@@ -73,16 +75,17 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   }
 
   // 3. FLUXO DE DESENVOLVIMENTO: Enviar para revisão da coordenação
+  // Corrigido: Agora usa a comparação robusta ehMinha e texto mais claro
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
-    botoes.push(ui.botao('Enviar para revisão', { 
+    botoes.push(ui.botao('Concluí / Enviar para revisão', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Enviada para a revisão da coordenação.') 
+      onClick: () => mover({ status: 'em_revisao' }, 'demanda.revisao', 'Trabalho concluído! Enviada para a revisão da coordenação.') 
     }));
   }
 
   // 4. FLUXO DE REVISÃO E APROVAÇÃO (Apenas Coordenador)
   if (demanda.status === 'em_revisao' && coord) {
-    botoes.push(ui.botao('Abrir revisão', { 
+    botoes.push(ui.botao('Analisar Revisão', { 
       tipo: 'primario', 
       onClick: () => { modal.fechar(); ctx.navegar('aprovacao', { id: demanda.id }); } 
     }));
@@ -90,9 +93,12 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   if (demanda.status === 'aprovado' && coord) {
     botoes.push(ui.botao('Marcar como no ar', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Demanda no ar.') 
+      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Demanda publicada com sucesso!') 
     }));
   }
+
+  // Botão Fechar sempre ao final
+  botoes.push(ui.botao('Fechar', { onClick: () => modal.fechar() }));
 
   const modal = ui.modal({
     titulo: demanda.codigo + ' — ' + demanda.titulo,
@@ -102,9 +108,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
-      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['Ajustes pedidos pela coordenação: ' + (ajuste.comentario || '(sem comentário)')]) : null,
-      ui.par('Pedido por', demanda.solicitante_nome),
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
+      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes pedidos pela coordenação: ' + (ajuste.comentario || '(sem comentário)')]) : null,
+      ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null

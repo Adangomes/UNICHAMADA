@@ -1,7 +1,10 @@
+/**
+ * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtros temporais e métricas.
+ */
 window.TI = window.TI || {};
 
 TI.telas.infra = {
-  async render(c, ctx, mostrarEncerrados = false) {
+  async render(c, ctx, mostrarEncerrados = false, filtroPeriodo = 'todos') {
     const { el } = TI.dom;
     const { ui, fmt, K } = TI;
     c.replaceChildren(ui.carregando());
@@ -18,20 +21,58 @@ TI.telas.infra = {
     }
 
     const f = ctx.f;
-    const recarregar = (encerrados = mostrarEncerrados) => TI.telas.infra.render(c, ctx, encerrados);
+    const recarregar = (encerrados = mostrarEncerrados, periodo = filtroPeriodo) => 
+      TI.telas.infra.render(c, ctx, encerrados, periodo);
     
-    // Status que consideramos realmente fechados
-    const statusFechados = ['resolvido', 'fechado'];
+    const statusFechados = ['resolvido', 'fechado', 'concluido'];
     
-    // Filtro flexibilizado: aceita infraestrutura ou desenvolvimento e não oculta chamados em atendimento/aguardando
-    const abertos = chamados.filter((x) => {
+    // 1. Filtragem por setor e status encerrado
+    const baseSetor = chamados.filter((x) => {
       const pertenceAoSetor = x.grupo_destino === 'infraestrutura' || x.grupo_destino === 'desenvolvimento' || !x.grupo_destino;
       if (mostrarEncerrados) return pertenceAoSetor;
-      return pertenceAoSetor && !statusFechados.includes(x.status);
+      return pertenceAoSetor && !statusFechados.includes(x.status?.toLowerCase());
     });
-    
-    const meus = abertos.filter((x) => x.responsavel_id === f.id);
+
+    // 2. Filtro Temporal Avançado (Dia, Semana, Mês, Ano)
+    const agora = new Date();
+    const abertos = baseSetor.filter(item => {
+      if (filtroPeriodo === 'todos') return true;
+      const dataCriacao = new Date(item.criado_em || item.created_at);
+      
+      switch (filtroPeriodo) {
+        case 'dia':
+          return dataCriacao.toDateString() === agora.toDateString();
+        case 'semana': {
+          const primeiroDiaSemana = new Date(agora);
+          primeiroDiaSemana.setDate(agora.getDate() - agora.getDay());
+          primeiroDiaSemana.setHours(0, 0, 0, 0);
+          return dataCriacao >= primeiroDiaSemana;
+        }
+        case 'mes':
+          return (
+            dataCriacao.getMonth() === agora.getMonth() &&
+            dataCriacao.getFullYear() === agora.getFullYear()
+          );
+        case 'ano':
+          return dataCriacao.getFullYear() === agora.getFullYear();
+        default:
+          return true;
+      }
+    });
+
+    const meus = abertos.filter((x) => String(x.responsavel_id) === String(f.id));
     const livres = abertos.filter((x) => !x.responsavel_id);
+    
+    // Métrica de resolvidos no período atual para exibir no painel
+    const resolvidosNoPeriodo = baseSetor.filter(x => {
+      if (!statusFechados.includes(x.status?.toLowerCase())) return false;
+      const dataMod = new Date(x.atualizado_em || x.criado_em || x.created_at);
+      if (filtroPeriodo === 'dia') return dataMod.toDateString() === agora.toDateString();
+      if (filtroPeriodo === 'mes') return dataMod.getMonth() === agora.getMonth() && dataMod.getFullYear() === agora.getFullYear();
+      if (filtroPeriodo === 'ano') return dataMod.getFullYear() === agora.getFullYear();
+      return true;
+    }).length;
+
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
     meus.sort(prazoOrdem); 
     livres.sort(prazoOrdem);
@@ -50,15 +91,35 @@ TI.telas.infra = {
 
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
-      el('div', { class: 'ti-//-filtro' }, [
+      
+      // Barra de Ferramentas com Filtros e Métricas Nível Pleno
+      el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
         ui.botao(mostrarEncerrados ? 'Ocultar Encerrados' : 'Mostrar Encerrados', { 
           tipo: 'secundario', 
-          onClick: () => recarregar(!mostrarEncerrados) 
-        })
+          onClick: () => recarregar(!mostrarEncerrados, filtroPeriodo) 
+        }),
+        
+        // Seletor de Período (Dia, Semana, Mês, Ano, Todos)
+        el('select', { 
+          style: 'padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff;',
+          onChange: (e) => recarregar(mostrarEncerrados, e.target.value)
+        }, [
+          el('option', { value: 'todos', selected: filtroPeriodo === 'todos' }, ['Todo o Período']),
+          el('option', { value: 'dia', selected: filtroPeriodo === 'dia' }, ['Hoje']),
+          el('option', { value: 'semana', selected: filtroPeriodo === 'semana' }, ['Esta Semana']),
+          el('option', { value: 'mes', selected: filtroPeriodo === 'mes' }, ['Este Mês']),
+          el('option', { value: 'ano', selected: filtroPeriodo === 'ano' }, ['Este Ano'])
+        ]),
+
+        // KPI Dinâmico de Resolvidos
+        el('span', { style: 'margin-left: auto; font-size: 13px; font-weight: 600; color: #475569;' }, [
+          `📊 Resolvidos no filtro: ${resolvidosNoPeriodo}`
+        ])
       ]),
+
       el('div', { class: 'ti-cols' }, [
         el('div', { class: 'ti-col-principal' }, [
-          ...(meus.length ? meus.map(ficha) : [ui.cartao(null, ui.vazio('Você não tem chamados em andamento.'))]),
+          ...(meus.length ? meus.map(ficha) : [ui.cartao(null, ui.vazio('Você não tem chamados em andamento neste filtro.'))]),
           livres.length ? el('h2', { class: 'ti-infra-subtitulo' }, ['Disponíveis para assumir']) : null,
           ...livres.map(ficha)
         ]),
@@ -73,15 +134,12 @@ TI.telas.infra = {
       ])
     );
 
-    // ==========================================
-    // CANAL WEBSOCKET REALTIME (AUTO REFRESH)
-    // ==========================================
+    // Canal Websocket Realtime
     if (TI.db && !window._realtimeInfraIniciado) {
       window._realtimeInfraIniciado = true;
       TI.db
         .channel('realtime_infra_chamados')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'ti_chamados' }, () => {
-          console.log('Realtime: mudança detectada na ti_chamados. Recarregando tela...');
           recarregar();
         })
         .subscribe();

@@ -1,5 +1,5 @@
 /**
- * tarefa.js — Versão Final Limpa e Corrigida.
+ * tarefa.js — Versão Final Ajustada e Pronta.
  */
 window.TI = window.TI || {};
 
@@ -73,13 +73,27 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
 
-  if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
+  if (demanda.status === 'desenvolvendo' && (coord || ehMinha || doGrupo)) {
     botoes.push(ui.botao('Concluir e Enviar para Revisão', { 
       tipo: 'primario', 
       onClick: function() {
         ui.prompt('Envio para Revisão', 'O que você ajustou nesta demanda?', async function(txt) {
-          if (txt) await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado para a coordenação!', txt);
-          else ui.toast('Por favor, descreva o que foi feito.', 'erro');
+          if (txt && txt.trim()) {
+            try {
+              if (TI.dados.revisoes && TI.dados.revisoes.criar) {
+                await TI.dados.revisoes.criar({
+                  demanda_id: demanda.id,
+                  decisao: 'dev_resposta',
+                  comentario: txt.trim()
+                });
+              }
+            } catch (e) {
+              console.warn('Comentário não gravado:', e);
+            }
+            await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado para a coordenação!');
+          } else {
+            ui.toast('Por favor, descreva o que foi feito.', 'erro');
+          }
         });
       } 
     }));
@@ -113,7 +127,7 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
       el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
-      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
+      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['Ajustes: ' + (ajuste.comentario || '')]) : null,
       ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),

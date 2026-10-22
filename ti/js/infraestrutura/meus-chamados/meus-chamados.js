@@ -1,5 +1,5 @@
 /**
- * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtros temporais e métricas.
+ * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtros temporais.
  */
 window.TI = window.TI || {};
 
@@ -62,16 +62,6 @@ TI.telas.infra = {
 
     const meus = abertos.filter((x) => String(x.responsavel_id) === String(f.id));
     const livres = abertos.filter((x) => !x.responsavel_id);
-    
-    // Métrica de resolvidos no período atual para exibir no painel
-    const resolvidosNoPeriodo = baseSetor.filter(x => {
-      if (!statusFechados.includes(x.status?.toLowerCase())) return false;
-      const dataMod = new Date(x.atualizado_em || x.criado_em || x.created_at);
-      if (filtroPeriodo === 'dia') return dataMod.toDateString() === agora.toDateString();
-      if (filtroPeriodo === 'mes') return dataMod.getMonth() === agora.getMonth() && dataMod.getFullYear() === agora.getFullYear();
-      if (filtroPeriodo === 'ano') return dataMod.getFullYear() === agora.getFullYear();
-      return true;
-    }).length;
 
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
     meus.sort(prazoOrdem); 
@@ -91,17 +81,17 @@ TI.telas.infra = {
 
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
-       
-      // Barra de Ferramentas com Filtros e Métricas Padronizadas
-      el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
+      
+      // Barra de Ferramentas limpa com botão e select perfeitamente nivelados
+      el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
         ui.botao(mostrarEncerrados ? 'Ocultar Encerrados' : 'Mostrar Encerrados', { 
           tipo: 'secundario', 
           onClick: () => recarregar(!mostrarEncerrados, filtroPeriodo) 
         }),
-         
-        // Seletor de Período com altura, padding e borda idênticos aos botões/inputs do sistema
+        
+        // Seletor com exatamente a mesma estrutura visual, altura e padding dos botões do sistema
         el('select', { 
-          style: 'padding: .6em .8em; height: 40px; border-radius: 6px; border: 1.5px solid var(--ti-linha, #e3e0d9); font-size: 14.5px; font-family: inherit; background: var(--ti-branco, #fff); color: var(--ti-tinta, #1b2547); cursor: pointer;',
+          style: 'height: 38px; padding: 0 14px; border-radius: var(--raio-pequeno, 6px); border: 1.5px solid var(--ti-linha, #e3e0d9); font-size: 14px; font-family: inherit; font-weight: 500; background: var(--ti-branco, #fff); color: var(--ti-tinta, #1b2547); cursor: pointer; outline: none;',
           onChange: (e) => recarregar(mostrarEncerrados, e.target.value)
         }, [
           el('option', { value: 'todos', selected: filtroPeriodo === 'todos' }, ['Todo o Período']),
@@ -109,11 +99,6 @@ TI.telas.infra = {
           el('option', { value: 'semana', selected: filtroPeriodo === 'semana' }, ['Esta Semana']),
           el('option', { value: 'mes', selected: filtroPeriodo === 'mes' }, ['Este Mês']),
           el('option', { value: 'ano', selected: filtroPeriodo === 'ano' }, ['Este Ano'])
-        ]),
-
-        // KPI Dinâmico de Resolvidos
-        el('span', { style: 'margin-left: auto; font-size: 13.5px; font-weight: 600; color: var(--ti-suave, #5b6585);' }, [
-          `📊 Resolvidos no filtro: ${resolvidosNoPeriodo}`
         ])
       ]),
 
@@ -132,7 +117,7 @@ TI.telas.infra = {
             ? Object.entries(locais).map(([l, n]) => ui.par(l, String(n))) : [ui.vazio('Nenhum.')]))
         ])
       ])
-  );
+    );
 
     // Canal Websocket Realtime
     if (TI.db && !window._realtimeInfraIniciado) {

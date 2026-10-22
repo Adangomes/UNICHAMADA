@@ -1,6 +1,5 @@
 /**
- * tarefa.js — Versão Ultra-Simplificada.
- * Aqui não tem erro de sintaxe, é impossível.
+ * tarefa.js — Versão Ultra-Simplificada e Limpa.
  */
 window.TI = window.TI || {};
 
@@ -54,11 +53,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       id: 'select-resp',
       style: 'padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; margin-right: 8px;'
     }, [
-      el('option', { value: '' }, ['Selecionar...']),
-      // Use map de forma simples
+      el('option', { value: '' }, ['Selecionar...'])
     ]);
     
-    // Adiciona as opções do select manualmente para evitar erros de spread operator
     funcionarios.forEach(function(fn) {
       var opt = el('option', { value: fn.id }, [fn.nome]);
       select.appendChild(opt);
@@ -121,13 +118,11 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         ui.chipPrioridade(demanda.prioridade), 
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
-      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
+      el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
       ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
-      demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_//S-C... missing part? no, just a typo in my thought.
-      demanda.no_ar_em ? ui.par('No ar desde', fmt.//... no, just use a safe way.
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
     ],
     botoes: botoes

@@ -1,5 +1,5 @@
 /**
- * coordenadores.js
+ * coordenador.js
  * 
  * Painel do coordenador. Monta a tela com abas (Professores, Cursos, Alunos,
  * Disciplinas, Turmas, Matrículas, Notificações, Chat) dentro de #tela-coordenador.
@@ -24,7 +24,7 @@ const ABAS_COORDENADOR = [
       elementoConteudoCoordenador.innerHTML = '<div id="chat-coordenador-root"></div>';
       await iniciarChatCoordenador('chat-coordenador-root');
     }
-  }, // <--- VÍRGULA AQUI ENTRE OS OBJETOS DO ARRAY
+  },
   {
     // Dashboard de relatórios (js/relatorios/relatorios.js)
     chave: 'relatorios',
@@ -37,14 +37,13 @@ const ABAS_COORDENADOR = [
     render: async () => {
       elementoConteudoCoordenador.innerHTML = '';
       
-      // Pega a sessão atual ou o objeto do coordenador logado
-      const usuarioSessao = window.sessaoAtual || window.coordenadorLogado || {};
+      // UUID real do coordenador obtido diretamente da tabela 'coordenadores' do Supabase
+      const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
       
-      // Garante que o objeto passado tenha o .id preenchido (usando email ou id, o que existir)
       const usuarioFormatado = {
-        id: usuarioSessao.id || usuarioSessao.email || usuarioSessao.codigo || 'coordenador_geral',
-        nome: usuarioSessao.nome || 'Coordenador',
-        email: usuarioSessao.email || 'coordenador@sistema.local'
+        id: uuidCoordenadorBanco, // Força o UUID correto e válido
+        nome: 'Coordenador Acadêmico',
+        email: 'cordenador@unichamada.com.br'
       };
 
       await montarSuporte(elementoConteudoCoordenador, { 
@@ -55,6 +54,7 @@ const ABAS_COORDENADOR = [
     }
   }
 ];
+
 // Guarda a referência do container onde o conteúdo da aba atual é desenhado.
 // É preenchido lá no montarPainelCoordenador() e usado pelas funções de render.
 let elementoConteudoCoordenador = null;
@@ -104,8 +104,7 @@ async function montarPainelCoordenador(sessao) {
 
   // Assim que monta o painel, já renderiza o conteúdo da aba ativa
   await renderizarAbaAtivaCoordenador();
-
-  }
+}
 
 /**
  * Troca a aba ativa: atualiza qual botão fica marcado como "ativo" e

@@ -3,12 +3,6 @@
  * Nenhuma tela fala direto com o Supabase: todas passam pelos arquivos desta pasta.
  */
 window.TI = window.TI || {};
-window.TI.config = window.TI.config || {};
-
-// Configuração injetada diretamente
-window.TI.config.supabaseUrl = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
-window.TI.config.supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
-
 TI.dados = TI.dados || {};
 TI.db = null;
 TI.dbErro = null;
@@ -19,8 +13,8 @@ TI.dbErro = null;
     TI.dbErro = 'A biblioteca do Supabase não carregou. Verifique a internet.';
     return;
   }
-  if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || String(cfg.supabaseUrl).indexOf('COLE_AQUI') === 0 || String(cfg.supabaseAnonKey).indexOf('COLE_AQUI') === 0) {
-    TI.dbErro = 'Preencha a URL e a chave anon do Supabase.';
+  if (String(cfg.supabaseUrl).indexOf('https://xultvypwxwyxhxfzwqdw.supabase.co') === 0 || String(cfg.supabaseAnonKey).indexOf('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY') === 0) {
+    TI.dbErro = 'Preencha a URL e a chave anon do Supabase em js/config/supabase-config.js.';
     return;
   }
   try {
@@ -44,3 +38,5 @@ TI.dados.tratar = function (resposta) {
   }
   return resposta ? resposta.data : null;
 };
+
+

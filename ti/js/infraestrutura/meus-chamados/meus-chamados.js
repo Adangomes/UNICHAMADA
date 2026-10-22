@@ -102,10 +102,10 @@ TI.telas.infra = {
           el('option', { value: 'abertos_mes', selected: filtroAtual === 'abertos_mes' }, ['Abertos · Este Mês']),
           el('option', { value: 'abertos_semana', selected: filtroAtual === 'abertos_semana' }, ['Abertos · Esta Semana']),
           el('option', { value: 'abertos_dia', selected: filtroAtual === 'abertos_dia' }, ['Abertos · Hoje']),
-          el('option', { value: 'todos_todos', selected: filtroAtual === 'todos_todos' }, ['Com Encerrados · Todo o Período']),
-          el('option', { value: 'todos_mes', selected: filtroAtual === 'todos_mes' }, ['Com Encerrados · Este Mês']),
-          el('option', { value: 'todos_semana', selected: filtroAtual === 'todos_semana' }, ['Com Encerrados · Esta Semana']),
-          el('option', { value: 'todos_dia', selected: filtroAtual === 'todos_dia' }, ['Com Encerrados · Hoje'])
+          el('option', { value: 'todos_todos', selected: filtroAtual === 'todos_todos' }, ['Encerrados · Todo o Período']),
+          el('option', { value: 'todos_mes', selected: filtroAtual === 'todos_mes' }, ['Encerrados · Este Mês']),
+          el('option', { value: 'todos_semana', selected: filtroAtual === 'todos_semana' }, ['CEncerrados · Esta Semana']),
+          el('option', { value: 'todos_dia', selected: filtroAtual === 'todos_dia' }, ['Encerrados · Hoje'])
         ])
       ]),
 

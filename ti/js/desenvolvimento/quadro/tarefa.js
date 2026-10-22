@@ -1,7 +1,3 @@
-/**
- * tarefa.js — janela de uma demanda.
- * Versão Blindada: Sem erros de sintaxe.
- */
 window.TI = window.TI || {};
 
 TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
@@ -19,9 +15,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     if (revisoes && revisoes.length > 0 && revisoes[0].decisao === 'ajustes') {
       ajuste = revisoes[0];
     }
-  } catch (e) { }
+  } catch (e) {}
 
-  // Função para atualizar banco e fechar modal
   const mover = async (campos, acao, mensagem) => {
     try {
       await TI.dados.demandas.atualizar(demanda.id, campos);
@@ -36,58 +31,50 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
 
   const botoes = [];
 
-  // Ações do Coordenador (Backlog)
   if (demanda.status === 'backlog' && coord) {
-    let funcionarios = [];
+    let funcs = [];
     try {
-      const lista = await TI.dados.funcionarios.listar();
-      funcionarios = (lista || []).filter(i => i.papel !== 'coordenador_ti');
-    } catch (e) { funcionarios = []; }
+      const l = await TI.dados.funcionarios.listar();
+      funcs = (l || []).filter(i => i.papel !== 'coordenador_ti');
+    } catch (e) { funcs = []; }
 
-    const select = el('select', { 
-      id: 'select-resp',
+    const sel = el('select', { 
+      id: 'sel-resp',
       style: 'padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; background: #fff; margin-right: 8px;'
     }, [
-      el('option', { value: '' }, ['Selecionar funcionário...']),
-      ...funcionarios.map(func => el('option', { value: func.id }, [func.nome]))
+      el('option', { value: '' }, ['Selecionar...']),
+      ...funcs.map(fn => el('option', { value: fn.id }, [fn.nome]))
     ]);
 
-    botoes.push(select);
+    botoes.push(sel);
     botoes.push(ui.botao('Direcionar', {
       tipo: 'primario',
       onClick: async () => {
-        if (!select.value) return ui.toast('Selecione um funcionário.', 'erro');
-        await mover({ responsavel_id: select.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Direcionada com sucesso!');
+        if (!sel.value) return ui.toast('Selecione um funcionário.', 'erro');
+        await mover({ responsavel_id: sel.value, status: 'desenvolvendo' }, 'demanda.direcionada', 'Sucesso!');
       }
     }));
-  } 
-  // Ações do Funcionário (Assumir)
-  else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
+  } else if (demanda.status === 'backlog' && (doGrupo || !demanda.grupo_destino) && !demanda.responsavel_id) {
     botoes.push(ui.botao('Assumir', { 
       tipo: 'primario', 
-      onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Você assumiu a demanda!') 
+      onClick: () => mover({ responsavel_id: f.id, status: 'desenvolvendo' }, 'demanda.assumida', 'Assumido!') 
     }));
   }
 
-  // Ação de Conclusão (Retorno do Funcionário)
   if (demanda.status === 'desenvolvendo' && (coord || ehMinha)) {
-    botoes.push(ui.botao('Concluí / Enviar para revisão', { 
+    botoes.push(ui.botao('Concluir', { 
       tipo: 'primario', 
       onClick: () => {
-        const nota = ui.prompt('Envio para Revisão', 'Descreva brevemente o que foi feito:', async (txt) => {
-          if (txt) {
-            await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviada para revisão!', txt);
-          } else {
-            ui.toast('Por favor, descreva o que foi feito.', 'erro');
-          }
+        const n = ui.prompt('Revisão', 'O que foi feito?', async (txt) => {
+          if (txt) await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado!', txt);
+          else ui.toast('Descreva o trabalho.', 'erro');
         });
       } 
     }));
   }
 
-  // Ações de Aprovação (Coordenação)
   if (demanda.status === 'em_revisao' && coord) {
-    botoes.push(ui.botao('Analisar Revisão', { 
+    botoes.push(ui.botao('Analisar', { 
       tipo: 'primario', 
       onClick: () => { 
         if (window.currentTiModal) window.currentTiModal.fechar(); 
@@ -96,16 +83,15 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
   if (demanda.status === 'aprovado' && coord) {
-    botoes.push(ui.botao('Marcar como no ar', { 
+    botoes.push(ui.botao('No ar', { 
       tipo: 'primario', 
-      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicada com sucesso!') 
+      onClick: () => mover({ status: 'no_ar' }, 'demanda.no_ar', 'Publicado!') 
     }));
   }
 
   botoes.push(ui.botao('Fechar', { onClick: () => { if (window.currentTiModal) window.currentTiModal.fechar(); } }));
 
-  // Montagem do Modal
-  const modalConfig = {
+  const config = {
     titulo: demanda.codigo + ' — ' + demanda.titulo,
     corpo: [
       el('div', { class: 'ti-acoes' }, [
@@ -114,8 +100,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
         demanda.area ? el('span', { class: 'ti-tag' }, [demanda.area]) : null
       ]),
       el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)')],
-      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '(sem comentário)')]) : null,
-      ui.par('Solicitado por', demanda.solicitante_nome),
+      ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
+      ui.par('Pedido por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),
       demanda.no_ar_em ? ui.par('No ar desde', fmt.dataHoraCompleta(demanda.no_ar_em)) : null
@@ -123,5 +109,5 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     botoes: botoes
   };
 
-  window.currentTiModal = ui.modal(modalConfig);
+  window.currentTiModal = ui.modal(config);
 };

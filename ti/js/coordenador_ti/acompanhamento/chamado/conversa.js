@@ -13,7 +13,7 @@ TI.telas.detalheBlocos = TI.telas.detalheBlocos || {};
 TI.telas.detalheBlocos.conversa = function (e) {
   const { el } = TI.dom;
   const { ui, fmt } = TI;
-  const { chamado, comentarios, recarregar } = e;
+  const { chamado, comentarios, recarregar, f, coord } = e;
 
   const quemAbriu = chamado.solicitante_tipo === 'professor' ? 'Professor(a)' : chamado.solicitante_tipo === 'coordenador' ? 'Coordenação' : 'TI';
 
@@ -27,7 +27,12 @@ TI.telas.detalheBlocos.conversa = function (e) {
       ])
     ])
   ];
+  
   comentarios.forEach((m) => {
+    // CORREÇÃO DE PRIVACIDADE: 
+    // Se a mensagem for interna E o usuário NÃO for coordenador de TI, ignora a mensagem completamente.
+    if (m.interno && !coord) return;
+
     mensagens.push(el('div', { class: 'ti-msg' }, [
       ui.avatar(m.autor_nome, 'grande'),
       el('div', { class: 'ti-msg-corpo' }, [

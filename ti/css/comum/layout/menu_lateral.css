@@ -1,18 +1,19 @@
-/* comum/layout/menu_lateral.css — menu lateral fixo com rolagem e rodapé travado embaixo */
+/* comum/layout/menu_lateral.css — menu lateral fixo (grudado na tela) */
 
 .ti-lateral {
-  flex: 1 1 248px;
-  max-width: 264px;
-  height: 100vh;           /* Trava a altura exatamente na tela inteira */
-  position: sticky;        /* Mantém fixo ao rolar a página principal */
-  top: 0;                  /* Gruda no topo da viewport */
+  flex: 0 0 264px;
+  width: 264px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   background: var(--ti-navy);
   color: #dfe6fb;
   padding: 28px 16px;
   display: flex;
   flex-direction: column;
   gap: 28px;
-  overflow-y: auto;        /* Se a lista de menus for grande, vira scroll interno com elegância! */
+  overflow-y: auto;        /* Garante scroll interno se o menu for extenso */
+  z-index: 100;            /* Fica acima do conteúdo se houver sobreposição */
 }
 
 .ti-marca { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
@@ -53,5 +54,5 @@
 .ti-sair:hover { background: rgba(255, 255, 255, .1); }
 
 @media (max-width: 760px) {
-  .ti-lateral { max-width: none; height: auto; position: static; flex-basis: 100%; padding: 16px; gap: 16px; overflow-y: visible; }
+  .ti-lateral { width: 100%; height: auto; position: static; overflow-y: visible; padding: 16px; gap: 16px; }
 }

@@ -22,7 +22,7 @@ window.Suporte.novoChamado = {
       'aria-label': 'Assunto'
     });
 
-    // Seletor do Setor Responsável
+    // Seletor do Setor Responsável (Logo abaixo do Assunto)
     const setorResponsavel = el('select', { class: 'su-select', 'aria-label': 'Setor responsável' }, [
       el('option', { value: '' }, ['Selecione o setor responsável…']),
       el('option', { value: 'infraestrutura' }, ['Infraestrutura (Hardware, Rede, Equipamentos)']),

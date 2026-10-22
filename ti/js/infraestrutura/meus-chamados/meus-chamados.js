@@ -1,10 +1,10 @@
 /**
- * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtros temporais.
+ * meus-chamados.js — Tela de gerenciamento de chamados da infraestrutura com filtro unificado.
  */
 window.TI = window.TI || {};
 
 TI.telas.infra = {
-  async render(c, ctx, mostrarEncerrados = false, filtroPeriodo = 'todos') {
+  async render(c, ctx, filtroAtual = 'abertos_todos') {
     const { el } = TI.dom;
     const { ui, fmt, K } = TI;
     c.replaceChildren(ui.carregando());
@@ -21,9 +21,14 @@ TI.telas.infra = {
     }
 
     const f = ctx.f;
-    const recarregar = (encerrados = mostrarEncerrados, periodo = filtroPeriodo) => 
-      TI.telas.infra.render(c, ctx, encerrados, periodo);
+    const recarregar = (novoFiltro = filtroAtual) => 
+      TI.telas.infra.render(c, ctx, novoFiltro);
     
+    // Desmembra o filtro unificado (ex: 'abertos_mes' -> status: abertos, periodo: mes)
+    const [statusFiltro, periodoFiltro] = filtroAtual.split('_');
+    const mostrarEncerrados = statusFiltro === 'todos';
+    const filtroPeriodo = periodoFiltro || 'todos';
+
     const statusFechados = ['resolvido', 'fechado', 'concluido'];
     
     // 1. Filtragem por setor e status encerrado
@@ -33,7 +38,7 @@ TI.telas.infra = {
       return pertenceAoSetor && !statusFechados.includes(x.status?.toLowerCase());
     });
 
-    // 2. Filtro Temporal Avançado (Dia, Semana, Mês, Ano)
+    // 2. Filtro Temporal Avançado
     const agora = new Date();
     const abertos = baseSetor.filter(item => {
       if (filtroPeriodo === 'todos') return true;
@@ -82,23 +87,20 @@ TI.telas.infra = {
     c.replaceChildren(
       ui.cabecalhoPagina(f.nome + ' · ' + meus.length + ' meu(s) · ' + livres.length + ' disponível(is)', 'Meus chamados'),
       
-      // Barra de Ferramentas limpa com botão e select perfeitamente nivelados
+      // Barra de Ferramentas limpa com um único seletor inteligente unificando status e período
       el('div', { class: 'ti-filtro-toolbar', style: 'display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;' }, [
-        ui.botao(mostrarEncerrados ? 'Ocultar Encerrados' : 'Mostrar Encerrados', { 
-          tipo: 'secundario', 
-          onClick: () => recarregar(!mostrarEncerrados, filtroPeriodo) 
-        }),
-        
-        // Seletor com exatamente a mesma estrutura visual, altura e padding dos botões do sistema
         el('select', { 
           style: 'height: 38px; padding: 0 14px; border-radius: var(--raio-pequeno, 6px); border: 1.5px solid var(--ti-linha, #e3e0d9); font-size: 14px; font-family: inherit; font-weight: 500; background: var(--ti-branco, #fff); color: var(--ti-tinta, #1b2547); cursor: pointer; outline: none;',
-          onChange: (e) => recarregar(mostrarEncerrados, e.target.value)
+          onChange: (e) => recarregar(e.target.value)
         }, [
-          el('option', { value: 'todos', selected: filtroPeriodo === 'todos' }, ['Todo o Período']),
-          el('option', { value: 'dia', selected: filtroPeriodo === 'dia' }, ['Hoje']),
-          el('option', { value: 'semana', selected: filtroPeriodo === 'semana' }, ['Esta Semana']),
-          el('option', { value: 'mes', selected: filtroPeriodo === 'mes' }, ['Este Mês']),
-          el('option', { value: 'ano', selected: filtroPeriodo === 'ano' }, ['Este Ano'])
+          el('option', { value: 'abertos_todos', selected: filtroAtual === 'abertos_todos' }, ['Abertos · Todo o Período']),
+          el('option', { value: 'abertos_mes', selected: filtroAtual === 'abertos_mes' }, ['Abertos · Este Mês']),
+          el('option', { value: 'abertos_semana', selected: filtroAtual === 'abertos_semana' }, ['Abertos · Esta Semana']),
+          el('option', { value: 'abertos_dia', selected: filtroAtual === 'abertos_dia' }, ['Abertos · Hoje']),
+          el('option', { value: 'todos_todos', selected: filtroAtual === 'todos_todos' }, ['Com Encerrados · Todo o Período']),
+          el('option', { value: 'todos_mes', selected: filtroAtual === 'todos_mes' }, ['Com Encerrados · Este Mês']),
+          el('option', { value: 'todos_semana', selected: filtroAtual === 'todos_semana' }, ['Com Encerrados · Esta Semana']),
+          el('option', { value: 'todos_dia', selected: filtroAtual === 'todos_dia' }, ['Com Encerrados · Hoje'])
         ])
       ]),
 

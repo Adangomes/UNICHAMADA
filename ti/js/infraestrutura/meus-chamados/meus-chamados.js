@@ -7,20 +7,34 @@ TI.telas.infra = {
     c.replaceChildren(ui.carregando());
 
     let chamados, equipe;
-    try { [chamados, equipe] = await Promise.all([TI.dados.chamados.listar(), TI.dados.funcionarios.listar()]); }
-    catch (e) { c.replaceChildren(ui.erro(e.message)); return; }
+    try { 
+      [chamados, equipe] = await Promise.all([
+        TI.dados.chamados.listar(), 
+        TI.dados.funcionarios.listar()
+      ]); 
+    } catch (e) { 
+      c.replaceChildren(ui.erro(e.message)); 
+      return; 
+    }
 
     const f = ctx.f;
-    const recarregar = () => TI.telas.infra.render(c, ctx, mostrarEncerrados);
+    const recarregar = (encerrados = mostrarEncerrados) => TI.telas.infra.render(c, ctx, encerrados);
     
-    // FILTRO PROFISSIONAL: Se mostrarEncerrados for true, ignora a lista de status encerrados
-    const filtroStatus = mostrarEncerrados ? [] : K.chamadoEncerrado;
-    const abertos = chamados.filter((x) => x.grupo_destino === 'infraestrutura' && !filtroStatus.includes(x.status));
+    // Status que consideramos realmente fechados
+    const statusFechados = ['resolvido', 'fechado'];
+    
+    // Filtro flexibilizado: aceita infraestrutura ou desenvolvimento e não oculta chamados em atendimento/aguardando
+    const abertos = chamados.filter((x) => {
+      const pertenceAoSetor = x.grupo_destino === 'infraestrutura' || x.grupo_destino === 'desenvolvimento' || !x.grupo_destino;
+      if (mostrarEncerrados) return pertenceAoSetor;
+      return pertenceAoSetor && !statusFechados.includes(x.status);
+    });
     
     const meus = abertos.filter((x) => x.responsavel_id === f.id);
     const livres = abertos.filter((x) => !x.responsavel_id);
     const prazoOrdem = (a, b) => (a.prazo_em ? new Date(a.prazo_em).getTime() : 8.64e15) - (b.prazo_em ? new Date(b.prazo_em).getTime() : 8.64e15);
-    meus.sort(prazoOrdem); livres.sort(prazoOrdem);
+    meus.sort(prazoOrdem); 
+    livres.sort(prazoOrdem);
 
     async function mudar(x, campos, acao, mensagem) {
       await TI.dados.chamados.atualizar(x.id, campos);
@@ -58,5 +72,19 @@ TI.telas.infra = {
         ])
       ])
     );
+
+    // ==========================================
+    // CANAL WEBSOCKET REALTIME (AUTO REFRESH)
+    // ==========================================
+    if (TI.db && !window._realtimeInfraIniciado) {
+      window._realtimeInfraIniciado = true;
+      TI.db
+        .channel('realtime_infra_chamados')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ti_chamados' }, () => {
+          console.log('Realtime: mudança detectada na ti_chamados. Recarregando tela...');
+          recarregar();
+        })
+        .subscribe();
+    }
   }
 };

@@ -2,6 +2,8 @@
  * tarefa.js — Versão Final Ajustada e Pronta.
  */
 window.TI = window.TI || {};
+TI.telas = TI.telas || {};
+TI.telas.dev = TI.telas.dev || {};
 
 TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   var el = TI.dom.el;
@@ -11,7 +13,8 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   var f = ctx.f;
   
   var coord = (f.papel === 'coordenador_ti');
-  var doGrupo = (demanda.grupo_destino === K.grupoDoSetor(f.setor));
+  var grupoDestino = String(demanda.grupo_destino || '').trim().toLowerCase();
+  var doGrupo = (grupoDestino === K.grupoDoSetor(f.setor));
   
   var idResponsavel = demanda.responsavel_id ? String(demanda.responsavel_id).trim().toLowerCase() : '';
   var idUsuario = f.id ? String(f.id).trim().toLowerCase() : '';
@@ -73,24 +76,31 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
     }));
   }
 
-  if (demanda.status === 'desenvolvendo' && (coord || ehMinha || doGrupo)) {
-    botoes.push(ui.botao('Concluir e Enviar para Revisão', { 
+  var podeEnviarParaRevisao = demanda.status === 'desenvolvendo' &&
+    !coord &&
+    (ehMinha || (!demanda.responsavel_id && doGrupo));
+
+  if (podeEnviarParaRevisao) {
+    var assumindo = !demanda.responsavel_id;
+    botoes.push(ui.botao(assumindo ? 'Assumir e Enviar para Revisão' : 'Concluir e Enviar para Revisão', {
       tipo: 'primario', 
       onClick: function() {
-        ui.prompt('Envio para Revisão', 'O que você ajustou nesta demanda?', async function(txt) {
+        ui.prompt('Envio para Revisão', 'Descreva o que foi feito nesta demanda.', async function(txt) {
           if (txt && txt.trim()) {
             try {
-              if (TI.dados.revisoes && TI.dados.revisoes.criar) {
-                await TI.dados.revisoes.criar({
-                  demanda_id: demanda.id,
-                  decisao: 'dev_resposta',
-                  comentario: txt.trim()
-                });
-              }
-            } catch (e) {
-              console.warn('Comentário não gravado:', e);
+              await TI.dados.revisoes.criar({
+                demanda_id: demanda.id,
+                decisao: 'dev_resposta',
+                comentario: txt.trim()
+              });
+            } catch (err) {
+              ui.toast('Não foi possível registrar sua resposta: ' + err.message, 'erro');
+              return;
             }
-            await mover({ status: 'em_revisao' }, 'demanda.concluida', 'Enviado para a coordenação!');
+            await mover({
+              status: 'em_revisao',
+              ...(assumindo ? { responsavel_id: f.id } : {})
+            }, 'demanda.concluida', 'Enviado para a coordenação!');
           } else {
             ui.toast('Por favor, descreva o que foi feito.', 'erro');
           }
@@ -128,6 +138,9 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
       ]),
       el('div', { class: 'ti-texto-corrido' }, [demanda.descricao || '(sem descrição)']),
       ajuste ? el('div', { class: 'ti-alerta-amarelo' }, ['⚠️ Ajustes: ' + (ajuste.comentario || '')]) : null,
+      demanda.status === 'desenvolvendo' && coord
+        ? el('div', { class: 'ti-sub' }, ['Aguardando o funcionário responsável concluir o trabalho e enviar esta demanda para revisão.'])
+        : null,
       ui.par('Solicitado por', demanda.solicitante_nome),
       ui.par('Equipe', K.grupos[demanda.grupo_destino] || '—'),
       ui.par('Criada em', fmt.dataHoraCompleta(demanda.criado_em)),

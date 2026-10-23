@@ -3,6 +3,8 @@
  * Parte do quadro (veja quadro.js). Tabelas: ti_demandas (escrita), ti_auditoria (escrita).
  */
 window.TI = window.TI || {};
+TI.telas = TI.telas || {};
+TI.telas.dev = TI.telas.dev || {};
 
 /**
  * @param {{grupo:?string, novoGrupo:string}} opcoes  as mesmas opções do quadro

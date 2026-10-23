@@ -9,6 +9,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Corrigido
 - O quadro de demandas e seus diálogos inicializam o próprio namespace antes de registrar as telas,
   evitando falhas quando os scripts são servidos em cache ou fora de ordem.
+- Corrigido erro de sintaxe no renderizador das colunas, que impedia o carregamento do quadro Kanban.
 - Funcionários podem registrar a resposta e enviar demandas para revisão; a migração
   `banco-de-dados/ti-fluxo-revisao.sql` atualiza o constraint e a política RLS em instalações existentes.
 

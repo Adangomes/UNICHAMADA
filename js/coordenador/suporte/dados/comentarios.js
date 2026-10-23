@@ -13,6 +13,12 @@ window.Suporte.dados.comentarios = {
 
   /** Escreve uma mensagem. "Aguardando usuário" volta para "em atendimento"; "resolvido" é reaberto. */
   async responder(tipo, id, codigo, texto) {
-    return window.Suporte.dados.rpc('ti_responder_chamado', { p_tipo: tipo, p_id: id, p_codigo: codigo, p_texto: texto });
+    return window.Suporte.dados.rpc('ti_responder_chamado', {
+      p_tipo: tipo,
+      p_id: id,
+      p_codigo: codigo,
+      p_texto: texto,
+      p_interno: false
+    });
   }
 };

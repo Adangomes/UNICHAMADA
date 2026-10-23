@@ -261,6 +261,11 @@ Object.assign(TI.telas.dev, {
           : (linhas.length
             ? linhas
             : [el('tr', {}, [el('td', { colspan: '6', class: 'ti-coluna-vazia' }, [temFiltroAtivo ? 'Nenhuma demanda corresponde aos filtros.' : 'Nenhuma demanda encontrada.'])])]);
+        const maisResultados = ordenadas.length > visiveis.length
+          ? ui.botao('Mostrar mais (' + Math.min(25, ordenadas.length - visiveis.length) + ')', {
+            onClick: () => { limiteLista += 25; desenhar(); }
+          })
+          : null;
         resultados.replaceChildren(
           el('div', { class: 'ti-tabela-wrap' }, [
             el('table', { class: 'ti-tabela ti-demandas-tabela' }, [
@@ -275,11 +280,7 @@ Object.assign(TI.telas.dev, {
               el('tbody', {}, corpo)
             ])
           ]),
-          ordenadas.length > visiveis.length
-            ? ui.botao('Mostrar mais (' + Math.min(25, ordenadas.length - visiveis.length) + ')', {
-              onClick: () => { limiteLista += 25; desenhar(); }
-            })
-            : null
+          ...(maisResultados ? [maisResultados] : [])
         );
       }
     }

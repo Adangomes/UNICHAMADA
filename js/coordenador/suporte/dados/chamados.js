@@ -29,7 +29,7 @@ window.Suporte.dados.chamados = {
     if (!id) throw new Error('Não foi possível identificar o coordenador da sessão.');
     return window.Suporte.dados.rpc('ti_ver_chamado', { 
       p_tipo: tipo, 
-      p_id: String(id)
+      p_id: String(id),
       p_codigo: chamadoIdOuCodigo 
     });
   }

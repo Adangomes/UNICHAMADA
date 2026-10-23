@@ -211,8 +211,14 @@ Object.assign(TI.telas.dev, {
           return el('section', { class: 'ti-coluna' }, [
             el('h2', { class: 'ti-coluna-cab' }, [el('span', {}, [rotulo]), el('span', {}, [String(itens.length)])]),
             ...(itens.length ? itensVisiveis.map((d) => el('button', {
-              class: 'ti-ficha', type: 'button', onClick: () => TI.telas.dev.abrirTarefa(d, ctx, recarregar)
-            }, [
+              class: 'ti-ficha' + (status === 'no_ar' ? ' ti-ficha-no-ar' : ''),
+              type: 'button',
+              'aria-label': status === 'no_ar' ? 'Abrir demanda ' + d.codigo : undefined,
+              title: status === 'no_ar' ? d.titulo : undefined,
+              onClick: () => TI.telas.dev.abrirTarefa(d, ctx, recarregar)
+            }, status === 'no_ar' ? [
+              el('span', { class: 'ti-codigo' }, [d.codigo])
+            ] : [
               el('span', { class: 'ti-codigo' }, [d.codigo]),
               el('span', { class: 'ti-ficha-titulo' }, [d.titulo]),
               d.area ? el('span', { class: 'ti-tag' }, [d.area]) : null,

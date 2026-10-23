@@ -1,114 +1,59 @@
 /**
- * auth.js
- * ------------------------------------------------------------------
- * Supabase Auth por código enviado ao e-mail. Após a confirmação do
- * código, associa o usuário autenticado ao cadastro acadêmico pelo
- * RA e e-mail (coordenador ou professor).
- * ------------------------------------------------------------------ */
+ * Login da equipe por RA + e-mail, sem Supabase Auth ou código por e-mail.
+ * O perfil validado fica na sessão atual do navegador.
+ */
+const CHAVE_SESSAO = 'sistema-academico-sessao';
 
-function exigirClienteAuth() {
-  if (!window.supabaseClient) {
-    throw new Error('Supabase não configurado.');
-  }
-  return window.supabaseClient;
-}
+async function autenticar(ra, email) {
+  const cliente = window.supabaseClient;
+  if (!cliente) throw new Error('Supabase não configurado.');
 
-async function solicitarCodigoAcesso(email) {
-  const { error } = await exigirClienteAuth().auth.signInWithOtp({
-    email: email.trim().toLowerCase(),
-    options: { shouldCreateUser: true }
-  });
-  if (error) {
-    console.error('Falha ao solicitar código de acesso:', error);
-    throw error;
-  }
-}
-
-async function buscarPerfilAcademico(email, ra = null) {
-  const cliente = exigirClienteAuth();
+  const raNormalizado = ra.trim();
   const emailNormalizado = email.trim().toLowerCase();
 
-  let consultaCoordenador = cliente
-    .from('coordenadores')
-    .select('*')
-    .ilike('email', emailNormalizado);
-  if (ra) consultaCoordenador = consultaCoordenador.eq('ra', ra.trim());
+  for (const [tipo, tabela] of [
+    ['coordenador', 'coordenadores'],
+    ['professor', 'professores']
+  ]) {
+    const { data, error } = await cliente
+      .from(tabela)
+      .select('*')
+      .eq('ra', raNormalizado)
+      .ilike('email', emailNormalizado.replace(/[\\%_]/g, '\\$&'))
+      .maybeSingle();
 
-  const { data: coordenador, error: erroCoordenador } = await consultaCoordenador.maybeSingle();
-  if (erroCoordenador) {
-    console.error('Falha ao consultar cadastro do coordenador:', erroCoordenador);
-    throw erroCoordenador;
-  }
-  if (coordenador) return { tipo: 'coordenador', dados: coordenador };
-
-  let consultaProfessor = cliente
-    .from('professores')
-    .select('*')
-    .ilike('email', emailNormalizado);
-  if (ra) consultaProfessor = consultaProfessor.eq('ra', ra.trim());
-
-  const { data: professor, error: erroProfessor } = await consultaProfessor.maybeSingle();
-  if (erroProfessor) {
-    console.error('Falha ao consultar cadastro do professor:', erroProfessor);
-    throw erroProfessor;
-  }
-  return professor ? { tipo: 'professor', dados: professor } : null;
-}
-
-async function confirmarCodigoAcesso(ra, email, codigo) {
-  const cliente = exigirClienteAuth();
-  const emailNormalizado = email.trim().toLowerCase();
-  const { error } = await cliente.auth.verifyOtp({
-    email: emailNormalizado,
-    token: codigo.trim(),
-    type: 'email'
-  });
-  if (error) {
-    console.error('Código de acesso inválido ou expirado:', error);
-    throw error;
+    if (error) {
+      console.error(`Falha ao validar o acesso em ${tabela}:`, error);
+      throw error;
+    }
+    if (data) return { tipo, dados: data };
   }
 
-  try {
-    const perfil = await buscarPerfilAcademico(emailNormalizado, ra);
-    if (perfil) return perfil;
-  } catch (erro) {
-    await cliente.auth.signOut();
-    throw erro;
-  }
-
-  await cliente.auth.signOut();
   return null;
 }
 
-async function obterSessao() {
-  const cliente = exigirClienteAuth();
-  const { data, error } = await cliente.auth.getSession();
-  if (error) {
-    console.error('Falha ao recuperar sessão Supabase:', error);
-    throw error;
-  }
+function salvarSessao(sessao) {
+  sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+}
 
-  const email = data.session?.user?.email;
-  if (!email) return null;
+function obterSessao() {
+  const bruto = sessionStorage.getItem(CHAVE_SESSAO);
+  if (!bruto) return null;
 
-  const perfil = await buscarPerfilAcademico(email);
-  if (!perfil) {
-    await cliente.auth.signOut();
+  try {
+    return JSON.parse(bruto);
+  } catch (erro) {
+    console.error('Não foi possível ler a sessão salva:', erro);
+    sessionStorage.removeItem(CHAVE_SESSAO);
     return null;
   }
-  return perfil;
 }
 
-async function encerrarSessao() {
-  const cliente = exigirClienteAuth();
-  const { error } = await cliente.auth.signOut();
-  if (error) {
-    console.error('Falha ao encerrar sessão Supabase:', error);
-    throw error;
-  }
+function encerrarSessao() {
+  sessionStorage.removeItem(CHAVE_SESSAO);
 }
 
-window.solicitarCodigoAcesso = solicitarCodigoAcesso;
-window.confirmarCodigoAcesso = confirmarCodigoAcesso;
+window.autenticar = autenticar;
+window.salvarSessao = salvarSessao;
 window.obterSessao = obterSessao;
 window.encerrarSessao = encerrarSessao;

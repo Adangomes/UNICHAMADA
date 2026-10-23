@@ -25,20 +25,22 @@ Sistema de gestão acadêmica focado na **autenticação e registro de presença
 O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta performance, baixo consumo de recursos e facilidade de deploy.
 
 - **Camada de Abstração:** Isolamento da lógica do SDK do Supabase através do modulo `db.js`, facilitando testes e futuras migrações.
-- **Segurança:** O login da equipe usa Supabase Auth; políticas *Row Level Security* (RLS) por perfil ainda precisam estar configuradas no banco.
+- **Acesso:** O painel principal confere RA + e-mail no cadastro; não usa Supabase Auth. Esse acesso não é autenticação forte.
 - **UI/UX Produtiva:** Layout responsivo otimizado para operação diária, incluindo suporte a modo "Telão" para salas de aula.
 
 ## Configuração do Supabase
 
 Antes de publicar, preencha `supabaseAnonKey` em `js/data/config.js` com a chave **anon/public** do projeto Supabase. A chave é pública no front-end; nunca use `service_role`. O arquivo de configuração está separado do cliente de dados para deixar explícito o valor que falta configurar.
 
-O login de coordenadores e professores usa código de e-mail do Supabase Auth. Configure o template de e-mail para exibir `{{ .Token }}` e crie políticas RLS por perfil antes de habilitar o acesso ao sistema.
+O login de coordenadores e professores valida RA e e-mail contra os cadastros no banco; não usa Supabase Auth nem envia código por e-mail. Esse modo é simples para demonstração/portfólio, mas RA e e-mail não são fatores de autenticação seguros. Não o use para proteger dados acadêmicos reais sem autenticação individual e políticas RLS adequadas.
 
 Para que o telão e a lista de presença recebam alterações feitas em outros dispositivos, habilite Realtime para as tabelas `chamadas` e `presencas` no projeto Supabase. A assinatura usada pelo front-end depende dessa publicação.
 
 O reconhecimento facial em `js/utils/reconhecimento-facial.js` ainda é somente uma simulação e não deve ser tratado como autenticação biométrica real. Para usar essa etapa em produção, é necessário integrar um serviço de verificação no servidor.
 
-O login de equipe confirma o e-mail por Supabase Auth e associa o usuário ao cadastro acadêmico pelo RA/e-mail. A página do aluno ainda usa RA/e-mail sem autenticação; com RLS habilitado, a confirmação precisa migrar para uma função/endpoint de servidor antes de operar com dados reais.
+O login de equipe valida RA e e-mail no cadastro acadêmico, sem confirmação por Supabase Auth. A página do aluno também usa RA/e-mail sem autenticação; com RLS habilitado, esses fluxos precisam migrar para autenticação individual e uma função/endpoint de servidor antes de operar com dados reais.
+
+As abas Chat, Relatórios e Suporte do coordenador dependem de módulos JavaScript carregados em `index.html`. O Chat também depende dos scripts SQL em `banco-de-dados/chat/`. O Suporte chama as RPCs `ti_abrir_chamado`, `ti_listar_meus_chamados`, `ti_ver_chamado`, `ti_listar_comentarios` e `ti_responder_chamado`; o arquivo `ti/banco-de-dados/ti-tabelas.sql` cria as tabelas, mas não define essas RPCs. Portanto, o Suporte precisa dessas funções instaladas no Supabase antes de abrir/listar/enviar chamados.
 
 ---
 

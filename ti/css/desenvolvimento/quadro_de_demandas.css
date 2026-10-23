@@ -6,6 +6,13 @@
 .ti-coluna { flex: 1 1 0; min-width: 0; background: #ebe8e1; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
 .ti-coluna-cab { display: flex; justify-content: space-between; padding: 4px 6px 6px; font-size: 14px; font-weight: 700; }
 .ti-coluna-cab span:last-child { color: var(--ti-suave); }
+.ti-kanban-filtros { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.ti-kanban-filtros-campos { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(170px, .8fr) auto; gap: 10px; align-items: end; }
+.ti-kanban-filtros-campos.com-responsavel { grid-template-columns: minmax(220px, 2fr) minmax(170px, .8fr) minmax(190px, 1fr) auto; }
+.ti-kanban-filtros-campos .ti-campo { min-width: 0; }
+.ti-kanban-limpar { height: 44px; padding: 0 12px; border: 1px solid #cfccc3; border-radius: 10px; background: var(--ti-branco); color: var(--ti-tinta); cursor: pointer; white-space: nowrap; }
+.ti-kanban-limpar:disabled { opacity: .5; cursor: not-allowed; }
+.ti-kanban-filtros-resumo { color: var(--ti-suave); font-size: 13px; }
 .ti-ficha {
   width: 100%; text-align: left; cursor: pointer;
   background: var(--ti-branco); border: 1px solid var(--ti-linha); border-radius: 12px;
@@ -15,3 +22,10 @@
 .ti-ficha-titulo { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
 .ti-ficha-nota { font-size: 12.5px; color: var(--ti-suave); }
 .ti-coluna-vazia { font-size: 13px; color: var(--ti-suave); padding: 8px 6px; }
+.ti-coluna-mais { min-height: 38px; border: 1px solid #cfccc3; border-radius: 9px; background: transparent; color: var(--ti-navy); font-weight: 600; cursor: pointer; }
+.ti-coluna-mais:hover { background: var(--ti-branco); }
+
+@media (max-width: 760px) {
+  .ti-kanban-filtros-campos,
+  .ti-kanban-filtros-campos.com-responsavel { grid-template-columns: 1fr; }
+}

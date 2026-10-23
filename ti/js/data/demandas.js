@@ -30,16 +30,12 @@ TI.dados.demandas = {
   },
 
   async atualizar(id, campos) {
-    const resp = await TI.db.rpc('atualizar_demanda', {
-      p_id: id,
-      p_status: campos.status ?? null,
-      p_responsavel_id:
-        campos.responsavel_id == null ||
-        campos.responsavel_id === 'undefined' ||
-        campos.responsavel_id === ''
-          ? null
-          : String(campos.responsavel_id)
-    });
+    const resp = await TI.db
+      .from('ti_demandas')
+      .update(campos)
+      .eq('id', id)
+      .select()
+      .single();
     const d = TI.dados.tratar(resp);
     return Array.isArray(d) ? d[0] : d;
   }

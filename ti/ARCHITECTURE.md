@@ -45,6 +45,11 @@ Exemplo: a coordenação clica em **Direcionar** na Triagem.
 3. O **banco** confere as regras de acesso (RLS): só a coordenação, o responsável ou alguém do grupo pode alterar.
 4. A tela registra a ação em `TI.dados.auditoria.registrar(...)` e se redesenha.
 
+No fluxo de uma demanda, a pessoa responsável (ou alguém do grupo quando ainda não há responsável)
+descreve o que fez e envia para revisão. Se a demanda estiver sem responsável, o envio a atribui
+automaticamente à pessoa que a assumiu. A coordenação não envia o próprio trabalho para revisão:
+ela analisa demandas em **Em revisão** e pede ajustes ou aprova.
+
 ## 4. Quem vê o quê
 
 | Pessoa | Telas no menu | O que o banco deixa ler |

@@ -25,14 +25,9 @@ function montarCabecalhoPainel(sessao, tipo) {
 
   const btnSair = criarElemento('button', {
     class: 'btn-sair',
-    onClick: async () => {
-      try {
-        await encerrarSessao();
-        window.location.reload();
-      } catch (erro) {
-        console.error('Não foi possível encerrar a sessão:', erro);
-        mostrarToast('Não foi possível encerrar a sessão. Confira a conexão.', 'erro');
-      }
+    onClick: () => {
+      encerrarSessao();
+      window.location.reload();
     }
   }, ['Sair']);
 

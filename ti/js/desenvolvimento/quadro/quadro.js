@@ -225,21 +225,22 @@ Object.assign(TI.telas.dev, {
             el('span', { class: 'ti-ficha-titulo' }, [d.titulo]),
             d.area ? el('span', { class: 'ti-tag' }, [d.area]) : null,
             el('span', { class: 'ti-ficha-nota' }, [(String(d.responsavel_id || '') === String(f.id) ? 'Você' : (d.responsavel_id ? nomeDe(d.responsavel_id) : 'Sem responsável')) + ' · ' + K.prioridades[d.prioridade]])
-          ]);
+          ]));
           const carregarMais = itens.length > itensVisiveis.length
             ? el('button', {
               class: 'ti-coluna-mais',
               type: 'button',
               onClick: () => {
-                const listaAtual = quadro.querySelector('.ti-coluna-no-ar .ti-coluna-itens');
+                const listaAtual = quadro.querySelector('[data-status="' + status + '"] .ti-coluna-itens');
                 const rolagem = listaAtual ? listaAtual.scrollTop : 0;
                 visiveisPorColuna[status] = limite + limitePorColuna;
                 desenhar();
                 if (status === 'no_ar') {
-                  const listaAtualizada = quadro.querySelector('.ti-coluna-no-ar .ti-coluna-itens');
+                  const listaAtualizada = quadro.querySelector('[data-status="' + status + '"] .ti-coluna-itens');
                   if (listaAtualizada) listaAtualizada.scrollTop = listaAtualizada.scrollHeight;
                 } else if (listaAtual) {
-                  listaAtual.scrollTop = rolagem;
+                  const listaAtualizada = quadro.querySelector('[data-status="' + status + '"] .ti-coluna-itens');
+                  if (listaAtualizada) listaAtualizada.scrollTop = rolagem;
                 }
               }
             }, [status === 'no_ar'
@@ -252,7 +253,10 @@ Object.assign(TI.telas.dev, {
           }, itens.length ? [...cards, ...(carregarMais ? [carregarMais] : [])] : [
             el('div', { class: 'ti-coluna-vazia' }, [vazio])
           ]);
-          return el('section', { class: 'ti-coluna' + (status === 'no_ar' ? ' ti-coluna-no-ar' : '') }, [
+          return el('section', {
+            class: 'ti-coluna' + (status === 'no_ar' ? ' ti-coluna-no-ar' : ''),
+            'data-status': status
+          }, [
             el('h2', { class: 'ti-coluna-cab' }, [el('span', {}, [rotulo]), el('span', {}, [String(itens.length)])]),
             status === 'no_ar'
               ? el('p', { class: 'ti-coluna-nota' }, ['No ar há mais de 30 dias? Consulte na Lista.'])

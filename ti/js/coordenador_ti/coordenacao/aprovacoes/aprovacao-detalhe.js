@@ -39,7 +39,9 @@ TI.telas.aprovacaoDetalhe = {
             el('div', { class: 'ti-sub' }, ['Pedido por ' + demanda.solicitante_nome + (demanda.area ? ' · ' + demanda.area : '')])
           ])),
           ui.cartao('Histórico de revisões', revisoes.length ? revisoes.map((r) => el('div', { class: 'ti-linha' }, [
-            el('span', { class: 'ti-status ' + (r.decisao === 'aprovada' ? 'ti-status-resolvido' : 'ti-status-em_revisao') }, [r.decisao === 'aprovada' ? 'Aprovada' : 'Ajustes pedidos']),
+            el('span', { class: 'ti-status ' + (r.decisao === 'aprovada' ? 'ti-status-resolvido' : 'ti-status-em_revisao') }, [
+              r.decisao === 'aprovada' ? 'Aprovada' : (r.decisao === 'dev_resposta' ? 'Enviado para revisão' : 'Ajustes pedidos')
+            ]),
             el('span', { class: 'ti-linha-texto' }, [el('span', {}, [r.comentario || '(sem comentário)']), el('span', { class: 'ti-linha-sub' }, [nomeDe(r.revisor_id) + ' · ' + fmt.dataHoraCompleta(r.criado_em)])])
           ])) : [ui.vazio('Ainda não houve revisões.')])
         ]),

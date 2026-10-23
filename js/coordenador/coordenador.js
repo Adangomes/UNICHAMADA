@@ -22,33 +22,28 @@ const ABAS_COORDENADOR = [
     rotulo: 'Chat',
     render: async () => {
       elementoConteudoCoordenador.innerHTML = '<div id="chat-coordenador-root"></div>';
-      await iniciarChatCoordenador('chat-coordenador-root');
+      const usuario = sessaoCoordenador?.dados;
+      if (!usuario?.id) throw new Error('Não foi possível identificar o coordenador da sessão.');
+      await window.iniciarChatCoordenador('chat-coordenador-root', usuario);
     }
   },
   {
     // Dashboard de relatórios (js/relatorios/relatorios.js)
     chave: 'relatorios',
     rotulo: 'Relatórios',
-    render: async () => await renderRelatorios(elementoConteudoCoordenador, 'coordenador')
+    render: async () => await window.renderRelatorios(elementoConteudoCoordenador, 'coordenador')
   },
   {
     chave: 'suporte',
     rotulo: 'Suporte',
     render: async () => {
       elementoConteudoCoordenador.innerHTML = '';
-      
-      // UUID real do coordenador obtido diretamente da tabela 'coordenadores' do Supabase
-      const uuidCoordenadorBanco = '3cec55f8-5a4e-49b1-b333-9350b22b946c';
-      
-      const usuarioFormatado = {
-        id: uuidCoordenadorBanco, // Força o UUID correto e válido
-        nome: 'Coordenador Acadêmico',
-        email: 'cordenador@unichamada.com.br'
-      };
+      const usuario = sessaoCoordenador?.dados;
+      if (!usuario?.id) throw new Error('Não foi possível identificar o coordenador da sessão.');
 
-      await montarSuporte(elementoConteudoCoordenador, { 
+      await window.montarSuporte(elementoConteudoCoordenador, {
         tipo: 'coordenador', 
-        usuario: usuarioFormatado, 
+        usuario,
         tela: 'Painel do coordenador' 
       });
     }
@@ -59,6 +54,8 @@ const ABAS_COORDENADOR = [
 // É preenchido lá no montarPainelCoordenador() e usado pelas funções de render.
 let elementoConteudoCoordenador = null;
 
+let sessaoCoordenador = null;
+
 // Qual aba tá ativa no momento. Começa em 'professores' por padrão.
 let abaAtivaCoordenador = 'professores';
 
@@ -68,6 +65,7 @@ let abaAtivaCoordenador = 'professores';
  * renderiza a aba inicial.
  */
 async function montarPainelCoordenador(sessao) {
+  sessaoCoordenador = sessao;
   const tela = $('#tela-coordenador');
 
   // Limpa qualquer conteúdo anterior antes de remontar o painel
@@ -129,6 +127,9 @@ async function selecionarAbaCoordenador(chave, nav) {
 async function renderizarAbaAtivaCoordenador() {
   // Desliga o tempo real do chat ao sair da aba Chat (evita conexão aberta à toa)
   if (window.ChatDados) window.ChatDados.cancelar();
+  if (abaAtivaCoordenador !== 'relatorios' && window.Relatorios) {
+    window.Relatorios.parar();
+  }
 
   // Procura na lista de abas qual delas corresponde à chave ativa no momento
   const aba = ABAS_COORDENADOR.find((a) => a.chave === abaAtivaCoordenador);
@@ -136,7 +137,16 @@ async function renderizarAbaAtivaCoordenador() {
   // Só renderiza se encontrou (proteção básica, caso a chave esteja errada
   // ou a aba tenha sido removida da lista por engano)
   if (aba) {
-    await aba.render();
+    try {
+      await aba.render();
+    } catch (erro) {
+      console.error(`Falha ao abrir a aba "${aba.rotulo}":`, erro);
+      elementoConteudoCoordenador.replaceChildren(
+        criarElemento('div', { class: 'estado-vazio', role: 'alert' }, [
+          `Não foi possível abrir ${aba.rotulo}. ${erro.message || 'Verifique a conexão e tente novamente.'}`
+        ])
+      );
+    }
   }
 }
 

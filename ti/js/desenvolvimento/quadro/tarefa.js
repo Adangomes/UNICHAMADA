@@ -83,28 +83,43 @@ TI.telas.dev.abrirTarefa = async function (demanda, ctx, aoMudar) {
   if (podeEnviarParaRevisao) {
     var assumindo = !demanda.responsavel_id;
     botoes.push(ui.botao(assumindo ? 'Assumir e Enviar para Revisão' : 'Concluir e Enviar para Revisão', {
-      tipo: 'primario', 
+      tipo: 'primario',
       onClick: function() {
-        ui.prompt('Envio para Revisão', 'Descreva o que foi feito nesta demanda.', async function(txt) {
-          if (txt && txt.trim()) {
-            try {
-              await TI.dados.revisoes.criar({
-                demanda_id: demanda.id,
-                decisao: 'dev_resposta',
-                comentario: txt.trim()
-              });
-            } catch (err) {
-              ui.toast('Não foi possível registrar sua resposta: ' + err.message, 'erro');
-              return;
-            }
-            await mover({
-              status: 'em_revisao',
-              ...(assumindo ? { responsavel_id: f.id } : {})
-            }, 'demanda.concluida', 'Enviado para a coordenação!');
-          } else {
-            ui.toast('Por favor, descreva o que foi feito.', 'erro');
-          }
+        var resposta = ui.textarea({
+          rows: '4',
+          'aria-label': 'O que foi feito',
+          placeholder: 'Descreva o que foi feito nesta demanda.'
         });
+        var modalResposta = ui.modal({
+          titulo: 'Envio para Revisão',
+          corpo: [ui.campo('O que foi feito?', resposta)],
+          botoes: [
+            ui.botao('Cancelar', { onClick: function() { modalResposta.fechar(); } }),
+            ui.botao('Enviar para Revisão', {
+              tipo: 'primario',
+              onClick: async function() {
+                var comentario = resposta.value.trim();
+                if (!comentario) {
+                  ui.toast('Por favor, descreva o que foi feito.', 'erro');
+                  resposta.focus();
+                  return;
+                }
+
+                await TI.dados.revisoes.criar({
+                  demanda_id: demanda.id,
+                  decisao: 'dev_resposta',
+                  comentario: comentario
+                });
+                modalResposta.fechar();
+                await mover({
+                  status: 'em_revisao',
+                  ...(assumindo ? { responsavel_id: f.id } : {})
+                }, 'demanda.concluida', 'Enviado para a coordenação!');
+              }
+            })
+          ]
+        });
+        resposta.focus();
       } 
     }));
   }

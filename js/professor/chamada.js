@@ -223,24 +223,31 @@ async function abrirModalChamada(turma, professor) {
     preenchimento.style.width = '0%';
   }
 
+  let atualizacaoLista = 0;
   async function renderizarLista() {
-    areaLista.innerHTML = '';
-    const alunosDaTurma = await alunosMatriculadosNaTurma(turma.id);
-    const presencas = await dbListar('presencas');
+    const atualizacao = ++atualizacaoLista;
+    const [alunosDaTurma, presencas] = await Promise.all([
+      alunosMatriculadosNaTurma(turma.id),
+      dbListar('presencas')
+    ]);
+    if (atualizacao !== atualizacaoLista || !modal.isConnected) return;
 
     if (alunosDaTurma.length === 0) {
-      areaLista.appendChild(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado nesta turma ainda.']));
+      areaLista.replaceChildren(criarElemento('div', { class: 'estado-vazio' }, ['Nenhum aluno matriculado nesta turma ainda.']));
       return;
     }
 
-    for (const aluno of alunosDaTurma) {
+    const linhas = document.createDocumentFragment();
+    const alunosUnicos = new Map(alunosDaTurma.map((aluno) => [aluno.id, aluno]));
+    for (const aluno of alunosUnicos.values()) {
       const presenca = presencas.find((p) => {
         const cId = p.chamada_id || p.chamadaId;
         const aId = p.aluno_id || p.alunoId;
         return cId === chamada.id && aId === aluno.id;
       });
-      areaLista.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
+      linhas.appendChild(montarLinhaAlunoChamada(aluno, presenca, chamada, turma, async () => await renderizarLista()));
     }
+    areaLista.replaceChildren(linhas);
   }
 
   await renderizarCodigo();

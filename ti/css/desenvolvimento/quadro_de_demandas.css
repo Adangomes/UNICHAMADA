@@ -34,6 +34,7 @@
   background: var(--ti-branco); border: 1px solid var(--ti-linha); border-radius: 12px;
   padding: 14px; display: flex; flex-direction: column; gap: 8px;
 }
+.ti-ficha-no-ar { min-height: 38px; padding: 8px 10px; justify-content: center; }
 .ti-ficha:hover { border-color: #b9c4ea; }
 .ti-ficha-titulo { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
 .ti-ficha-nota { font-size: 12.5px; color: var(--ti-suave); }

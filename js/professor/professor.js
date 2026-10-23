@@ -56,7 +56,28 @@ let professorLogado = null;
  */
 const ABAS_PROFESSOR = [
   { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
-  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) }
+  { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
+  {
+    chave: 'chat',
+    rotulo: 'Chat',
+    render: async (container, professor) => {
+      container.innerHTML = '<div id="chat-professor-root"></div>';
+      if (!professor?.id) throw new Error('Não foi possível identificar o professor da sessão.');
+      await window.iniciarChatProfessor('chat-professor-root', professor);
+    }
+  },
+  {
+    chave: 'suporte',
+    rotulo: 'Suporte',
+    render: async (container, professor) => {
+      if (!professor?.id) throw new Error('Não foi possível identificar o professor da sessão.');
+      await window.montarSuporte(container, {
+        tipo: 'professor',
+        usuario: professor,
+        tela: 'Painel do professor'
+      });
+    }
+  }
 ];
 
 /**
@@ -156,9 +177,19 @@ async function renderizarAbaAtivaProfessor() {
     pararAssinaturaAbaProfessor(); 
     pararAssinaturaAbaProfessor = null; 
   }
+  if (window.ChatDados) window.ChatDados.cancelar();
   const aba = ABAS_PROFESSOR.find((a) => a.chave === abaAtivaProfessor);
   if (aba) {
-    await aba.render(elementoConteudoProfessor, professorLogado);
+    try {
+      await aba.render(elementoConteudoProfessor, professorLogado);
+    } catch (erro) {
+      console.error(`Falha ao abrir a aba "${aba.rotulo}":`, erro);
+      elementoConteudoProfessor.replaceChildren(
+        criarElemento('div', { class: 'estado-vazio', role: 'alert' }, [
+          `Não foi possível abrir ${aba.rotulo}. ${erro.message || 'Verifique a conexão e tente novamente.'}`
+        ])
+      );
+    }
   }
 }
 

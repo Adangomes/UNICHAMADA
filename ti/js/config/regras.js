@@ -5,7 +5,7 @@ TI.K.slaHoras = { alta: 4, media: 24, baixa: 72 };
 // NOVO: Mapeia o setor do funcionário para o grupo de trabalho do chamado
 TI.K.grupoDoSetor = function (setor) {
   if (!setor) return 'coordenacao';
-  const s = setor.toLowerCase();
+  const s = String(setor).trim().toLowerCase();
   if (s === 'infraestrutura') return 'infraestrutura';
   if (['dev_frontend', 'dev_backend', 'full_stack'].includes(s)) return 'desenvolvimento';
   if (s === 'banco_de_dados') return 'banco_de_dados';

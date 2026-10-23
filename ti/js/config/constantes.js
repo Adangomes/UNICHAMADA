@@ -4,8 +4,8 @@
  * Para mudar um texto (ex.: "Em atendimento"), mude AQUI e vale para o painel inteiro.
  */
 window.TI = window.TI || {};
-TI.telas = {};     // cada tela se registra aqui (ex.: TI.telas.fila)
-TI.dados = {};     // cada arquivo de js/data/ se registra aqui (ex.: TI.dados.chamados)
+TI.telas = TI.telas || {};     // cada tela se registra aqui (ex.: TI.telas.fila)
+TI.dados = TI.dados || {};     // cada arquivo de js/data/ se registra aqui (ex.: TI.dados.chamados)
 
 TI.K = {
   // Setores que podem ser escolhidos no cadastro de funcionário (mesmos valores do SQL)

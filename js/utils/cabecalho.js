@@ -7,7 +7,6 @@ function montarCabecalhoPainel(sessao, tipo) {
   const dados = (sessao && sessao.dados) ? sessao.dados : (sessao || {});
 
   const nome = dados.nome || 'Usuário';
-  const ra = dados.ra || '—';
 
   const foto = dados.fotoRosto
     ? criarElemento('img', { class: 'foto-mini', src: dados.fotoRosto, alt: `Foto de ${nome}` })
@@ -19,7 +18,7 @@ function montarCabecalhoPainel(sessao, tipo) {
     foto,
     criarElemento('div', { class: 'textos' }, [
       criarElemento('strong', {}, [nome]),
-      criarElemento('span', {}, [`${rotuloTipo} · RA ${ra}`])
+      criarElemento('span', {}, [rotuloTipo])
     ])
   ]);
 

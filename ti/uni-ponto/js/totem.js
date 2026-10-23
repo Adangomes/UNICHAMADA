@@ -1,58 +1,25 @@
-document.addEventListener("DOMContentLoaded", () => {
-    // Monta o layout visual dinamicamente no body limpo
-    const card = document.createElement("div");
-    card.className = "card";
-    
-    card.innerHTML = `
-        <h2>Registo de Ponto</h2>
-        <p>Aproxime o cartão ou insira o ID</p>
-        <input type="text" id="funcionarioId" placeholder="Ex: FUNC-001" autocomplete="off">
-        <button id="btnPonto">Registar Ponto</button>
-        <div id="mensagem"></div>
-    `;
-    
-    document.body.appendChild(card);
+const resposta = await fetch('/ti/uni-ponto/registrar', { ... })
+```[cite: 12]
 
-    // Eventos de clique e tecla Enter
-    document.getElementById("btnPonto").addEventListener("click", baterPonto);
-    document.getElementById("funcionarioId").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") baterPonto();
-    });
+O teu JavaScript está a fazer um `fetch` diretamente para o endpoint reltivo `/ti/uni-ponto/registrar`[cite: 12]! 
+
+Se a página do totem está a correr a partir de uma aplicação CSP mapeada (por exemplo, `/totem/totem.csp` ou `/uni-ponto/totem.csp`), o navegador vai tentar procurar a rota `POST` em `/totem/ti/uni-ponto/registrar` e vai dar **404 / Erro de ligação**, porque a tua API REST vive na aplicação web dedicada `/ti/uni-ponto`[cite: 8]!
+
+### Como resolver isto definitivamente de forma elegante:
+
+Podes atualizar a linha do `fetch` no teu `totem.js` para apontar diretamente com o IP/Porta absolutos do Docker ou usar o caminho completo da API REST, assim:
+
+```javascript
+const resposta = await fetch('http://192.168.0.157:52773/ti/uni-ponto/registrar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        funcionarioId: funcionarioId,
+        dispositivoId: 'TOTEM-TABLET-01'
+    })
 });
+```[cite: 12]
 
-async function baterPonto() {
-    const inputEl = document.getElementById('funcionarioId');
-    const msgDiv = document.getElementById('mensagem');
-    const funcionarioId = inputEl.value.trim();
-    
-    if (!funcionarioId) {
-        msgDiv.style.color = '#f87171';
-        msgDiv.innerText = 'Por favor, insira o ID do funcionário.';
-        return;
-    }
+Como a tua classe REST `Ponto.TI.Service` já tem o CORS 100% liberado (`Access-Control-Allow-Origin: *`)[cite: 11], o navegador vai aceitar o pedido com zero conflitos de domínio!
 
-    try {
-        const resposta = await fetch('/ti/uni-ponto/registrar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                funcionarioId: funcionarioId,
-                dispositivoId: 'TOTEM-TABLET-01'
-            })
-        });
-
-        const resultado = await resposta.json();
-        
-        if (resposta.ok) {
-            msgDiv.style.color = '#4ade80';
-            msgDiv.innerText = resultado.mensagem || 'Ponto registado com sucesso!';
-            inputEl.value = '';
-        } else {
-            msgDiv.style.color = '#f87171';
-            msgDiv.innerText = resultado.mensagem || 'Atenção: Registo não efetuado.';
-        }
-    } catch (erro) {
-        msgDiv.style.color = '#f87171';
-        msgDiv.innerText = 'Erro de ligação ao servidor do IRIS.';
-    }
-}
+Atualiza isso no teu ficheiro local, copia de novo para dentro do container com o `docker cp` e abre a p*rra da tela do totem. Vai funcionar de primeira!

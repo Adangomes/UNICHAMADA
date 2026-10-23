@@ -38,7 +38,7 @@ const ABAS_COORDENADOR = [
       elementoConteudoCoordenador.innerHTML = '';
       
       // UUID real do coordenador obtido diretamente da tabela 'coordenadores' do Supabase
-      const uuidCoordenadorBanco = 'ba48d258-b46f-4bc6-9ae0-5daaa396';
+      const uuidCoordenadorBanco = '3cec55f8-5a4e-49b1-b333-9350b22b946c';
       
       const usuarioFormatado = {
         id: uuidCoordenadorBanco, // Força o UUID correto e válido
@@ -55,7 +55,7 @@ const ABAS_COORDENADOR = [
   }
 ];
 
-// Guarda a referência do container onde o conteúdo da aba atual é desenhado.
+// ( ba48d258-b46f-4bc6-9ae0-5daaa396 )Guarda a referência do container onde o conteúdo da aba atual é desenhado.
 // É preenchido lá no montarPainelCoordenador() e usado pelas funções de render.
 let elementoConteudoCoordenador = null;
 

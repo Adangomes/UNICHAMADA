@@ -41,7 +41,10 @@
 .ti-ficha-no-ar { min-height: 54px; padding: 8px 10px; gap: 4px; justify-content: center; }
 .ti-ficha:hover { border-color: #b9c4ea; }
 .ti-ficha-titulo { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
-.ti-ficha-no-ar .ti-ficha-titulo { font-size: 13px; line-height: 1.3; }
+.ti-ficha-no-ar .ti-ficha-titulo {
+  display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  font-size: 13px; line-height: 1.3;
+}
 .ti-ficha-nota { font-size: 12.5px; color: var(--ti-suave); }
 .ti-coluna-vazia { font-size: 13px; color: var(--ti-suave); padding: 8px 6px; }
 .ti-coluna-mais { min-height: 38px; border: 1px solid #cfccc3; border-radius: 9px; background: transparent; color: var(--ti-navy); font-weight: 600; cursor: pointer; }

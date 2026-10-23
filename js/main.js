@@ -1,6 +1,5 @@
 /**
- * main.js — Ponto de entrada. Confirma o código Supabase Auth e associa
- * RA + e-mail ao perfil do coordenador ou do professor.
+ * main.js — Ponto de entrada. Valida RA + e-mail e abre o painel correspondente.
  */
 
 async function iniciarAplicacao() {
@@ -38,7 +37,7 @@ async function iniciarAplicacao() {
   }
 
   try {
-    const sessaoExistente = await obterSessao();
+    const sessaoExistente = obterSessao();
     if (sessaoExistente) abrirPainel(sessaoExistente);
   } catch (erro) {
     console.error('Não foi possível recuperar a sessão do usuário:', erro);
@@ -54,12 +53,9 @@ function obterIdDaUrl(prefixo) {
 
 function configurarFormularioLogin() {
   const form = $('#form-login');
-  const formCodigo = $('#form-codigo-acesso');
   const aviso = $('#aviso-login');
 
-  if (!form || !formCodigo) return;
-
-  let credenciaisEmConfirmacao = null;
+  if (!form) return;
 
   form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
@@ -71,76 +67,21 @@ function configurarFormularioLogin() {
       return;
     }
 
-    if (!emailValido(email)) {
-      exibirAvisoLogin(aviso, 'Informe um e-mail válido.');
-      return;
-    }
-
     const botao = form.querySelector('button[type="submit"]');
     botao.disabled = true;
     try {
-      await solicitarCodigoAcesso(email);
-      credenciaisEmConfirmacao = { ra, email };
-      form.classList.add('oculto');
-      formCodigo.classList.remove('oculto');
-      $('#input-codigo-acesso').focus();
-      exibirAvisoLogin(aviso, 'Enviamos um código de acesso para o e-mail informado. Confira também a caixa de spam.');
-    } catch (erro) {
-      console.error('Falha ao solicitar código de acesso:', erro);
-      exibirAvisoLogin(aviso, 'Não foi possível enviar o código. Confira o e-mail e a configuração do Supabase Auth.');
-    } finally {
-      botao.disabled = false;
-    }
-  });
-
-  formCodigo.addEventListener('submit', async (evento) => {
-    evento.preventDefault();
-    if (!credenciaisEmConfirmacao) {
-      formCodigo.classList.add('oculto');
-      form.classList.remove('oculto');
-      return;
-    }
-
-    const codigo = formCodigo.codigo.value.trim();
-    if (!codigo) {
-      exibirAvisoLogin(aviso, 'Informe o código enviado por e-mail.');
-      return;
-    }
-
-    const botao = formCodigo.querySelector('button[type="submit"]');
-    botao.disabled = true;
-    try {
-      const perfil = await confirmarCodigoAcesso(
-        credenciaisEmConfirmacao.ra,
-        credenciaisEmConfirmacao.email,
-        codigo
-      );
+      const perfil = await autenticar(ra, email);
       if (!perfil) {
-        exibirAvisoLogin(aviso, 'Esse e-mail não está cadastrado com o RA informado. Procure a coordenação.');
+        exibirAvisoLogin(aviso, 'RA ou e-mail não encontrados. Confira os dados com a coordenação.');
         return;
       }
 
       aviso.classList.add('oculto');
-      credenciaisEmConfirmacao = null;
+      salvarSessao(perfil);
       abrirPainel(perfil);
     } catch (erro) {
-      console.error('Falha ao confirmar código de acesso:', erro);
-      exibirAvisoLogin(aviso, 'Código inválido/expirado ou acesso negado pelo Supabase. Solicite um novo código.');
-    } finally {
-      botao.disabled = false;
-    }
-  });
-
-  $('#btn-reenviar-codigo').addEventListener('click', async () => {
-    if (!credenciaisEmConfirmacao) return;
-    const botao = $('#btn-reenviar-codigo');
-    botao.disabled = true;
-    try {
-      await solicitarCodigoAcesso(credenciaisEmConfirmacao.email);
-      exibirAvisoLogin(aviso, 'Enviamos um novo código para o seu e-mail.');
-    } catch (erro) {
-      console.error('Falha ao reenviar código de acesso:', erro);
-      exibirAvisoLogin(aviso, 'Não foi possível reenviar o código. Tente novamente.');
+      console.error('Falha ao validar RA e e-mail:', erro);
+      exibirAvisoLogin(aviso, 'Não foi possível validar o acesso. Confira a conexão e as permissões do Supabase.');
     } finally {
       botao.disabled = false;
     }

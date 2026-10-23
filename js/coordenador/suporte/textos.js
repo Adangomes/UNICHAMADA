@@ -5,7 +5,7 @@ window.Suporte = window.Suporte || {};
 
 window.Suporte.T = {
   titulo: 'Suporte',
-  subtitulo: 'Abra um chamado para a equipe de TI e acompanhe por aqui.',
+  subtitulo: '',
 
   quem: { professor: 'Professor(a)', coordenador: 'Coordenação' },
 

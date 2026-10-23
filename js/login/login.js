@@ -60,23 +60,6 @@ function renderizarTelaLogin(container) {
             <button type="submit" class="btn-primario">Entrar</button>
           </form>
 
-          <form id="form-codigo-acesso" class="oculto" novalidate>
-            <div class="campo">
-              <label for="input-codigo-acesso">Código enviado ao seu e-mail</label>
-              <input
-                id="input-codigo-acesso"
-                name="codigo"
-                type="text"
-                inputmode="numeric"
-                autocomplete="one-time-code"
-                maxlength="8"
-                required
-              />
-            </div>
-            <button type="submit" class="btn-primario">Confirmar código</button>
-            <button id="btn-reenviar-codigo" type="button" class="btn-secundario">Reenviar código</button>
-          </form>
-          
           <p id="aviso-login" class="aviso-login oculto"></p>
         </div>
       </div>

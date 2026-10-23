@@ -42,6 +42,10 @@
 <script src="js/auth/login.js"></script>
 <script src="js/auth/primeiro-acesso.js"></script>
 
+<!-- Aplicação (Carrega primeiro para definir o motor de rotas e o objeto global) -->
+<script src="js/app/rotas.js"></script>
+<script src="js/app/app.js"></script>
+
 <!-- Coordenador de TI — seção Acompanhamento -->
 <script src="js/coordenador_ti/acompanhamento/visao-geral.js"></script>
 <script src="js/coordenador_ti/acompanhamento/fila.js"></script>
@@ -61,18 +65,14 @@
 <script src="js/coordenador_ti/coordenacao/equipe/cadastro-funcionario.js"></script>
 <script src="js/coordenador_ti/coordenacao/equipe/equipe.js"></script>
 
-<!-- Demais equipes -->
+<!-- Demais equipes (Carregadas após o app.js para garantirem dependências) -->
 <script src="js/infraestrutura/meus-chamados/ficha.js"></script>
 <script src="js/infraestrutura/meus-chamados/meus-chamados.js"></script>
 <script src="js/desenvolvimento/quadro/quadro.js"></script>
 <script src="js/desenvolvimento/quadro/nova-demanda.js"></script>
-<!-- Adicionado ?v=1 para forçar a atualização do cache e matar o erro de sintaxe -->
 <script src="js/desenvolvimento/quadro/tarefa.js?v=1"></script>
 <script src="js/banco_de_dados/tarefas.js"></script>
 <script src="js/power_bi/pedidos.js"></script>
 
-<!-- Aplicação -->
-<script src="js/app/rotas.js"></script>
-<script src="js/app/app.js"></script>
 </body>
 </html>

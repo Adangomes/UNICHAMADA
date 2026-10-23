@@ -4,8 +4,12 @@
 .ti-kanban-wrap { overflow-x: auto; padding-bottom: 6px; }
 .ti-kanban { display: flex; gap: 14px; min-width: 1180px; align-items: flex-start; }
 .ti-coluna { flex: 1 1 0; min-width: 0; background: #ebe8e1; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ti-coluna-no-ar { min-height: 0; }
+.ti-coluna-itens { display: flex; flex-direction: column; gap: 10px; }
+.ti-coluna-no-ar-itens { max-height: min(60vh, 640px); overflow-y: auto; padding: 0 4px 4px 0; overscroll-behavior: contain; }
 .ti-coluna-cab { display: flex; justify-content: space-between; padding: 4px 6px 6px; font-size: 14px; font-weight: 700; }
 .ti-coluna-cab span:last-child { color: var(--ti-suave); }
+.ti-coluna-nota { margin: -6px 0 0; color: var(--ti-suave); font-size: 11px; line-height: 1.4; }
 .ti-kanban-filtros { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
 .ti-kanban-filtros-topo { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .ti-kanban-filtros-campos { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; align-items: end; }
@@ -34,9 +38,10 @@
   background: var(--ti-branco); border: 1px solid var(--ti-linha); border-radius: 12px;
   padding: 14px; display: flex; flex-direction: column; gap: 8px;
 }
-.ti-ficha-no-ar { min-height: 38px; padding: 8px 10px; justify-content: center; }
+.ti-ficha-no-ar { min-height: 54px; padding: 8px 10px; gap: 4px; justify-content: center; }
 .ti-ficha:hover { border-color: #b9c4ea; }
 .ti-ficha-titulo { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
+.ti-ficha-no-ar .ti-ficha-titulo { font-size: 13px; line-height: 1.3; }
 .ti-ficha-nota { font-size: 12.5px; color: var(--ti-suave); }
 .ti-coluna-vazia { font-size: 13px; color: var(--ti-suave); padding: 8px 6px; }
 .ti-coluna-mais { min-height: 38px; border: 1px solid #cfccc3; border-radius: 9px; background: transparent; color: var(--ti-navy); font-weight: 600; cursor: pointer; }

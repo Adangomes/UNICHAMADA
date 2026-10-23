@@ -216,6 +216,7 @@ Object.assign(TI.telas.dev, {
             class: 'ti-ficha' + (status === 'no_ar' ? ' ti-ficha-no-ar' : ''),
             type: 'button',
             'aria-label': 'Abrir demanda ' + d.codigo + ': ' + d.titulo,
+            title: status === 'no_ar' ? d.titulo : undefined,
             onClick: () => TI.telas.dev.abrirTarefa(d, ctx, recarregar)
           }, status === 'no_ar' ? [
             el('span', { class: 'ti-codigo' }, [d.codigo]),

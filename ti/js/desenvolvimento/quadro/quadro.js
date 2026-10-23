@@ -27,6 +27,7 @@ Object.assign(TI.telas.dev, {
     const f = ctx.f;
     const recarregar = () => TI.telas.dev.renderQuadro(c, ctx, opcoes);
     const nomeDe = (id) => (equipe.find((p) => p.id === id) || {}).nome || 'Responsável não listado';
+    const limiteHistoricoNoAr = Date.now() - 30 * 24 * 60 * 60 * 1000;
     let somenteMinhas = false;
     let modoVisual = 'quadro';
     const limitePorColuna = 20;
@@ -148,7 +149,10 @@ Object.assign(TI.telas.dev, {
 
     function desenhar(reiniciarLimites) {
       let lista = demandas.filter((d) => !opcoes.grupo || d.grupo_destino === opcoes.grupo);
-      if (modoVisual === 'quadro') lista = lista.filter((d) => d.status !== 'cancelado');
+      if (modoVisual === 'quadro') {
+        lista = lista.filter((d) => d.status !== 'cancelado' &&
+          (d.status !== 'no_ar' || !d.no_ar_em || new Date(d.no_ar_em).getTime() >= limiteHistoricoNoAr));
+      }
       const termo = normalizar(busca.value);
       const responsavelSelecionado = responsavel ? responsavel.value : '';
       if (somenteMinhas) lista = lista.filter((d) => String(d.responsavel_id || '') === String(f.id));
@@ -208,32 +212,52 @@ Object.assign(TI.telas.dev, {
             : (!lista.length && temFiltroAtivo
               ? 'Nenhuma demanda corresponde aos filtros.'
               : (lista.length ? 'Nenhuma demanda nesta etapa.' : 'Nada aqui.'));
-          return el('section', { class: 'ti-coluna' }, [
-            el('h2', { class: 'ti-coluna-cab' }, [el('span', {}, [rotulo]), el('span', {}, [String(itens.length)])]),
-            ...(itens.length ? itensVisiveis.map((d) => el('button', {
-              class: 'ti-ficha' + (status === 'no_ar' ? ' ti-ficha-no-ar' : ''),
+          const cards = itensVisiveis.map((d) => el('button', {
+            class: 'ti-ficha' + (status === 'no_ar' ? ' ti-ficha-no-ar' : ''),
+            type: 'button',
+            'aria-label': 'Abrir demanda ' + d.codigo + ': ' + d.titulo,
+            onClick: () => TI.telas.dev.abrirTarefa(d, ctx, recarregar)
+          }, status === 'no_ar' ? [
+            el('span', { class: 'ti-codigo' }, [d.codigo]),
+            el('span', { class: 'ti-ficha-titulo' }, [d.titulo])
+          ] : [
+            el('span', { class: 'ti-codigo' }, [d.codigo]),
+            el('span', { class: 'ti-ficha-titulo' }, [d.titulo]),
+            d.area ? el('span', { class: 'ti-tag' }, [d.area]) : null,
+            el('span', { class: 'ti-ficha-nota' }, [(String(d.responsavel_id || '') === String(f.id) ? 'Você' : (d.responsavel_id ? nomeDe(d.responsavel_id) : 'Sem responsável')) + ' · ' + K.prioridades[d.prioridade]])
+          ]);
+          const carregarMais = itens.length > itensVisiveis.length
+            ? el('button', {
+              class: 'ti-coluna-mais',
               type: 'button',
-              'aria-label': status === 'no_ar' ? 'Abrir demanda ' + d.codigo : undefined,
-              title: status === 'no_ar' ? d.titulo : undefined,
-              onClick: () => TI.telas.dev.abrirTarefa(d, ctx, recarregar)
-            }, status === 'no_ar' ? [
-              el('span', { class: 'ti-codigo' }, [d.codigo])
-            ] : [
-              el('span', { class: 'ti-codigo' }, [d.codigo]),
-              el('span', { class: 'ti-ficha-titulo' }, [d.titulo]),
-              d.area ? el('span', { class: 'ti-tag' }, [d.area]) : null,
-              el('span', { class: 'ti-ficha-nota' }, [(String(d.responsavel_id || '') === String(f.id) ? 'Você' : (d.responsavel_id ? nomeDe(d.responsavel_id) : 'Sem responsável')) + ' · ' + K.prioridades[d.prioridade]])
-            ])) : [el('div', { class: 'ti-coluna-vazia' }, [vazio])]),
-            itens.length > itensVisiveis.length
-              ? el('button', {
-                class: 'ti-coluna-mais',
-                type: 'button',
-                onClick: () => {
-                  visiveisPorColuna[status] = limite + limitePorColuna;
-                  desenhar();
+              onClick: () => {
+                const listaAtual = quadro.querySelector('.ti-coluna-no-ar .ti-coluna-itens');
+                const rolagem = listaAtual ? listaAtual.scrollTop : 0;
+                visiveisPorColuna[status] = limite + limitePorColuna;
+                desenhar();
+                if (status === 'no_ar') {
+                  const listaAtualizada = quadro.querySelector('.ti-coluna-no-ar .ti-coluna-itens');
+                  if (listaAtualizada) listaAtualizada.scrollTop = listaAtualizada.scrollHeight;
+                } else if (listaAtual) {
+                  listaAtual.scrollTop = rolagem;
                 }
-              }, ['Mostrar mais (' + Math.min(limitePorColuna, itens.length - itensVisiveis.length) + ')'])
-              : null
+              }
+            }, [status === 'no_ar'
+              ? 'Carregar mais (' + itensVisiveis.length + '/' + itens.length + ')'
+              : 'Mostrar mais (' + Math.min(limitePorColuna, itens.length - itensVisiveis.length) + ')'])
+            : null;
+          const listaColuna = el('div', {
+            class: 'ti-coluna-itens' + (status === 'no_ar' ? ' ti-coluna-no-ar-itens' : ''),
+            ...(status === 'no_ar' ? { role: 'region', tabindex: '0', 'aria-label': 'Demandas publicadas' } : {})
+          }, itens.length ? [...cards, ...(carregarMais ? [carregarMais] : [])] : [
+            el('div', { class: 'ti-coluna-vazia' }, [vazio])
+          ]);
+          return el('section', { class: 'ti-coluna' + (status === 'no_ar' ? ' ti-coluna-no-ar' : '') }, [
+            el('h2', { class: 'ti-coluna-cab' }, [el('span', {}, [rotulo]), el('span', {}, [String(itens.length)])]),
+            status === 'no_ar'
+              ? el('p', { class: 'ti-coluna-nota' }, ['No ar há mais de 30 dias? Consulte na Lista.'])
+              : null,
+            listaColuna
           ]);
         }));
       } else {

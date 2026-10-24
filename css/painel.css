@@ -96,6 +96,27 @@
   gap: .3em;
 }
 
+.painel-nav button[aria-controls="menu-cadastros"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.painel-nav-seta {
+  width: .5em;
+  height: .5em;
+  margin-right: .2em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-.1em);
+  transition: transform .18s ease;
+}
+
+.painel-nav button[aria-expanded="true"] .painel-nav-seta {
+  transform: rotate(225deg) translate(-.1em, -.1em);
+}
+
 .painel-nav-submenu {
   display: flex;
   flex-direction: column;

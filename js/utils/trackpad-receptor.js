@@ -1,24 +1,28 @@
 /**
  * Módulo Receptor do Trackpad Remoto (Modo Apresentação)
- * Comunicação em tempo real via Supabase Broadcast - Otimizado (Zero Delay)
+ * Comunicação em tempo real via Supabase Broadcast - Com Salas Isoladas
  */
 (function() {
   window.addEventListener('DOMContentLoaded', () => {
-    // Chaves reais do Supabase do projeto UniChamadas
     const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
-    // Verifica se o SDK do Supabase foi carregado via CDN
     if (!window.supabase || !window.supabase.createClient) {
       console.warn('[Trackpad] SDK do Supabase não encontrado.');
       return;
     }
 
-    // Cria a instância do cliente e abre o canal Broadcast
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const channel = client.channel('unichamadas_trackpad');
 
-    // Cria o cursor virtual estético na tela do Mac/Telão (Transition: none para zerar o atraso visual)
+    // Cria ou recupera um ID de sala único persistente para este navegador
+    let roomId = localStorage.getItem('unichamadas_room');
+    if (!roomId) {
+      roomId = 'sessao_' + Math.random().toString(36).substring(2, 8);
+      localStorage.setItem('unichamadas_room', roomId);
+    }
+
+    const channel = client.channel(`unichamadas_trackpad_${roomId}`);
+
     const cursor = document.createElement('div');
     cursor.id = 'virtual-trackpad-cursor';
     cursor.style.cssText = `
@@ -59,9 +63,14 @@
       }
     });
 
+    channel.on('broadcast', { event: 'trackpad_disconnect' }, () => {
+      cursor.style.display = 'none';
+    });
+
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        console.log('✅ [Trackpad Receptor] Conectado e escutando comandos mobile com zero delay!');
+        console.log(`✅ [Trackpad Receptor] Conectado na Sala: ${roomId}`);
+        console.log(`📱 Link para o seu celular: https://adangomes.github.io/UNICHAMADA/mousepad/?room=${roomId}`);
       }
     });
   });

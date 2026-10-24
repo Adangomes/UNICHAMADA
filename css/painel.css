@@ -90,6 +90,25 @@
   gap: .3em;
 }
 
+.painel-nav-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: .2em;
+  padding: .6em;
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+}
+
+.painel-nav-grupo-titulo {
+  margin: 0;
+  padding: .35em .65em .45em;
+  color: var(--grafite-suave);
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
 .painel-nav button {
   text-align: left;
   background: transparent;
@@ -331,6 +350,17 @@ tbody tr:hover { background: rgba(31,45,80,.025); }
     flex-direction: row;
     overflow-x: auto;
     padding: 1em;
+  }
+  .painel-nav-grupo {
+    flex-direction: row;
+    align-items: center;
+    width: max-content;
+  }
+  .painel-nav-grupo-titulo {
+    white-space: nowrap;
+  }
+  .painel-nav-grupo button {
+    flex: 0 0 auto;
   }
   .grade-secao { grid-template-columns: 1fr; }
   .linha-campos { grid-template-columns: 1fr; }

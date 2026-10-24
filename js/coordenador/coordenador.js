@@ -9,12 +9,12 @@
 // o rótulo que aparece no botão e a função que renderiza o conteúdo dela.
 // Se precisar adicionar uma aba nova, é só incluir aqui.
 const ABAS_COORDENADOR = [
-  { chave: 'professores', rotulo: 'Professores', render: async () => await renderSecaoProfessores(elementoConteudoCoordenador) },
-  { chave: 'cursos', rotulo: 'Cursos', render: async () => await renderSecaoCursos(elementoConteudoCoordenador) },
-  { chave: 'alunos', rotulo: 'Alunos', render: async () => await renderSecaoAlunos(elementoConteudoCoordenador) },
-  { chave: 'disciplinas', rotulo: 'Disciplinas', render: async () => await renderSecaoDisciplinas(elementoConteudoCoordenador) },
-  { chave: 'turmas', rotulo: 'Turmas', render: async () => await renderSecaoTurmas(elementoConteudoCoordenador) },
-  { chave: 'matriculas', rotulo: 'Matrículas', render: async () => await renderSecaoMatriculas(elementoConteudoCoordenador) },
+  { chave: 'professores', rotulo: 'Professores', grupo: 'Cadastros', render: async () => await renderSecaoProfessores(elementoConteudoCoordenador) },
+  { chave: 'cursos', rotulo: 'Cursos', grupo: 'Cadastros', render: async () => await renderSecaoCursos(elementoConteudoCoordenador) },
+  { chave: 'alunos', rotulo: 'Alunos', grupo: 'Cadastros', render: async () => await renderSecaoAlunos(elementoConteudoCoordenador) },
+  { chave: 'disciplinas', rotulo: 'Disciplinas', grupo: 'Cadastros', render: async () => await renderSecaoDisciplinas(elementoConteudoCoordenador) },
+  { chave: 'turmas', rotulo: 'Turmas', grupo: 'Cadastros', render: async () => await renderSecaoTurmas(elementoConteudoCoordenador) },
+  { chave: 'matriculas', rotulo: 'Matrículas', grupo: 'Cadastros', render: async () => await renderSecaoMatriculas(elementoConteudoCoordenador) },
   { chave: 'notificacoes', rotulo: 'Notificações', render: async () => await renderSecaoNotificacoes(elementoConteudoCoordenador) },
   {
     // Chat com os professores (js/coordenador/chat/chat.js)
@@ -84,6 +84,7 @@ async function montarPainelCoordenador(sessao) {
   // Percorre a lista de abas e cria um botão pra cada uma.
   // O botão já nasce marcado como "ativo" se for a aba atual (importante
   // pro caso de recarregar o painel mantendo a aba que o usuário tava vendo).
+  const gruposNav = new Map();
   ABAS_COORDENADOR.forEach((aba) => {
     const botao = criarElemento('button', {
       class: aba.chave === abaAtivaCoordenador ? 'ativo' : '',
@@ -93,7 +94,21 @@ async function montarPainelCoordenador(sessao) {
     // Guarda a chave da aba no próprio botão (via data-attribute) pra
     // conseguir identificar ele depois, sem precisar de closures complicadas
     botao.dataset.chave = aba.chave;
-    nav.appendChild(botao);
+
+    if (!aba.grupo) {
+      nav.appendChild(botao);
+      return;
+    }
+
+    let grupo = gruposNav.get(aba.grupo);
+    if (!grupo) {
+      grupo = criarElemento('section', { class: 'painel-nav-grupo' }, [
+        criarElemento('h2', { class: 'painel-nav-grupo-titulo' }, [aba.grupo])
+      ]);
+      gruposNav.set(aba.grupo, grupo);
+      nav.appendChild(grupo);
+    }
+    grupo.appendChild(botao);
   });
 
   // Junta nav + conteúdo no corpo, e o corpo na tela

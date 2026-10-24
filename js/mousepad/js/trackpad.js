@@ -9,7 +9,9 @@
   channel.subscribe();
 
   const canvas = document.getElementById('canvas');
-  const powerBtn = document.getElementById('power-btn');
+  const trackpadEl = document.getElementById('trackpad');
+  const powerToggle = document.getElementById('power-toggle');
+  
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let particles = [];
@@ -56,14 +58,15 @@
   }
   animate();
 
-  // Acionamento do botão Power
-  powerBtn.addEventListener('click', () => {
-    isDisconnected = !isDisconnected;
+  // Controle do Switch On/Off
+  powerToggle.addEventListener('change', () => {
+    isDisconnected = !powerToggle.checked;
+    
     if (isDisconnected) {
-      powerBtn.classList.add('active');
+      trackpadEl.classList.add('inactive');
       channel.send({ type: 'broadcast', event: 'trackpad_disconnect' });
     } else {
-      powerBtn.classList.remove('active');
+      trackpadEl.classList.remove('inactive');
       channel.send({ type: 'broadcast', event: 'trackpad_connect' });
     }
   });

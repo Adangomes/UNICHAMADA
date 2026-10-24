@@ -1,11 +1,11 @@
 /**
  * Módulo Receptor do Trackpad Remoto (Modo Apresentação)
- * Comunicação em tempo real via Supabase Broadcast - Com Salas Isoladas
+ * Comunicação em tempo real via Supabase Broadcast - Sincronizado por Sala
  */
 (function() {
   window.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6InFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
     if (!window.supabase || !window.supabase.createClient) {
       console.warn('[Trackpad] SDK do Supabase não encontrado.');
@@ -14,7 +14,6 @@
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Cria ou recupera um ID de sala único persistente para este navegador
     let roomId = localStorage.getItem('unichamadas_room');
     if (!roomId) {
       roomId = 'sessao_' + Math.random().toString(36).substring(2, 8);
@@ -35,8 +34,17 @@
 
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
+    let isTrackpadActive = true;
+
+    channel.on('broadcast', { event: 'trackpad_state' }, ({ payload }) => {
+      isTrackpadActive = payload.active;
+      if (!isTrackpadActive) {
+        cursor.style.display = 'none';
+      }
+    });
 
     channel.on('broadcast', { event: 'trackpad_move' }, ({ payload }) => {
+      if (!isTrackpadActive) return;
       cursor.style.display = 'block';
       mouseX += (payload.deltaX || 0) * 1.5;
       mouseY += (payload.deltaY || 0) * 1.5;
@@ -49,10 +57,12 @@
     });
 
     channel.on('broadcast', { event: 'trackpad_scroll' }, ({ payload }) => {
+      if (!isTrackpadActive) return;
       window.scrollBy({ top: (payload.deltaY || 0) * 2, behavior: 'instant' });
     });
 
     channel.on('broadcast', { event: 'trackpad_click' }, () => {
+      if (!isTrackpadActive) return;
       const target = document.elementFromPoint(mouseX, mouseY);
       if (target) {
         cursor.style.transform = 'translate(-50%, -50%) scale(1.6)';
@@ -61,10 +71,6 @@
         target.click();
         if (typeof target.focus === 'function') target.focus();
       }
-    });
-
-    channel.on('broadcast', { event: 'trackpad_disconnect' }, () => {
-      cursor.style.display = 'none';
     });
 
     channel.subscribe((status) => {

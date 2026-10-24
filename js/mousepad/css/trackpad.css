@@ -82,9 +82,9 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #00c853;
-  border-color: rgba(0, 200, 83, 0.4);
-  box-shadow: 0 0 12px rgba(0, 200, 83, 0.4);
+  background-color: #00f0ff;
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
 }
 
 input:checked + .slider:before {

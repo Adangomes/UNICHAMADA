@@ -102,21 +102,59 @@ async function montarPainelCoordenador(sessao) {
 
     let grupo = gruposNav.get(aba.grupo);
     if (!grupo) {
-      grupo = criarElemento('section', { class: 'painel-nav-grupo' }, [
-        criarElemento('h2', { class: 'painel-nav-grupo-titulo' }, [aba.grupo])
+      const submenuId = `menu-${aba.grupo.toLowerCase()}`;
+      const submenu = criarElemento('div', {
+        id: submenuId,
+        class: 'painel-nav-submenu'
+      });
+      submenu.hidden = true;
+
+      const toggle = criarElemento('button', {
+        type: 'button',
+        class: 'painel-nav-cadastros-toggle',
+        'aria-expanded': 'false',
+        'aria-controls': submenuId,
+        onClick: () => {
+          submenu.hidden = !submenu.hidden;
+          toggle.setAttribute('aria-expanded', String(!submenu.hidden));
+          atualizarNavegacaoCoordenador(nav);
+        }
+      }, [
+        criarElemento('span', { class: 'painel-nav-icone', 'aria-hidden': 'true' }, ['⋮']),
+        criarElemento('span', {}, [aba.grupo])
       ]);
+
+      grupo = criarElemento('div', { class: 'painel-nav-grupo' }, [toggle, submenu]);
+      grupo.submenu = submenu;
       gruposNav.set(aba.grupo, grupo);
       nav.appendChild(grupo);
     }
-    grupo.appendChild(botao);
+    grupo.submenu.appendChild(botao);
   });
 
   // Junta nav + conteúdo no corpo, e o corpo na tela
   corpo.append(nav, elementoConteudoCoordenador);
   tela.appendChild(corpo);
 
+  atualizarNavegacaoCoordenador(nav);
+
   // Assim que monta o painel, já renderiza o conteúdo da aba ativa
   await renderizarAbaAtivaCoordenador();
+}
+
+function atualizarNavegacaoCoordenador(nav) {
+  $all('button[data-chave]', nav).forEach((botao) => {
+    botao.classList.toggle('ativo', botao.dataset.chave === abaAtivaCoordenador);
+  });
+
+  const toggleCadastros = nav.querySelector('.painel-nav-cadastros-toggle');
+  if (toggleCadastros) {
+    const menuExpandido = toggleCadastros.getAttribute('aria-expanded') === 'true';
+    const cadastroAtivo = ABAS_COORDENADOR.some(
+      (aba) => aba.grupo === 'Cadastros' && aba.chave === abaAtivaCoordenador
+    );
+    toggleCadastros.classList.toggle('ativo', cadastroAtivo && !menuExpandido);
+  }
 }
 
 /**
@@ -127,10 +165,15 @@ async function selecionarAbaCoordenador(chave, nav) {
   // Atualiza a variável global de controle pra nova aba clicada
   abaAtivaCoordenador = chave;
 
-  // Passa por todos os botões do menu e ajusta a classe "ativo":
-  // fica true só no botão cujo data-chave bate com a aba selecionada,
-  // e false em todos os outros (tira o destaque visual dos demais)
-  $all('button', nav).forEach((btn) => btn.classList.toggle('ativo', btn.dataset.chave === chave));
+  const abaSelecionada = ABAS_COORDENADOR.find((aba) => aba.chave === chave);
+  const toggleCadastros = nav.querySelector('.painel-nav-cadastros-toggle');
+  if (toggleCadastros) {
+    const expandido = abaSelecionada?.grupo === 'Cadastros';
+    const submenu = nav.querySelector(`#${toggleCadastros.getAttribute('aria-controls')}`);
+    submenu.hidden = !expandido;
+    toggleCadastros.setAttribute('aria-expanded', String(expandido));
+  }
+  atualizarNavegacaoCoordenador(nav);
 
   // Renderiza o conteúdo da aba que acabou de ser selecionada
   await renderizarAbaAtivaCoordenador();

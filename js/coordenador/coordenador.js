@@ -118,7 +118,10 @@ async function montarPainelCoordenador(sessao) {
           toggle.setAttribute('aria-expanded', String(!submenu.hidden));
           atualizarNavegacaoCoordenador(nav);
         }
-      }, [aba.grupo]);
+      }, [
+        criarElemento('span', {}, [aba.grupo]),
+        criarElemento('span', { class: 'painel-nav-seta', 'aria-hidden': 'true' })
+      ]);
 
       grupo = criarElemento('div', { class: 'painel-nav-grupo' }, [toggle, submenu]);
       grupo.submenu = submenu;

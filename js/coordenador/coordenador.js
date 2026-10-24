@@ -111,7 +111,6 @@ async function montarPainelCoordenador(sessao) {
 
       const toggle = criarElemento('button', {
         type: 'button',
-        class: 'painel-nav-cadastros-toggle',
         'aria-expanded': 'false',
         'aria-controls': submenuId,
         onClick: () => {
@@ -119,10 +118,7 @@ async function montarPainelCoordenador(sessao) {
           toggle.setAttribute('aria-expanded', String(!submenu.hidden));
           atualizarNavegacaoCoordenador(nav);
         }
-      }, [
-        criarElemento('span', { class: 'painel-nav-icone', 'aria-hidden': 'true' }, ['⋮']),
-        criarElemento('span', {}, [aba.grupo])
-      ]);
+      }, [aba.grupo]);
 
       grupo = criarElemento('div', { class: 'painel-nav-grupo' }, [toggle, submenu]);
       grupo.submenu = submenu;
@@ -147,7 +143,7 @@ function atualizarNavegacaoCoordenador(nav) {
     botao.classList.toggle('ativo', botao.dataset.chave === abaAtivaCoordenador);
   });
 
-  const toggleCadastros = nav.querySelector('.painel-nav-cadastros-toggle');
+  const toggleCadastros = nav.querySelector('button[aria-controls="menu-cadastros"]');
   if (toggleCadastros) {
     const menuExpandido = toggleCadastros.getAttribute('aria-expanded') === 'true';
     const cadastroAtivo = ABAS_COORDENADOR.some(
@@ -166,7 +162,7 @@ async function selecionarAbaCoordenador(chave, nav) {
   abaAtivaCoordenador = chave;
 
   const abaSelecionada = ABAS_COORDENADOR.find((aba) => aba.chave === chave);
-  const toggleCadastros = nav.querySelector('.painel-nav-cadastros-toggle');
+  const toggleCadastros = nav.querySelector('button[aria-controls="menu-cadastros"]');
   if (toggleCadastros) {
     const expandido = abaSelecionada?.grupo === 'Cadastros';
     const submenu = nav.querySelector(`#${toggleCadastros.getAttribute('aria-controls')}`);

@@ -9,8 +9,14 @@
 <body>
 
   <div class="header">
+    <div class="header-spacer"></div>
     <h2>UNICHAMADAS TRACKPAD</h2>
-    <button id="power-btn" title="Desativar Cursor">⏻</button>
+    <div class="toggle-wrapper">
+      <label class="switch" title="Ligar / Desligar Trackpad">
+        <input type="checkbox" id="power-toggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
   <div id="trackpad">

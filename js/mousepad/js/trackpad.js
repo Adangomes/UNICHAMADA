@@ -9,9 +9,11 @@
   channel.subscribe();
 
   const canvas = document.getElementById('canvas');
+  const powerBtn = document.getElementById('power-btn');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   let particles = [];
+  let isDisconnected = false;
 
   function resize() {
     canvas.width = canvas.clientWidth;
@@ -54,13 +56,25 @@
   }
   animate();
 
-  // Controle de estado e lote (Batching para zerar o delay)
+  // Acionamento do botão Power
+  powerBtn.addEventListener('click', () => {
+    isDisconnected = !isDisconnected;
+    if (isDisconnected) {
+      powerBtn.classList.add('active');
+      channel.send({ type: 'broadcast', event: 'trackpad_disconnect' });
+    } else {
+      powerBtn.classList.remove('active');
+      channel.send({ type: 'broadcast', event: 'trackpad_connect' });
+    }
+  });
+
   let lastX = 0, lastY = 0, touchStartTime = 0, touchCount = 0;
   let accumulatedDeltaX = 0;
   let accumulatedDeltaY = 0;
   let isSending = false;
 
   function flushMovement() {
+    if (isDisconnected) return;
     if ((accumulatedDeltaX !== 0 || accumulatedDeltaY !== 0) && channel) {
       channel.send({
         type: 'broadcast',
@@ -74,6 +88,7 @@
   }
 
   canvas.addEventListener('touchstart', (e) => {
+    if (isDisconnected) return;
     touchCount = e.touches.length;
     touchStartTime = Date.now();
     if (touchCount === 1) {
@@ -85,6 +100,7 @@
   });
 
   canvas.addEventListener('touchmove', (e) => {
+    if (isDisconnected) return;
     if (touchCount === 1 && e.touches.length === 1) {
       const x = e.touches[0].clientX;
       const y = e.touches[0].clientY;
@@ -119,6 +135,7 @@
   });
 
   canvas.addEventListener('touchend', (e) => {
+    if (isDisconnected) return;
     const touchDuration = Date.now() - touchStartTime;
     if (touchDuration < 200 && e.touches.length === 0) {
       channel.send({ type: 'broadcast', event: 'trackpad_click' });

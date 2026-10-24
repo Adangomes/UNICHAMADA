@@ -1,10 +1,15 @@
 (function() {
-  // Configuração do Supabase no Trackpad isolada em escopo privado
   const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const channel = supabaseClient.channel('unichamadas_trackpad');
+  // Usa window.supabase para evitar qualquer conflito de identificador global
+  if (!window.supabase) {
+    console.error('SDK do Supabase não carregado.');
+    return;
+  }
+
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const channel = client.channel('unichamadas_trackpad');
   channel.subscribe();
 
   const canvas = document.getElementById('canvas');
@@ -20,7 +25,6 @@
   window.addEventListener('orientationchange', () => setTimeout(resize, 200));
   resize();
 
-  // Efeito Visual de Partículas Neon
   class Particle {
     constructor(x, y) {
       this.x = x; this.y = y;
@@ -55,7 +59,6 @@
   }
   animate();
 
-  // Gestos Touch
   let lastX = 0, lastY = 0, touchStartTime = 0, touchCount = 0;
 
   canvas.addEventListener('touchstart', (e) => {

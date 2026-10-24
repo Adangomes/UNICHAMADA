@@ -2,11 +2,7 @@
   const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
-  // Usa window.supabase para evitar qualquer conflito de identificador global
-  if (!window.supabase) {
-    console.error('SDK do Supabase não carregado.');
-    return;
-  }
+  if (!window.supabase) return;
 
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const channel = client.channel('unichamadas_trackpad');
@@ -22,13 +18,12 @@
     canvas.height = canvas.clientHeight;
   }
   window.addEventListener('resize', resize);
-  window.addEventListener('orientationchange', () => setTimeout(resize, 200));
   resize();
 
   class Particle {
     constructor(x, y) {
       this.x = x; this.y = y;
-      this.size = Math.random() * 6 + 2;
+      this.size = Math.random() * 5 + 2;
       this.color = Math.random() > 0.5 ? '#00f0ff' : '#7000ff';
       this.alpha = 1;
     }
@@ -39,13 +34,13 @@
       ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
       ctx.fillStyle = this.color;
       ctx.shadowColor = this.color;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 8;
       ctx.fill();
       ctx.restore();
     }
     update() {
-      this.alpha -= 0.04;
-      this.size *= 0.93;
+      this.alpha -= 0.05;
+      this.size *= 0.92;
     }
   }
 
@@ -59,7 +54,24 @@
   }
   animate();
 
+  // Controle de estado e lote (Batching para zerar o delay)
   let lastX = 0, lastY = 0, touchStartTime = 0, touchCount = 0;
+  let accumulatedDeltaX = 0;
+  let accumulatedDeltaY = 0;
+  let isSending = false;
+
+  function flushMovement() {
+    if ((accumulatedDeltaX !== 0 || accumulatedDeltaY !== 0) && channel) {
+      channel.send({
+        type: 'broadcast',
+        event: 'trackpad_move',
+        payload: { deltaX: accumulatedDeltaX, deltaY: accumulatedDeltaY }
+      });
+      accumulatedDeltaX = 0;
+      accumulatedDeltaY = 0;
+    }
+    isSending = false;
+  }
 
   canvas.addEventListener('touchstart', (e) => {
     touchCount = e.touches.length;
@@ -79,21 +91,26 @@
       const deltaX = x - lastX;
       const deltaY = y - lastY;
 
+      accumulatedDeltaX += deltaX;
+      accumulatedDeltaY += deltaY;
+
       const rect = canvas.getBoundingClientRect();
       particles.push(new Particle(x - rect.left, y - rect.top));
 
-      channel.send({
-        type: 'broadcast', event: 'trackpad_move',
-        payload: { deltaX, deltaY }
-      });
+      if (!isSending) {
+        isSending = true;
+        requestAnimationFrame(flushMovement);
+      }
 
-      lastX = x; lastY = y;
+      lastX = x;
+      lastY = y;
     } else if (touchCount === 2 && e.touches.length === 2) {
       const currentY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
       const deltaY = lastY - currentY;
 
       channel.send({
-        type: 'broadcast', event: 'trackpad_scroll',
+        type: 'broadcast',
+        event: 'trackpad_scroll',
         payload: { deltaY }
       });
 

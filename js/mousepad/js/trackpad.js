@@ -1,12 +1,25 @@
 (function() {
   const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6InFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
   if (!window.supabase) return;
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const roomId = urlParams.get('room') || 'padrao';
+
   const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const channel = client.channel('unichamadas_trackpad');
-  channel.subscribe();
+  const channel = client.channel(`unichamadas_trackpad_${roomId}`);
+  
+  channel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      // Sincroniza o estado inicial ao conectar
+      channel.send({
+        type: 'broadcast',
+        event: 'trackpad_state',
+        payload: { active: powerToggle.checked }
+      });
+    }
+  });
 
   const canvas = document.getElementById('canvas');
   const trackpadEl = document.getElementById('trackpad');
@@ -58,17 +71,21 @@
   }
   animate();
 
-  // Controle do Switch On/Off
+  // Controle unificado do Switch
   powerToggle.addEventListener('change', () => {
     isDisconnected = !powerToggle.checked;
     
     if (isDisconnected) {
       trackpadEl.classList.add('inactive');
-      channel.send({ type: 'broadcast', event: 'trackpad_disconnect' });
     } else {
       trackpadEl.classList.remove('inactive');
-      channel.send({ type: 'broadcast', event: 'trackpad_connect' });
     }
+
+    channel.send({
+      type: 'broadcast',
+      event: 'trackpad_state',
+      payload: { active: powerToggle.checked }
+    });
   });
 
   let lastX = 0, lastY = 0, touchStartTime = 0, touchCount = 0;

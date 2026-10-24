@@ -3,17 +3,19 @@
  * Comunicação em tempo real via Supabase Broadcast
  */
 (function() {
-  // Aguarda o carregamento dos scripts e do cliente Supabase
   window.addEventListener('DOMContentLoaded', () => {
-    // Tenta encontrar o cliente ativo do Supabase (_supabase global do UniChamadas)
-    const client = window._supabase || (typeof supabase !== 'undefined' && typeof supabase.channel === 'function' ? supabase : null);
+    // Chaves reais do Supabase do projeto UniChamadas
+    const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
-    if (!client) {
-      console.warn('[Trackpad] Instância do Supabase não encontrada.');
+    // Verifica se o SDK do Supabase foi carregado via CDN
+    if (typeof supabase === 'undefined' || !supabase.createClient) {
+      console.warn('[Trackpad] SDK do Supabase não encontrado.');
       return;
     }
 
-    // Cria o canal de comunicação em tempo real
+    // Cria a instância do cliente e abre o canal Broadcast
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const channel = client.channel('unichamadas_trackpad');
 
     // Cria o cursor virtual estético na tela do Mac/Telão
@@ -30,13 +32,11 @@
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
 
-    // Escuta movimento
     channel.on('broadcast', { event: 'trackpad_move' }, ({ payload }) => {
       cursor.style.display = 'block';
       mouseX += (payload.deltaX || 0) * 2.2;
       mouseY += (payload.deltaY || 0) * 2.2;
 
-      // Mantém o cursor dentro dos limites da tela
       mouseX = Math.max(10, Math.min(window.innerWidth - 10, mouseX));
       mouseY = Math.max(10, Math.min(window.innerHeight - 10, mouseY));
 
@@ -44,16 +44,13 @@
       cursor.style.top = `${mouseY}px`;
     });
 
-    // Escuta rolagem (scroll)
     channel.on('broadcast', { event: 'trackpad_scroll' }, ({ payload }) => {
       window.scrollBy({ top: (payload.deltaY || 0) * 2.5, behavior: 'smooth' });
     });
 
-    // Escuta clique
     channel.on('broadcast', { event: 'trackpad_click' }, () => {
       const target = document.elementFromPoint(mouseX, mouseY);
       if (target) {
-        // Efeito visual rápido de clique
         cursor.style.transform = 'translate(-50%, -50%) scale(1.6)';
         setTimeout(() => cursor.style.transform = 'translate(-50%, -50%) scale(1)', 150);
         

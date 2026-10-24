@@ -96,20 +96,6 @@
   gap: .3em;
 }
 
-.painel-nav-cadastros-toggle {
-  display: flex;
-  align-items: center;
-  gap: .65em;
-  width: 100%;
-}
-
-.painel-nav-icone {
-  width: 1em;
-  font-size: 1.15em;
-  line-height: 1;
-  text-align: center;
-}
-
 .painel-nav-submenu {
   display: flex;
   flex-direction: column;
@@ -368,7 +354,7 @@ tbody tr:hover { background: rgba(31,45,80,.025); }
     align-items: center;
     flex: 0 0 auto;
   }
-  .painel-nav-cadastros-toggle,
+  .painel-nav-grupo > button,
   .painel-nav-submenu button {
     flex: 0 0 auto;
   }

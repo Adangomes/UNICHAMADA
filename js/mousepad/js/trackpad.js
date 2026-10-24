@@ -1,10 +1,10 @@
-
-// IMPORTANTE: Insere as tuas chaves reais do Supabase aqui!
+// Configuração do Supabase no Trackpad
 const SUPABASE_URL = 'https://xultvypwxwyxhxfzwqdw.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bHR2eXB3eHd5eGh4Znp3cWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMDMyNDIsImV4cCI6MjEwNDU3OTI0Mn0.Ossrm1Iv0LzHnkWsKSbBUNAft4Aov8Z8bRbhC9vQMEY';
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const channel = supabase.channel('unichamadas_trackpad');
+// Usamos 'supabaseClient' para evitar o conflito com a variável global da CDN
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const channel = supabaseClient.channel('unichamadas_trackpad');
 channel.subscribe();
 
 const canvas = document.getElementById('canvas');

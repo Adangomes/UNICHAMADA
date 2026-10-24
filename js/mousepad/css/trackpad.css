@@ -7,11 +7,11 @@
 
 body {
   margin: 0; 
-  padding: 10px; 
+  padding: 6px; 
   background: #0c0d12; 
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  height: 100dvh; /* Altura dinâmica real do mobile */
+  height: 100dvh; 
   display: flex; 
   flex-direction: column; 
   overflow: hidden;
@@ -19,62 +19,30 @@ body {
 
 .header { 
   text-align: center; 
-  margin-bottom: 6px; 
+  margin-bottom: 4px; 
   flex-shrink: 0; 
 }
 
 .header h2 { 
   margin: 0; 
-  font-size: 0.95rem; 
+  font-size: 0.8rem; 
   color: #00f0ff; 
-  letter-spacing: 1px; 
-}
-
-.header p { 
-  margin: 2px 0 0; 
-  font-size: 0.6rem; 
-  color: #666; 
+  letter-spacing: 1.5px; 
 }
 
 #trackpad {
   flex: 1; 
   width: 100%;
   background: #161822; 
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid rgba(0, 240, 255, 0.3); 
   position: relative;
   overflow: hidden; 
-  box-shadow: inset 0 0 25px rgba(0,0,0,0.9);
-  min-height: 200px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
 }
 
 canvas { 
   width: 100%; 
   height: 100%; 
   display: block; 
-}
-
-.guide {
-  margin-top: 6px; 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
-  gap: 6px; 
-  flex-shrink: 0;
-}
-
-.card {
-  background: #161822; 
-  padding: 6px; 
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.05); 
-  text-align: center; 
-  font-size: 0.6rem; 
-  color: #aaa;
-}
-
-.card span { 
-  display: block; 
-  color: #7000ff; 
-  font-weight: bold; 
-  margin-bottom: 2px; 
 }

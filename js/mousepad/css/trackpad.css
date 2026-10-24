@@ -18,7 +18,10 @@ body {
 }
 
 .header { 
-  text-align: center; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
   margin-bottom: 4px; 
   flex-shrink: 0; 
 }
@@ -28,6 +31,27 @@ body {
   font-size: 0.8rem; 
   color: #00f0ff; 
   letter-spacing: 1.5px; 
+}
+
+#power-btn {
+  background: rgba(255, 0, 85, 0.15);
+  border: 1px solid rgba(255, 0, 85, 0.4);
+  color: #ff0055;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#power-btn.active {
+  background: #ff0055;
+  color: #fff;
+  box-shadow: 0 0 10px #ff0055;
 }
 
 #trackpad {

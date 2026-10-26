@@ -372,3 +372,52 @@ html, body {
 #btn-olho-senha:hover {
   color: #0284c7; /* Azul ciano no hover */
 }
+/* ==========================================================================
+   ESTILOS DO MÓDULO DE RECUPERAÇÃO DE SENHA / LOGIN
+   ========================================================================== */
+
+
+/* Garante que o formulário empilhe os itens em coluna */
+#form-recuperacao {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Deixa o rótulo (E-mail) em cima e o input preenchendo a largura */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.campo label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.campo input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  box-sizing: border-box; /* Fundamental para o input não estourar o layout */
+}
+
+/* Estilo do botão para ocupar a largura correta e ficar separado */
+.btn-primario {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #1d4ed8;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 8px;
+}

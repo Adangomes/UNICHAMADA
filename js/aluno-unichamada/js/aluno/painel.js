@@ -14,7 +14,7 @@ window.MAPA_BANCO = {
 // Tela do aluno: cursos, disciplinas, presenças e faltas
 (function () {
   const FREQ_MINIMA = 75; // % mínimo de frequência
-  const CHAVE = "aluno_sessao";
+  const CHAVE = "unichamada_aluno_atual"; // Chave unificada
   let atual = null;
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");

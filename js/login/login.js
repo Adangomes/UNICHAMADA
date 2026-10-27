@@ -72,9 +72,9 @@ function renderizarTelaLogin(container) {
             <button type="submit" id="btn-entrar" class="btn-primario">Entrar</button>
           </form>
 
-          <!-- Link de acesso rápido para colaboradores (TI) -->
+          <!-- Link de acesso rápido para colaboradores (TI) com transição suave -->
           <div style="text-align: center; margin-top: 20px;">
-            <a href="https://adangomes.github.io/UNICHAMADA/ti/" style="color: #0284c7; font-size: 14px; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+            <a href="https://adangomes.github.io/UNICHAMADA/ti/" id="link-colaboradores" style="color: #0284c7; font-size: 14px; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
               Acesso UNICHAMADAS Colaboradores
             </a>
           </div>
@@ -94,6 +94,7 @@ function renderizarTelaLogin(container) {
   const formLogin = container.querySelector('#form-login');
   const avisoLogin = container.querySelector('#aviso-login');
   const btnEntrar = container.querySelector('#btn-entrar');
+  const linkColaboradores = container.querySelector('#link-colaboradores');
 
   // Alternar visibilidade do RA (olho mágico)
   if (btnToggleRa && inputRa) {
@@ -101,6 +102,40 @@ function renderizarTelaLogin(container) {
       e.preventDefault(); 
       const tipoAtual = inputRa.getAttribute('type');
       inputRa.setAttribute('type', tipoAtual === 'password' ? 'text' : 'password');
+    });
+  }
+
+  // Efeito de transição suave e loading ao clicar no link de colaboradores (TI)
+  if (linkColaboradores) {
+    linkColaboradores.addEventListener('click', (e) => {
+      e.preventDefault();
+      const destinoUrl = linkColaboradores.getAttribute('href');
+      const carteirinhaDireita = container.querySelector('.carteirinha-login');
+      
+      if (!carteirinhaDireita) {
+        window.location.href = destinoUrl;
+        return;
+      }
+
+      carteirinhaDireita.classList.add('fade-out');
+
+      setTimeout(() => {
+        carteirinhaDireita.innerHTML = `
+          <div class="spinner-container" style="text-align: center; padding: 40px 0;">
+            <div class="spinner-circular"></div>
+            <span class="spinner-texto" style="display: block; margin-top: 15px; color: #666;">Carregando painel...</span>
+          </div>
+        `;
+        carteirinhaDireita.classList.remove('fade-out');
+
+        setTimeout(() => {
+          carteirinhaDireita.classList.add('fade-out');
+          setTimeout(() => {
+            window.location.href = destinoUrl;
+          }, 200);
+        }, 500);
+
+      }, 350);
     });
   }
 

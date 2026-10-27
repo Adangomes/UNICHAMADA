@@ -1,26 +1,19 @@
 /**
- * telao.js
- * ------------------------------------------------------------------
- * Tela enxuta (só QR Code + código gigante) pensada pra ser aberta numa
- * janela separada (window.open, veja professor/chamada.js) e arrastada
- * pro monitor/projetor da sala.
- *
- * Ela só EXIBE o código — quem gera e faz o código trocar a cada 45s é
- * o modal de chamada, aberto na aba principal do professor. Ou seja:
- * mantenha o modal de chamada aberto (pode minimizar a janela) enquanto
- * o telão estiver projetado, senão o código para de trocar.
- * ------------------------------------------------------------------
+ * js/professor/telao.js
+ * Tela enxuta (QR Code + código gigante + barra de tempo) pensada pra ser aberta numa
+ * janela separada (window.open) e arrastada pro monitor/projetor da sala.
  */
 
 let paradaAssinaturaTelao = null;
 
 async function montarTelaTelao(chamadaId) {
   const raiz = $('#tela-telao');
+  if (!raiz) return;
   raiz.innerHTML = '';
 
-  if (paradaAssinaturaTelao) { 
-    paradaAssinaturaTelao(); 
-    paradaAssinaturaTelao = null; 
+  if (paradaAssinaturaTelao) {  
+    paradaAssinaturaTelao();  
+    paradaAssinaturaTelao = null;  
   }
 
   const chamada = await dbBuscarPorId('chamadas', chamadaId);
@@ -39,6 +32,12 @@ async function montarTelaTelao(chamadaId) {
 
   const areaQr = criarElemento('div', { class: 'telao-qr' });
   const areaCodigo = criarElemento('div', { class: 'telao-codigo' });
+  
+  // Adiciona a barra de tempo idêntica à do modal de chamada
+  const areaBarraTempo = criarElemento('div', { class: 'chamada-barra-tempo' }, [
+    criarElemento('div', { class: 'chamada-barra-preenchimento' })
+  ]);
+
   const areaAviso = criarElemento('p', { class: 'telao-aviso oculto' });
 
   const btnTelaCheia = criarElemento('button', {
@@ -51,6 +50,7 @@ async function montarTelaTelao(chamadaId) {
     criarElemento('p', { class: 'telao-disciplina' }, [disciplina ? disciplina.nome : '']),
     areaQr,
     areaCodigo,
+    areaBarraTempo, // Insere a barra logo abaixo do código
     areaAviso,
     criarElemento('p', { class: 'telao-instrucao' }, ['Leia o QR Code ou acesse o link, e digite este código pra confirmar presença.'])
   ]);
@@ -62,6 +62,20 @@ async function montarTelaTelao(chamadaId) {
   // eslint-disable-next-line no-undef
   new QRCode(areaQr, { text: link, width: 220, height: 220, colorDark: '#1F2D50', colorLight: '#ffffff' });
 
+  let codigoRenderizado = '';
+
+  function reiniciarBarraTempo() {
+    const preenchimento = areaBarraTempo.querySelector('.chamada-barra-preenchimento');
+    if (!preenchimento) return;
+    preenchimento.style.transition = 'none';
+    preenchimento.style.width = '100%';
+    void preenchimento.offsetWidth; // Força reflow para reiniciar a animação CSS
+    // Utiliza a constante global de rotação (geralmente 45s) definida no projeto
+    const tempoRotacao = typeof INTERVALO_ROTACAO_MS !== 'undefined' ? INTERVALO_ROTACAO_MS : 45000;
+    preenchimento.style.transition = `width ${tempoRotacao}ms linear`;
+    preenchimento.style.width = '0%';
+  }
+
   async function renderizar() {
     const atual = await dbBuscarPorId('chamadas', chamadaId);
     if (!atual || !atual.ativa) {
@@ -70,15 +84,33 @@ async function montarTelaTelao(chamadaId) {
       areaCodigo.textContent = '——————';
       return;
     }
+    
     areaAviso.classList.add('oculto');
-    areaCodigo.textContent = atual.codigo_atual || atual.codigoAtual;
+    const codigo = atual.codigo_atual || atual.codigoAtual;
+    areaCodigo.textContent = codigo;
+
+    // Se o código mudou no banco, reinicia a barra de progresso visualmente no telão
+    if (codigo !== codigoRenderizado) {
+      codigoRenderizado = codigo;
+      reiniciarBarraTempo();
+    }
   }
 
   await renderizar();
 
+  // Ouve atualizações em tempo real do banco de dados na janela do telão
   if (typeof dbAoAtualizar === 'function') {
-    pararAssinaturaTelao = dbAoAtualizar(async () => await renderizar());
+    paradaAssinaturaTelao = dbAoAtualizar(async () => await renderizar());
   }
+
+  // Fallback opcional por segurança caso a assinatura em tempo real demore: checa a cada 5 segundos
+  const intervaloVerificacao = setInterval(async () => {
+    if (!window.document.contains(raiz)) {
+      clearInterval(intervaloVerificacao);
+      return;
+    }
+    await renderizar();
+  }, 5000);
 }
 
 function alternarTelaCheia() {

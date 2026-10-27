@@ -164,7 +164,7 @@ async function abrirModalChamada(turma, professor) {
     class: 'btn-secundario',
     title: 'Abrir o QR Code e o código em uma janela separada, pra arrastar pro telão/projetor',
     onClick: () => abrirJanelaTelao(chamada.id)
-  }, ['🖥️ Destacar pro telão']);
+  }, ['Destacar pro telão']);
 
   const areaQr = criarElemento('div', { class: 'chamada-qr' });
   const areaCodigo = criarElemento('div', { class: 'chamada-codigo' });

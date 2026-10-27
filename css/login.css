@@ -206,6 +206,7 @@ html, body {
 
 #form-login .campo {
   margin-bottom: 1.2em;
+  position: relative; /* Garante posicionamento base se necessário */
 }
 
 #form-login label {
@@ -242,7 +243,7 @@ html, body {
   width: 100%;
   margin-top: 1em;
   font-size: 1rem;
-  background: #0f172a; /* Botão no mesmo azul marinho sofisticado da marca */
+  background: #0f172a;
   color: #ffffff;
   padding: 0.95em;
   border: none;
@@ -340,23 +341,32 @@ html, body {
   color: #0369a1;
   text-decoration: underline;
 }
+
 /* ==========================================================================
-   ESTILO DO BOTÃO DO OLHO PARA O CAMPO DE E-MAIL (ALINHAMENTO IDÊNTICO AO TI)
+   ESTILOS DOS BOTÕES DO OLHO (VISIBILIDADE DA SENHA / RA)
    ========================================================================== */
 
-#form-login .campo {
-  position: relative; /* Garante que o botão se posicione em relação ao input */
+/* Container flex do input para alinhar o botão do olho internamente */
+.input-wrapper-flex {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
-#input-email {
-  padding-right: 45px; /* Espaço para o texto não ficar por baixo do ícone */
+/* Abre espaço à direita para o texto não passar por baixo do ícone do olho */
+.input-wrapper-flex input {
+  width: 100%;
+  padding-right: 45px;
+  box-sizing: border-box;
 }
 
-#btn-olho-email {
+/* Posicionamento absoluto perfeito do botão do olho do RA dentro do input */
+#btn-toggle-ra {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
-  transform: translateY(-25%);
+  transform: translateY(-50%);
   border: 0;
   background: transparent;
   cursor: pointer;
@@ -366,6 +376,31 @@ html, body {
   justify-content: center;
   padding: 4px;
   transition: color 0.2s ease;
+}
+
+#btn-toggle-ra:hover {
+  color: #0284c7 !important;
+}
+
+/* Efeito Hover Azul Ciano para o botão de senha da TI (#btn-olho-email / #btn-olho-senha) */
+#btn-olho-email, #btn-olho-senha {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+#btn-olho-email:hover, #btn-olho-senha:hover {
+  color: #0284c7;
 }
 
 /* Efeito de transição de fade e spinner de carregamento */
@@ -405,8 +440,4 @@ html, body {
 @keyframes girar-spinner {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-#btn-olho-email:hover {
-  color: #0284c7; /* Azul ciano no hover */
 }

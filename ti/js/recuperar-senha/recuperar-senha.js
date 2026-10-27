@@ -97,8 +97,8 @@ function renderizarTelaRecuperacao(container) {
       btnEnviar.textContent = 'Enviando...';
 
       try {
-        // Integração nativa com a API de recuperação do Supabase Auth
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        // Integração com a API de recuperação utilizando a instância correta do projeto (TI.db)
+        const { error } = await TI.db.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + window.location.pathname, // Redireciona de volta após clicar no link do e-mail
         });
 
@@ -149,7 +149,7 @@ function renderizarTelaRecuperacao(container) {
 
         }, 400);
 
-      }, 35); // Usando o tempo ajustado
+      }, 35);
 
     });
   }

@@ -8,7 +8,7 @@ TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
   render(raiz, opcoes) {
 
-    // Renderiza a estrutura HTML com os placeholders ajustados e o botão contendo o ícone de olho SVG
+    // Renderiza a estrutura HTML com o link "Esqueci minha senha" adicionado abaixo do formulário
     raiz.innerHTML = `
       <div class="login-wrapper">
         
@@ -31,7 +31,7 @@ TI.telas.login = {
             
             <form id="form-login" novalidate>
               <div class="campo">
-                <label for="input-email">E-mail</label>
+                <label for="input-email">E-mail:</label>
                 <input 
                   id="input-email" 
                   name="email" 
@@ -43,7 +43,7 @@ TI.telas.login = {
               </div>
               
               <div class="campo" style="position: relative;">
-                <label for="input-senha">Senha</label>
+                <label for="input-senha">Senha:</label>
                 <input 
                   id="input-senha" 
                   name="senha" 
@@ -60,6 +60,13 @@ TI.telas.login = {
                     <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 </button>
+              </div>
+
+              <!-- Link "Esqueci minha senha" espelhado no padrão Ulife -->
+              <div style="margin-bottom: 15px;">
+                <a href="#" id="link-esqueci-senha" style="color: #0284c7; font-size: 14px; text-decoration: none; font-weight: 500;">
+                  Esqueci minha senha
+                </a>
               </div>
               
               <button type="submit" id="btn-entrar" class="btn-primario">Entrar</button>
@@ -80,6 +87,46 @@ TI.telas.login = {
     const iconeOlho = raiz.querySelector('#icone-olho');
     const botao = raiz.querySelector('#btn-entrar');
     const aviso = raiz.querySelector('#aviso-login');
+    const linkEsqueciSenha = raiz.querySelector('#link-esqueci-senha');
+
+    // Configura o clique no link "Esqueci minha senha" com efeito de loading customizado e transição suave
+    if (linkEsqueciSenha) {
+      linkEsqueciSenha.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const carteirinhaDireita = raiz.querySelector('.carteirinha-login');
+        if (!carteirinhaDireita) return;
+
+        // 1. Aplica o efeito de fade-out no conteúdo atual
+        carteirinhaDireita.classList.add('fade-out');
+
+        // 2. Aguarda a animação e exibe o spinner circular de carregamento
+        setTimeout(() => {
+          carteirinhaDireita.innerHTML = `
+            <div class="spinner-container">
+              <div class="spinner-circular"></div>
+              <span class="spinner-texto">Carregando...</span>
+            </div>
+          `;
+          carteirinhaDireita.classList.remove('fade-out');
+
+          // 3. Simula um breve delay elegante e renderiza a tela de recuperação
+          setTimeout(() => {
+            carteirinhaDireita.classList.add('fade-out');
+            
+            setTimeout(() => {
+              if (typeof renderizarTelaRecuperacao === 'function') {
+                renderizarTelaRecuperacao(raiz);
+              } else {
+                console.error("A função renderizarTelaRecuperacao não foi encontrada. Verifique se o script foi importado no HTML.");
+              }
+            }, 200);
+
+          }, 400); // Tempo do loading na tela
+
+        }, 250);
+      });
+    }
 
     const mostrarErro = (texto) => {
       if (!aviso) return;
@@ -91,33 +138,30 @@ TI.telas.login = {
       }
     };
 
-    // Mensagem inicial opcional vinda por parâmetros
     if (opcoes && opcoes.mensagem) {
       mostrarErro(opcoes.mensagem);
     }
 
-    // Comportamento interativo do ícone de olho (Alterna SVG e Tipo do Input) com segurança
+    // Comportamento interativo do ícone de olho
     if (olhoBtn && senhaInput && iconeOlho) {
       olhoBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Evita qualquer comportamento acidental de submit
+        e.preventDefault();
         const mostrar = senhaInput.type === 'password';
         senhaInput.type = mostrar ? 'text' : 'password';
         olhoBtn.setAttribute('aria-pressed', String(mostrar));
         olhoBtn.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
 
         if (mostrar) {
-          // Muda para Olho Aberto (Mostrando a senha)
           iconeOlho.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
           olhoBtn.style.color = '#0284c7';
         } else {
-          // Muda para Olho Cortado / Fechado (Ocultando a senha)
           iconeOlho.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
           olhoBtn.style.color = '#64748b';
         }
       });
     }
 
-    // Evento de submissão do formulário
+    // Evento de submissão do formulário de login do TI
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -137,12 +181,11 @@ TI.telas.login = {
         try {
           let logouComoCoordenador = false;
 
-          // 1. Tenta autenticar primeiro como Coordenador no Supabase Auth
           try {
             await TI.sessao.entrar(valEmail, valSenha);
             logouComoCoordenador = true;
           } catch (authErr) {
-            // Se falhou no Auth, prossegue para verificar se é funcionário na tabela
+            // Ignora erro do auth e tenta funcionário
           }
 
           if (logouComoCoordenador) {
@@ -150,7 +193,6 @@ TI.telas.login = {
             return;
           }
 
-          // 2. Valida se é um funcionário cadastrado chamando a função segura RPC no Supabase
           const { data: funcionarios, error: dbErr } = await TI.db
             .rpc('verificar_login_funcionario', {
               p_email: valEmail,
@@ -163,7 +205,6 @@ TI.telas.login = {
             throw new Error('E-mail ou senha incorretos (ou conta inativa).');
           }
 
-          // Define o funcionário comum na sessão local ativa
           TI.sessao.funcionario = funcionario;
           await opcoes.aoEntrar();
 

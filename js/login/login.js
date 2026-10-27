@@ -113,8 +113,8 @@ function renderizarTelaLogin(container) {
       const raVal = inputRa.value.trim();
       const emailVal = inputEmail.value.trim();
 
-      if (!raVal && !emailVal) {
-        exibirAvisoLogin(avisoLogin, 'Por favor, informe seu RA ou e-mail.');
+      if (!raVal || !emailVal) {
+        exibirAvisoLogin(avisoLogin, 'Por favor, informe seu RA e e-mail.');
         return;
       }
 
@@ -122,28 +122,16 @@ function renderizarTelaLogin(container) {
       btnEntrar.textContent = 'Validando...';
 
       try {
-        // Valida se o módulo DadosAluno carregou corretamente
-        if (!window.DadosAluno || typeof window.DadosAluno.autenticar !== 'function') {
-          throw new Error('Módulo de dados do aluno não carregado.');
+        // Valida se o módulo PainelAluno carregou corretamente
+        if (!window.PainelAluno || typeof window.PainelAluno.entrar !== 'function') {
+          throw new Error('Módulo do painel do aluno não carregado.');
         }
 
-        // Consulta a tabela 'alunos' usando a função do seu script anterior
-        const alunoEncontrado = await window.DadosAluno.autenticar(raVal, emailVal);
+        // Chama a função entrar() oficial do painel.js que valida, salva na sessão correta e abre a tela
+        const sucesso = await window.PainelAluno.entrar(raVal, emailVal);
 
-        if (!alunoEncontrado) {
-          exibirAvisoLogin(avisoLogin, 'Aluno não encontrado. Verifique os dados informados.');
-          return;
-        }
-
-        // Salva os dados do aluno autenticado na sessão do navegador
-        sessionStorage.setItem('unichamada_aluno_atual', JSON.stringify(alunoEncontrado));
-
-        // Redireciona ou carrega o painel do aluno para ele ver as presenças
-        if (typeof window.carregarPainelAluno === 'function') {
-          window.carregarPainelAluno(alunoEncontrado);
-        } else {
-          // Fallback: recarrega a página ou redireciona para a view do aluno
-          window.location.reload();
+        if (!sucesso) {
+          exibirAvisoLogin(avisoLogin, 'Aluno não encontrado. Verifique o RA e o e-mail informados.');
         }
 
       } catch (err) {

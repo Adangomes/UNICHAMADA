@@ -8,7 +8,6 @@ TI.telas.login = {
   /** @param {HTMLElement} raiz  @param {{aoEntrar:Function, mensagem?:string}} opcoes */
   render(raiz, opcoes) {
 
-    // Renderiza a estrutura HTML com o link "Esqueci minha senha" adicionado abaixo do formulário
     raiz.innerHTML = `
       <div class="login-wrapper">
         
@@ -42,27 +41,29 @@ TI.telas.login = {
                 />
               </div>
               
-              <div class="campo" style="position: relative;">
+              <!-- Campo de senha com alinhamento flex centralizado -->
+              <div class="campo">
                 <label for="input-senha">Senha:</label>
-                <input 
-                  id="input-senha" 
-                  name="senha" 
-                  type="password" 
-                  autocomplete="current-password" 
-                  placeholder="Digite sua senha" 
-                  required 
-                  style="padding-right: 45px;"
-                />
-                <button type="button" id="btn-olho-senha" class="ti-lg-olho" style="position: absolute; right: 12px; top: 50%; transform: translateY(-15%); border:0; background:transparent; cursor:pointer; color:#64748b; display:flex; align-items:center; justify-content:center; padding:4px;" aria-pressed="false" aria-label="Mostrar senha">
-                  <!-- Ícone padrão: Olho Fechado / Oculto -->
-                  <svg id="icone-olho" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                  </svg>
-                </button>
+                <div class="input-wrapper-flex">
+                  <input 
+                    id="input-senha" 
+                    name="senha" 
+                    type="password" 
+                    autocomplete="current-password" 
+                    placeholder="Digite sua senha" 
+                    required 
+                  />
+                  <button type="button" id="btn-olho-senha" class="ti-lg-olho" aria-pressed="false" aria-label="Mostrar senha">
+                    <!-- Ícone padrão: Olho Fechado / Oculto -->
+                    <svg id="icone-olho" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              <!-- Link "Esqueci minha senha" espelhado no padrão Ulife -->
+              <!-- Link "Esqueci minha senha" -->
               <div style="margin-bottom: 15px;">
                 <a href="#" id="link-esqueci-senha" style="color: #0284c7; font-size: 14px; text-decoration: none; font-weight: 500;">
                   Esqueci minha senha
@@ -79,7 +80,6 @@ TI.telas.login = {
       </div>
     `;
 
-    // Captura os elementos recém-criados
     const form = raiz.querySelector('#form-login');
     const emailInput = raiz.querySelector('#input-email');
     const senhaInput = raiz.querySelector('#input-senha');
@@ -89,18 +89,14 @@ TI.telas.login = {
     const aviso = raiz.querySelector('#aviso-login');
     const linkEsqueciSenha = raiz.querySelector('#link-esqueci-senha');
 
-    // Configura o clique no link "Esqueci minha senha" com efeito de loading customizado e transição suave
     if (linkEsqueciSenha) {
       linkEsqueciSenha.addEventListener('click', (e) => {
         e.preventDefault();
-
         const carteirinhaDireita = raiz.querySelector('.carteirinha-login');
         if (!carteirinhaDireita) return;
 
-        // 1. Aplica o efeito de fade-out no conteúdo atual
         carteirinhaDireita.classList.add('fade-out');
 
-        // 2. Aguarda a animação e exibe o spinner circular de carregamento
         setTimeout(() => {
           carteirinhaDireita.innerHTML = `
             <div class="spinner-container">
@@ -110,20 +106,16 @@ TI.telas.login = {
           `;
           carteirinhaDireita.classList.remove('fade-out');
 
-          // 3. Simula um breve delay elegante e renderiza a tela de recuperação
           setTimeout(() => {
             carteirinhaDireita.classList.add('fade-out');
-            
             setTimeout(() => {
               if (typeof renderizarTelaRecuperacao === 'function') {
                 renderizarTelaRecuperacao(raiz);
               } else {
-                console.error("A função renderizarTelaRecuperacao não foi encontrada. Verifique se o script foi importado no HTML.");
+                console.error("A função renderizarTelaRecuperacao não foi encontrada.");
               }
             }, 200);
-
-          }, 400); // Tempo do loading na tela
-
+          }, 400);
         }, 250);
       });
     }
@@ -142,7 +134,6 @@ TI.telas.login = {
       mostrarErro(opcoes.mensagem);
     }
 
-    // Comportamento interativo do ícone de olho
     if (olhoBtn && senhaInput && iconeOlho) {
       olhoBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -161,7 +152,6 @@ TI.telas.login = {
       });
     }
 
-    // Evento de submissão do formulário de login do TI
     if (form) {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -184,9 +174,7 @@ TI.telas.login = {
           try {
             await TI.sessao.entrar(valEmail, valSenha);
             logouComoCoordenador = true;
-          } catch (authErr) {
-            // Ignora erro do auth e tenta funcionário
-          }
+          } catch (authErr) {}
 
           if (logouComoCoordenador) {
             await opcoes.aoEntrar();

@@ -131,6 +131,11 @@ async function montarPainelProfessor(sessao) {
     await inicializarSinoNotificacoes(cabecalho, professorLogado);
   }
 
+  // 2.1 Inicializa o assistente Chamy no cabeçalho do painel do professor
+  if (typeof window.inicializarChamy === 'function') {
+    window.inicializarChamy(cabecalho, professorLogado);
+  }
+
   // 3. Monta a estrutura da área de conteúdo e navegação por abas
   const corpo = criarElemento('div', { class: 'painel-corpo' });
   const nav = criarElemento('nav', { class: 'painel-nav' });

@@ -17,7 +17,16 @@ TI.app = {
     if (TI.dbErro) { this.raiz.append(TI.ui.erro(TI.dbErro)); return; }
 
     try {
-      const veioDeConvite = /type=(invite|recovery)/.test(TI.config.hashInicial);
+      // VERIFICAÇÃO DE RECUPERAÇÃO DE SENHA POR TOKEN NA URL
+      const hashUrl = window.location.hash;
+      if (hashUrl.includes('type=recovery') || hashUrl.includes('access_token')) {
+        await TI.estilos.carregar(TI.estilos.GRUPOS.login);
+        // Chama a função da tela de redefinir senha que criamos
+        renderizarTelaRedefinirSenha(this.raiz);
+        return;
+      }
+
+      const veioDeConvite = /type=invite/.test(hashUrl);
       if (veioDeConvite) {
         await TI.db.auth.getSession();
         await TI.estilos.carregar(TI.estilos.GRUPOS.login);
@@ -67,8 +76,6 @@ TI.app = {
     this.ctx = ctx;
     this.layout = TI.layout.montar(this.raiz, ctx);
     
-    // REGRA DE OURO RIGOROSA: Respeita estritamente a última rota salva no sessionStorage.
-    // Só usa a padrão se não houver nenhuma rota salva anteriormente.
     const rotaSalva = sessionStorage.getItem('ti_ultima_rota');
     const rotaInicial = (rotaSalva && TI.rotas.tabela[rotaSalva] && TI.rotas.permitida(rotaSalva, f)) 
       ? rotaSalva 
@@ -81,13 +88,11 @@ TI.app = {
     const f = TI.sessao.funcionario;
     const def = TI.rotas.tabela[rota];
     
-    // Segurança de permissão: se a rota não existe ou não é permitida para este cargo, aí sim bloqueia e vai pra padrão
     if (!def || !TI.rotas.permitida(rota, f)) { 
       rota = TI.rotas.padrao(f); 
       params = {}; 
     }
     
-    // Grava de forma imutável a rota atual no sessionStorage
     sessionStorage.setItem('ti_ultima_rota', rota);
 
     const alvo = TI.rotas.tabela[rota];

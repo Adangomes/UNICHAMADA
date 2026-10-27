@@ -404,7 +404,7 @@ html, body {
 
 
 /* ==========================================================================
-   PADRÃO VISUAL DO AVISO / ALERTA DE SUCESSO (RECUPERAÇÃO DE SENHA)
+   PADRÃO VISUAL DO AVISO / ALERTA (ERRO E SUCESSO)
    ========================================================================== */
 
 .aviso-login {
@@ -416,15 +416,16 @@ html, body {
   width: 100%;
 }
 
-/* Alerta de Erro (Padrão) */
-.aviso-login:not([style*="color: #16a34a"]) {
+/* Estado de Erro (Padrão) */
+.aviso-login.erro,
+.aviso-login:not(.sucesso) {
   border-left: 4px solid #ef4444;
   background: rgba(239, 68, 68, 0.08);
   color: #991b1b;
 }
 
-/* Alerta de Sucesso Padronizado */
-.aviso-login[style*="color: #16a34a"] {
+/* Estado de Sucesso Padronizado UniChamadas */
+.aviso-login.sucesso {
   border-left: 4px solid #22c55e !important;
   background: rgba(34, 197, 94, 0.08) !important;
   color: #15803d !important;

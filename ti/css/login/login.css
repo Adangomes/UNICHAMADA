@@ -332,3 +332,71 @@ html, body {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+/* ==========================================================================
+   ESTILOS DO FORMULÁRIO DE RECUPERAÇÃO DE SENHA
+   ========================================================================== */
+
+#form-recuperacao .campo {
+  margin-bottom: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+#form-recuperacao label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0;
+}
+
+#form-recuperacao input {
+  width: 100%;
+  padding: 0.9em 1.1em;
+  border: 1.5px solid var(--linha, #e2e8f0);
+  border-radius: 10px;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: var(--papel-cartao, #ffffff);
+  transition: all 0.2s ease;
+}
+
+#form-recuperacao input:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-sizing: border-box;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+  background: #ffffff;
+}
+
+#form-recuperacao .btn-primario {
+  width: 100%;
+  margin-top: 1em;
+  font-size: 1rem;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.95em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  box-sizing: border-box;
+}
+
+#form-recuperacao .btn-primario:hover {
+  background: #1e293b;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
+}
+
+#form-recuperacao .btn-primario:active {
+  transform: scale(0.98);
+}

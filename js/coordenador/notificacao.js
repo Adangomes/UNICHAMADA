@@ -3,7 +3,7 @@
  * 
  * Este módulo é responsável por prover a interface gráfica e a lógica de criação, edição, 
  * exclusão e listagem de notificações enviadas pela coordenação para os professores,
- * integrando persistência no banco de dados e envio automatizado via webhook (n8n).
+ * integrando persistência no banco de dados e envio automatizado via Supabase.
  * 
  * @module SeçãoNotificacoes
  * @requires dbBuscarPorId
@@ -16,55 +16,6 @@
  * @requires campoObrigatorioPreenchido
  * @requires confirmarAcao
  */
-
-// URL do Webhook do n8n hospedado no Render
-const N8N_WEBHOOK_URL = 'https://n8n-latest-3f5r.onrender.com/webhook/787c3594-f407-40d8-bb35-41a1b7d9b9d4';
-
-/**
- * Dispara um webhook para o n8n contendo os dados da notificação.
- * Função isolada para manter a responsabilidade única e não bloquear o fluxo principal.
- * 
- * @async
- * @param {Object} payload - Dados da notificação a serem enviados.
- * @param {string} payload.titulo - Título da notificação.
- * @param {string} payload.mensagem - Corpo da mensagem.
- * @param {Array<string>} payload.destinatarios - Lista de IDs dos professores ou ['todos'].
- * @returns {Promise<void>}
- */
-async function dispararWebhookN8n(payload) {
-  try {
-    // Verifica se a constante global do Webhook existe
-    if (typeof N8N_WEBHOOK_URL === 'undefined' || !N8N_WEBHOOK_URL) {
-      console.warn('[notificacao.js] N8N_WEBHOOK_URL não está definida. O disparo para o n8n foi ignorado.');
-      return false;
-    }
-
-    console.log('[notificacao.js] Disparando webhook para n8n...', payload);
-
-    const resposta = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...payload,
-        data_envio: new Date().toISOString(),
-        origem: 'UNICHAMADA - Painel do Coordenador'
-      })
-    });
-
-    if (!resposta.ok) {
-      throw new Error(`Erro na resposta do n8n: ${resposta.status} ${resposta.statusText}`);
-    }
-
-    console.log('[notificacao.js] Webhook n8n executado com sucesso!');
-    return true;
-  } catch (erro) {
-    // Logamos o erro para não quebrar a experiência do usuário
-    console.error('[notificacao.js] Falha ao comunicar com o n8n:', erro);
-    return false;
-  }
-}
 
 /**
  * Renderiza a seção principal de gerenciamento de notificações dentro de um container do DOM.
@@ -278,7 +229,7 @@ async function renderSecaoNotificacoes(container) {
     form.append(divProfessor, campoTitulo, campoMensagem, campoAnexo, botoes);
 
     // -------------------------------------------------------------------------
-    // 2.4 Event Handler: Submit (Persistência + Webhook N8N)
+    // 2.4 Event Handler: Submit (Persistência no Banco Supabase)
     // -------------------------------------------------------------------------
     form.addEventListener('submit', async (evento) => {
       evento.preventDefault();
@@ -331,7 +282,7 @@ async function renderSecaoNotificacoes(container) {
           mostrarToast('Notificação atualizada com sucesso!', 'sucesso');
           idEmEdicao = null;
         } else {
-          // 1. Insere a notificação na tabela 'notificacoes'
+          // 1. Insere a notificação na tabela 'notificacoes' do Supabase
           const res = await dbInserir('notificacoes', dadosNotificacao);
           const notifId = res?.id || (Array.isArray(res) ? res[0]?.id : null);
 
@@ -350,20 +301,9 @@ async function renderSecaoNotificacoes(container) {
             }
           }
 
-          // 3. Integração n8n: Dispara o webhook após salvar no banco com sucesso
-          const webhookEnviado = await dispararWebhookN8n({
-            titulo: titulo,
-            mensagem: mensagem,
-            destinatarios: selecionados.includes('todos') ? 'Todos os Professores' : targetProfs,
-            quantidade_professores: targetProfs.length
-          });
-
-          mostrarToast(
-            webhookEnviado
-              ? 'Notificação salva e enviada ao fluxo n8n.'
-              : 'Notificação salva no banco, mas o n8n não confirmou o envio.',
-            webhookEnviado ? 'sucesso' : 'erro'
-          );
+          // Nota: O n8n será acionado automaticamente em segundo plano 
+          // via Database Webhook configurado diretamente no painel do Supabase.
+          mostrarToast('Notificação salva com sucesso!', 'sucesso');
         }
       } catch (err) {
         console.error('[notificacao.js] Erro ao salvar:', err);

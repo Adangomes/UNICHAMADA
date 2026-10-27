@@ -357,7 +357,7 @@ html, body {
   position: absolute;
   right: 14px;
   top: 50%;
-  transform: translateY(-25%);
+  transform: translateY(-50%);
   border: 0;
   background: transparent;
   cursor: pointer;

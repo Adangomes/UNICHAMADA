@@ -27,15 +27,15 @@ function renderizarTelaLogin(container) {
           <h1>Acesso do Aluno</h1>
         </div>
         <div class="carteirinha-corpo">
-          <p class="instrucao">Digite seu RA e e-mail cadastrados para acessar suas chamadas e frequências.</p>
+          <p class="instrucao"></p>
           
           <!-- Formulário principal de autenticação do aluno -->
           <form id="form-login" novalidate>
             
             <!-- Campo de RA com suporte a alternância de visibilidade -->
             <div class="campo">
-              <label for="input-ra">RA</label>
-              <div style="position: relative; display: flex; align-items: center; width: 100%;">
+              <label for="input-ra">RA:</label>
+              <div class="input-wrapper-flex">
                 <input 
                   id="input-ra" 
                   name="ra" 
@@ -44,12 +44,12 @@ function renderizarTelaLogin(container) {
                   data-mono="true" 
                   autocomplete="off" 
                   required 
-                  style="width: 100%; padding-right: 40px;"
                 />
-                <button type="button" id="btn-toggle-ra" aria-label="Mostrar/Esconder RA" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center;">
-                  <svg id="icone-olho-ra" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #666;">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
+                <button type="button" id="btn-toggle-ra" class="ti-lg-olho" aria-pressed="false" aria-label="Mostrar RA">
+                  <!-- Ícone padrão: Olho Fechado / Oculto -->
+                  <svg id="icone-olho-ra" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
                   </svg>
                 </button>
               </div>
@@ -57,7 +57,7 @@ function renderizarTelaLogin(container) {
             
             <!-- Campo de E-mail do aluno -->
             <div class="campo">
-              <label for="input-email">E-mail</label>
+              <label for="input-email">E-mail:</label>
               <input 
                 id="input-email" 
                 name="email" 
@@ -91,17 +91,28 @@ function renderizarTelaLogin(container) {
   const inputRa = container.querySelector('#input-ra');
   const inputEmail = container.querySelector('#input-email');
   const btnToggleRa = container.querySelector('#btn-toggle-ra');
+  const iconeOlhoRa = container.querySelector('#icone-olho-ra');
   const formLogin = container.querySelector('#form-login');
   const avisoLogin = container.querySelector('#aviso-login');
   const btnEntrar = container.querySelector('#btn-entrar');
   const linkColaboradores = container.querySelector('#link-colaboradores');
 
-  // Alternar visibilidade do RA (olho mágico)
-  if (btnToggleRa && inputRa) {
+  // Alternar visibilidade do RA (olho mágico com troca de SVG e cores)
+  if (btnToggleRa && inputRa && iconeOlhoRa) {
     btnToggleRa.addEventListener('click', (e) => {
       e.preventDefault(); 
-      const tipoAtual = inputRa.getAttribute('type');
-      inputRa.setAttribute('type', tipoAtual === 'password' ? 'text' : 'password');
+      const mostrar = inputRa.type === 'password';
+      inputRa.type = mostrar ? 'text' : 'password';
+      btnToggleRa.setAttribute('aria-pressed', String(mostrar));
+      btnToggleRa.setAttribute('aria-label', mostrar ? 'Ocultar RA' : 'Mostrar RA');
+
+      if (mostrar) {
+        iconeOlhoRa.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+        btnToggleRa.style.color = '#0284c7';
+      } else {
+        iconeOlhoRa.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+        btnToggleRa.style.color = '#64748b';
+      }
     });
   }
 
@@ -157,12 +168,10 @@ function renderizarTelaLogin(container) {
       btnEntrar.textContent = 'Validando...';
 
       try {
-        // Valida se o módulo PainelAluno carregou corretamente
         if (!window.PainelAluno || typeof window.PainelAluno.entrar !== 'function') {
           throw new Error('Módulo do painel do aluno não carregado.');
         }
 
-        // Chama a função entrar() oficial do painel.js que valida, salva na sessão correta e abre a tela
         const sucesso = await window.PainelAluno.entrar(raVal, emailVal);
 
         if (!sucesso) {

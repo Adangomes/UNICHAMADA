@@ -72,12 +72,12 @@ function renderizarTelaRecuperacao(container) {
   const aviso = container.querySelector('#aviso-recuperacao');
   const linkVoltar = container.querySelector('#link-voltar');
 
-  // Função auxiliar para exibir mensagens de aviso/sucesso na tela
+  // Função auxiliar para exibir mensagens de aviso/sucesso na tela controlando via classes CSS
   const mostrarMensagem = (texto, tipo = 'erro') => {
     if (!aviso) return;
     aviso.textContent = texto;
-    aviso.classList.remove('oculto');
-    aviso.style.color = tipo === 'sucesso' ? '#16a34a' : '#dc2626'; // Verde para sucesso, vermelho para erro
+    aviso.classList.remove('oculto', 'sucesso', 'erro');
+    aviso.classList.add(tipo);
   };
 
   // Evento de submissão do formulário de recuperação
@@ -89,7 +89,7 @@ function renderizarTelaRecuperacao(container) {
       const email = inputEmail.value.trim().toLowerCase();
 
       if (!email) {
-        mostrarMensagem('Por favor, informe seu e-mail.');
+        mostrarMensagem('Por favor, informe seu e-mail.', 'erro');
         return;
       }
 
@@ -97,16 +97,16 @@ function renderizarTelaRecuperacao(container) {
       btnEnviar.textContent = 'Enviando...';
 
       try {
-        // Integração com a API de recuperação
+        // Integração com a API de recuperação apontando para o ambiente publicado
         const { error } = await TI.db.auth.resetPasswordForEmail(email, {
-          redirectTo: 'https://adangomes.github.io/UNICHAMADA/ti/', // Substitua pelo link real da sua página de TI ou produção
+          redirectTo: 'https://adangomes.github.io/UNICHAMADA/ti/',
         });
         if (error) throw error;
 
         mostrarMensagem('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.', 'sucesso');
         inputEmail.value = '';
       } catch (err) {
-        mostrarMensagem(err.message || 'Erro ao tentar enviar o e-mail de recuperação.');
+        mostrarMensagem(err.message || 'Erro ao tentar enviar o e-mail de recuperação.', 'erro');
       } finally {
         btnEnviar.disabled = false;
         btnEnviar.textContent = 'Enviar instruções';

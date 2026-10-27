@@ -46,12 +46,15 @@
   <script src="js/utils/codigo-rotativo.js"></script>
   <script src="js/utils/cache.js"></script>
    
-  <!-- Primeiro o mapeamento do banco e os dados do aluno -->
+
+  <!-- Mapeamento do banco deve vir ANTES do dados.js -->
+  <script src="js/aluno-unichamada/js/aluno/mapa-banco.js"></script>
   <script src="js/aluno-unichamada/js/aluno/dados.js"></script>
   
   <!-- Autenticação & Módulo de Login -->
   <script src="js/login/login.js"></script>
   <script src="js/auth/auth.js"></script>
+  
   <!-- Módulos do Coordenador -->
   <script src="js/coordenador/cursos.js"></script>
   <script src="js/coordenador/professores.js"></script>

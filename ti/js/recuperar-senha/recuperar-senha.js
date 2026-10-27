@@ -97,11 +97,10 @@ function renderizarTelaRecuperacao(container) {
       btnEnviar.textContent = 'Enviando...';
 
       try {
-        // Integração com a API de recuperação utilizando a instância correta do projeto (TI.db)
+        // Integração com a API de recuperação
         const { error } = await TI.db.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + window.location.pathname, // Redireciona de volta após clicar no link do e-mail
+          redirectTo: 'https://adangomes.github.io/UNICHAMADA/ti/', // Substitua pelo link real da sua página de TI ou produção
         });
-
         if (error) throw error;
 
         mostrarMensagem('E-mail de recuperação enviado com sucesso! Verifique sua caixa de entrada.', 'sucesso');

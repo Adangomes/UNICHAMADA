@@ -19,7 +19,7 @@ function renderizarTelaRecuperacao(container) {
       <div class="login-banner">
         <div class="arco-decorativo arco-topo"></div>
         <div class="login-brand">
-          <h1 class="logo-uni">UNI</h1>
+          <h1 class="logo-uni"><span class="u-destaque">U</span>NI</h1>
           <span class="logo-sub">CHAMADAS</span>
         </div>
         <div class="arco-decorativo arco-base"></div>
@@ -36,7 +36,7 @@ function renderizarTelaRecuperacao(container) {
           
           <form id="form-recuperacao" novalidate>
             <div class="campo">
-              <label for="input-recupera-email">E-mail</label>
+              <label for="input-recupera-email">E-mail:</label>
               <input 
                 id="input-recupera-email" 
                 name="email" 
@@ -115,14 +115,61 @@ function renderizarTelaRecuperacao(container) {
     });
   }
 
-  // Ação para o botão de voltar ao login (caso use roteador SPA)
+  // Ação para o botão de voltar ao login com efeito de loading e transição suave
   if (linkVoltar) {
     linkVoltar.addEventListener('click', (e) => {
       e.preventDefault();
-      // Aqui você chama a função que renderiza o login novamente (ex: renderizarTelaLogin(container))
-      if (typeof renderizarTelaLogin === 'function') {
-        renderizarTelaLogin(container);
+
+      const carteirinhaDireita = container.querySelector('.carteirinha-login');
+      if (!carteirinhaDireita) {
+        executarVoltarLogin();
+        return;
       }
+
+      // 1. Fade-out na tela de recuperação
+      carteirinhaDireita.classList.add('fade-out');
+
+      // 2. Exibe o spinner circular de carregamento
+      setTimeout(() => {
+        carteirinhaDireita.innerHTML = `
+          <div class="spinner-container">
+            <div class="spinner-circular"></div>
+            <span class="spinner-texto">Carregando...</span>
+          </div>
+        `;
+        carteirinhaDireita.classList.remove('fade-out');
+
+        // 3. Breve delay e renderiza o login novamente
+        setTimeout(() => {
+          carteirinhaDireita.classList.add('fade-out');
+          
+          setTimeout(() => {
+            executarVoltarLogin();
+          }, 200);
+
+        }, 400);
+
+      }, 35); // Usando o tempo ajustado
+
     });
+  }
+
+  // Função auxiliar que executa a renderização real do login
+  function executarVoltarLogin() {
+    if (window.TI && window.TI.telas && typeof window.TI.telas.login.render === 'function') {
+      window.TI.telas.login.render(container, {
+        aoEntrar: () => {
+          if (typeof window.carregarAplicacao === 'function') {
+            window.carregarAplicacao();
+          } else {
+            window.location.reload();
+          }
+        }
+      });
+    } else if (typeof renderizarTelaLogin === 'function') {
+      renderizarTelaLogin(container);
+    } else {
+      window.location.href = './';
+    }
   }
 }

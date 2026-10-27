@@ -17,7 +17,7 @@ window.MAPA_BANCO = {
   const CHAVE = "aluno_sessao";
   let atual = null;
 
-  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "'" }[c]));
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");
   const pct = (p, t) => (t ? Math.round((p / t) * 100) : null);
   const fmtData = (d) => {
     const dt = new Date(d);

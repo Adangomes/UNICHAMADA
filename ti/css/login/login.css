@@ -15,14 +15,12 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Fundo Off-White idêntico às telas do sistema */
   background: var(--papel, #fdfbf7);
   padding: 0;
   box-sizing: border-box;
   font-family: inherit;
 }
 
-/* Container Split-Screen em Tela Cheia */
 .login-wrapper {
   display: flex;
   width: 100%;
@@ -34,7 +32,7 @@ html, body {
   box-shadow: none;
 }
 
-/* ================= LADO ESQUERDO: BANNER COM CURVA HARMONIOSA ================= */
+/* ================= LADO ESQUERDO: BANNER ================= */
 .login-banner {
   flex: 1.25;
   position: relative;
@@ -43,24 +41,16 @@ html, body {
   justify-content: center;
   padding: 60px;
   overflow: hidden;
-  /* Gradiente Sofisticado: Azul Marinho -> Azul Oceano -> Ciano Acadêmico */
   background: linear-gradient(125deg, #0f172a 0%, #1e3a8a 35%, #0284c7 75%, #38bdf8 100%);
-  /* Corte oval curvo cortando para a direita no estilo Ulife */
   clip-path: ellipse(85% 100% at 15% 50%);
   z-index: 2;
 }
 
-/* Animação de rotação contínua para o arco */
 @keyframes girarArco {
-  from {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* Arco Curvo Decorativo Ciano Vibrante */
 .arco-decorativo {
   position: absolute;
   pointer-events: none;
@@ -85,11 +75,8 @@ html, body {
   filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
 }
 
-.arco-base {
-  display: none;
-}
+.arco-base { display: none; }
 
-/* Marca UNI CHAMADAS */
 .login-brand {
   text-align: center;
   z-index: 5;
@@ -107,7 +94,6 @@ html, body {
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
-/* Destaque Ciano Celeste no 'U' (Acolhedor e Tecnológico) */
 .logo-uni .u-destaque {
   color: #38bdf8;
   display: inline-block;
@@ -115,7 +101,6 @@ html, body {
   position: relative;
 }
 
-/* Detalhe geométrico elegante acima do U */
 .logo-uni .u-destaque::before {
   content: "";
   position: absolute;
@@ -142,7 +127,6 @@ html, body {
   opacity: 0.95;
 }
 
-/* Sombra suave de transição entre a curva e o formulário */
 .login-banner::after {
   content: "";
   position: absolute;
@@ -151,7 +135,7 @@ html, body {
   pointer-events: none;
 }
 
-/* ================= LADO DIREITO: FORMULÁRIO COM TOM DO SISTEMA ================= */
+/* ================= LADO DIREITO: FORMULÁRIO ================= */
 .carteirinha-login {
   flex: 1;
   display: flex;
@@ -170,15 +154,6 @@ html, body {
   max-width: 380px;
 }
 
-.carteirinha-topo .selo {
-  font-family: var(--fonte-mono, monospace);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #64748b;
-  font-weight: 600;
-}
-
 .carteirinha-topo h1 {
   color: #0f172a;
   font-size: 2.1rem;
@@ -187,32 +162,24 @@ html, body {
   letter-spacing: -0.02em;
 }
 
-.carteirinha-topo::after {
-  display: none;
-}
-
 .carteirinha-corpo {
   padding: 0;
   width: 100%;
   max-width: 380px;
 }
 
-.carteirinha-corpo .instrucao {
-  color: #64748b;
-  font-size: 0.92rem;
-  line-height: 1.5;
-  margin: 0 0 1.8em;
-}
-
 #form-login .campo {
   margin-bottom: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
 }
 
 #form-login label {
   display: block;
   font-size: 0.8rem;
   font-weight: 700;
-  margin-bottom: 0.5em;
   color: #1e293b;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -238,11 +205,42 @@ html, body {
   background: #ffffff;
 }
 
+/* Container Flex para o input e o botão ficarem perfeitamente alinhados */
+.input-wrapper-flex {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-wrapper-flex input {
+  padding-right: 45px;
+}
+
+/* Botão do olho perfeitamente centralizado por Flexbox nativo */
+#btn-olho-senha {
+  position: absolute;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+#btn-olho-senha:hover {
+  color: #0284c7;
+}
+
 #form-login .btn-primario {
   width: 100%;
   margin-top: 1em;
   font-size: 1rem;
-  background: #0f172a; /* Botão no mesmo azul marinho sofisticado da marca */
+  background: #0f172a;
   color: #ffffff;
   padding: 0.95em;
   border: none;
@@ -288,149 +286,15 @@ html, body {
     padding: 60px 20px;
     clip-path: ellipse(120% 80% at 50% 0%);
   }
-  .logo-uni {
-    font-size: 4.5rem;
-  }
+  .logo-uni { font-size: 4.5rem; }
   .carteirinha-login {
     padding: 40px 24px;
     align-items: center;
   }
-  .arco-topo {
-    display: none;
-  }
+  .arco-topo { display: none; }
 }
 
-.divisor-login {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 1.8em 0 1.2em;
-  width: 100%;
-}
-
-.divisor-login::before,
-.divisor-login::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #cbd5e1;
-}
-
-.divisor-login span {
-  padding: 0 12px;
-  color: #64748b;
-  font-size: 0.82rem;
-  font-weight: 500;
-}
-
-.btn-colaborador {
-  display: block;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: #0284c7;
-  font-size: 0.92rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.6em 0;
-  text-align: center;
-  text-decoration: none;
-}
-
-.btn-colaborador:hover {
-  color: #0369a1;
-  text-decoration: underline;
-}
-
-/* ==========================================================================
-   ESTILO APENAS PARA O BOTÃO DO OLHO (VISIBILIDADE DA SENHA)
-   ========================================================================== */
-
-#form-login .campo {
-  position: relative; /* Garante que o botão se posicione em relação ao input */
-}
-
-#input-senha {
-  padding-right: 45px; /* Espaço para o texto não ficar por baixo do ícone */
-}
-
-#btn-olho-senha {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-15%);
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  transition: color 0.2s ease;
-}
-
-#btn-olho-senha:hover {
-  color: #0284c7; /* Azul ciano no hover */
-}
-
-
-
-/* ==========================================================================
-   ESTILOS DO MÓDULO DE RECUPERAÇÃO DE SENHA / LOGIN
-   ========================================================================== */
-
-
-/* Garante que o formulário empilhe os itens em coluna */
-#form-recuperacao {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-/* Deixa o rótulo (E-mail) em cima e o input preenchendo a largura */
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-}
-
-.campo label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.campo input {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 0.95rem;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 8px;
-  box-sizing: border-box; /* Fundamental para o input não estourar o layout */
-}
-
-/* Estilo do botão para ocupar a largura correta e ficar separado */
-.btn-primario {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #ffffff;
-  background-color: #1d4ed8;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-top: 8px;
-}
-
-
-
-
-
-
-/* Efeito de transição de fade e spinner de carregamento */
+/* Transições e Spinner */
 .fade-out {
   opacity: 0;
   transition: opacity 0.45s ease-in-out;

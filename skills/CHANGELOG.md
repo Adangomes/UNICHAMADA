@@ -957,7 +957,7 @@ Todas as mudanças relevantes do UniChamada (Sistema Acadêmico).
 ### Alterado
 
 - `js/data/chat.js`: novas funções `editarMensagem`, `apagarMensagem`, `apagarConversa`, `enviarAnexo`, `urlAssinada`, `abrirVisualizacaoUnica`, `iniciarPresenca`, `pararPresenca`. `assinar()` agora recebe `{ onInsert, onUpdate, onConversaApagada }`.
-- `js/{coordenador,professor}/chat/chat.js`: botões 📎 e 😊, balões montados por DOM, menu de contexto nas mensagens e nos contatos, bolinha de online/offline.
+- `js/{coordenador,professor}/chat/chat.js`: botões e, balões montados por DOM, menu de contexto nas mensagens e nos contatos, bolinha de online/offline.
 - `css/chat/coordenador.css` e `professor.css`: estilos dos botões, da bolinha e do status.
 - `index.html`: CSS de `css/chat/config/` e scripts de `config/` (antes dos `chat.js` das telas).
 
@@ -1084,3 +1084,25 @@ Todas as mudanças relevantes do UniChamada (Sistema Acadêmico).
 
 - Documentar as tabelas `chat_conversas` e `chat_mensagens` no `banco-de-dados/DOC_BANCO.md`.
 - Migrar o login do sistema para o Supabase Auth e restringir as policies por usuário.
+
+
+
+Changelog — 27 de Outubro de 2026
+Otimização da Arquitetura de Notificações e Correção de CORS
+Refatoração do Módulo Front-end (notificacao.js):
+
+Removida a dependência de requisições fetch diretas do lado do cliente (navegador no GitHub Pages) para o serviço externo de automação (n8n no Render).
+
+Otimizado o fluxo de envio do formulário de notificações para focar estritamente na persistência transacional dos dados no banco de dados.
+
+Correção de Política de Origem Cruzada (CORS):
+
+Solucionado o bloqueio de segurança do navegador (Access-Control-Allow-Origin) ao desacoplar as chamadas externas diretas da interface do usuário.
+
+Implementação de Arquitetura Orientada a Banco de Dados (Supabase Webhooks):
+
+A arquitetura de integração passou a utilizar Database Webhooks nativos do Supabase.
+
+O front-end agora grava diretamente nas tabelas notificacoes e notificacao_professores, e o próprio banco de dados aciona de forma assíncrona (servidor para servidor) os fluxos de automação externa no n8n em segundo plano.
+
+Aumento da robustez, confiabilidade e segurança das requisições, eliminando falhas de rede originadas no client-side.

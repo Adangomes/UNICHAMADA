@@ -16,12 +16,29 @@
     return !(v === false || v === "falta" || v === "F" || v === "ausente");
   };
 
-  // Login do aluno: RA + e-mail (mesmo padrão do professor e do coordenador)
+  // Login do aluno: aceita validação flexível por RA ou e-mail
   async function autenticar(ra, email) {
     const A = M.alunos;
-    if (!norm(ra) || !norm(email)) return null;
     const alunos = await listar(A.tabela);
-    return alunos.find((a) => norm(a[A.ra]) === norm(ra) && norm(a[A.email]) === norm(email)) || null;
+    
+    const rClean = norm(ra);
+    const eClean = norm(email);
+
+    return alunos.find((a) => {
+      const aRa = norm(a[A.ra]);
+      const aEmail = norm(a[A.email]);
+
+      if (rClean && eClean) {
+        return aRa === rClean || aEmail === eClean;
+      }
+      if (rClean) {
+        return aRa === rClean;
+      }
+      if (eClean) {
+        return aEmail === eClean;
+      }
+      return false;
+    }) || null;
   }
 
   // Monta: cursos > disciplinas > aulas, com presenças e faltas do aluno

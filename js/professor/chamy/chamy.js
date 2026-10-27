@@ -1,14 +1,8 @@
 /**
  * @fileoverview chamy.js — Chamy, o assistente de dados do UniChamada (painel do professor)
  *
- * O professor pergunta em linguagem natural; o front-end envia a pergunta para um
- * Webhook do n8n; o n8n (agente de IA + Supabase) consulta o banco e devolve a resposta.
- *
- * Fluxo:  [botão do robô ao lado do sino] -> painel de conversa -> POST no webhook do n8n
- *         -> n8n responde JSON { "resposta": "texto" } -> aparece no painel.
- *
- * Como ligar no painel (já está no seu professor.js):
- *     if (typeof inicializarChamyProfessor === 'function') inicializarChamyProfessor(cabecalho, professorLogado);
+ * O professor pergunta em linguagem natural; o front-end envia a pergunta e o contexto
+ * atual das turmas do professor para o Webhook do n8n; o n8n processa e devolve a resposta.
  *
  * @module Chamy
  */
@@ -17,86 +11,76 @@
    CONFIGURAÇÃO — dados do seu n8n e ajustes do botão
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (para outros computadores precisa ser um endereço público https)
+  // URL de PRODUÇÃO do nó Webhook do n8n (via túnel Cloudflare)
   webhookUrl: 'https://characteristics-encoding-fuel-weeks.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
-  // Caminho do ícone do robô, relativo à raiz do site
   icone: 'js/professor/chamy/chamy.png',
-  // Tempo máximo de espera pela resposta do n8n, em milissegundos (60000 = 60 s)
   timeoutMs: 60000,
-  // Máximo de caracteres que o professor pode digitar numa pergunta
   maxPergunta: 500,
-  // >>> AJUSTE AQUI <<<  Se o espaço vazio entre o robô e o sino passar deste valor (px),
-  // o robô é empurrado para encostar no sino. Diminua para ser mais exigente (ex.: 12).
   folgaMaxima: 24
 };
 
 // Perguntas prontas que aparecem como botões quando o painel abre
 const CHAMY_SUGESTOES = [
-  'Quantos alunos tenho em cada turma?',          // sugestão 1
-  'Qual a taxa de presença das minhas turmas?',   // sugestão 2
-  'Quais alunos mais faltaram este mês?'          // sugestão 3
+  'Quantos alunos tenho em cada turma?',
+  'Qual a taxa de presença das minhas turmas?',
+  'Quais alunos mais faltaram este mês?'
 ];
 
 // Estado do Chamy enquanto a página está aberta
 const estadoChamy = {
-  aberto: false,      // o painel de conversa está aberto?
-  enviando: false,    // já existe uma pergunta sendo respondida?
-  professor: null,    // dados do professor logado
-  sessaoId: '',       // id da conversa (o n8n usa para lembrar do contexto)
-  observador: null,        // vigia o cabeçalho para recolocar o robô se ele sumir
-  redimensionador: null    // refaz o ajuste de proximidade quando o cabeçalho muda de tamanho
+  aberto: false,
+  enviando: false,
+  professor: null,
+  sessaoId: '',
+  observador: null,
+  redimensionador: null
 };
 
 /* ==========================================================================
    UTILITÁRIOS
    ========================================================================== */
 
-/** Cria um elemento HTML com atributos e filhos (texto ou outros elementos). */
+/** Cria um elemento HTML com atributos e filhos. */
 function chamyEl(tag, attrs = {}, filhos = []) {
-  const el = document.createElement(tag);                       // cria a tag pedida (div, button, img...)
-  Object.entries(attrs).forEach(([k, v]) => {                   // passa por cada atributo recebido
-    if (k === 'class') el.className = v;                        // "class" vira className
-    else if (k.startsWith('on') && typeof v === 'function')     // atributos "onClick", "onInput"...
-      el.addEventListener(k.slice(2).toLowerCase(), v);         // viram ouvintes de evento
-    else el.setAttribute(k, v);                                 // o resto vira atributo normal (id, title...)
+  const el = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on') && typeof v === 'function')
+      el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k, v);
   });
-  [].concat(filhos).forEach((f) => el.append(f));               // anexa os filhos (aceita um só ou uma lista)
-  return el;                                                    // devolve o elemento pronto
+  [].concat(filhos).forEach((f) => el.append(f));
+  return el;
 }
 
-/**
- * Converte o texto da resposta em nós seguros: quebras de linha, **negrito** e listas "- item".
- * Nunca usa innerHTML com texto vindo do servidor (evita injeção de HTML).
- */
+/** Converte o texto da resposta em nós seguros (negrito e listas). */
 function chamyFormatarResposta(texto) {
-  const caixa = document.createDocumentFragment();                          // "caixa" temporária para os parágrafos
-  String(texto || '').split('\n').forEach((linha) => {                      // trata cada linha da resposta
-    const ehItem = /^\s*[-•*]\s+/.test(linha);                              // linha começa com "-", "•" ou "*"? é item de lista
-    const limpa = linha.replace(/^\s*[-•*]\s+/, '');                        // tira o marcador da frente
-    const p = chamyEl('p', { class: ehItem ? 'chamy-item' : '' });          // parágrafo (com bolinha se for item)
-    limpa.split(/(\*\*[^*]+\*\*)/g).forEach((parte) => {                    // separa os trechos **em negrito**
-      if (/^\*\*[^*]+\*\*$/.test(parte))                                    // é um trecho em negrito?
-        p.append(chamyEl('strong', {}, [parte.slice(2, -2)]));              // tira os ** e usa <strong>
-      else p.append(parte);                                                 // senão, texto comum
+  const caixa = document.createDocumentFragment();
+  String(texto || '').split('\n').forEach((linha) => {
+    const ehItem = /^\s*[-•*]\s+/.test(linha);
+    const limpa = linha.replace(/^\s*[-•*]\s+/, '');
+    const p = chamyEl('p', { class: ehItem ? 'chamy-item' : '' });
+    limpa.split(/(\*\*[^*]+\*\*)/g).forEach((parte) => {
+      if (/^\*\*[^*]+\*\*$/.test(parte))
+        p.append(chamyEl('strong', {}, [parte.slice(2, -2)]));
+      else p.append(parte);
     });
-    if (limpa.trim() || ehItem) caixa.append(p);                            // ignora linhas totalmente vazias
+    if (limpa.trim() || ehItem) caixa.append(p);
   });
-  return caixa;                                                             // devolve os parágrafos prontos
+  return caixa;
 }
 
-/** Gera (ou recupera) o id da conversa, guardado só enquanto a aba do navegador estiver aberta. */
+/** Gera ou recupera o id da sessão de conversa. */
 function chamyIdSessao() {
-  const chave = 'chamy_sessao_id';                                          // nome em que o id fica guardado
-  const novoId = () => (crypto.randomUUID                                   // cria um id novo:
-    ? crypto.randomUUID()                                                   //   - UUID, se o navegador suportar
-    : String(Date.now()) + Math.random().toString(16).slice(2));            //   - ou data + número aleatório
+  const chave = 'chamy_sessao_id';
+  const novoId = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
   try {
-    let id = sessionStorage.getItem(chave);                                 // já existe um id guardado?
-    if (!id) { id = novoId(); sessionStorage.setItem(chave, id); }          // se não, cria e guarda
-    return id;                                                              // devolve o id
+    let id = sessionStorage.getItem(chave);
+    if (!id) { id = novoId(); sessionStorage.setItem(chave, id); }
+    return id;
   } catch (e) {
-    return novoId();                                                        // navegador bloqueou o storage: id só desta página
+    return novoId();
   }
 }
 
@@ -104,262 +88,252 @@ function chamyIdSessao() {
    PAINEL DE CONVERSA
    ========================================================================== */
 
-/** Adiciona um balão de mensagem na lista e rola até o final. */
+/** Adiciona um balão de mensagem na lista. */
 function chamyAdicionarMensagem(lista, autor, conteudo, classeExtra = '') {
-  const balao = chamyEl('div', { class: `chamy-msg chamy-msg-${autor} ${classeExtra}`.trim() }); // balão (chamy ou professor)
-  if (typeof conteudo === 'string' && autor === 'chamy')                    // resposta do Chamy em texto:
-    balao.append(chamyFormatarResposta(conteudo));                          //   formata (negrito, listas)
-  else if (typeof conteudo === 'string') balao.textContent = conteudo;      // texto do professor: puro, sem HTML
-  else balao.append(conteudo);                                              // já é um elemento (ex.: "digitando…")
-  lista.append(balao);                                                      // coloca o balão na lista
-  lista.scrollTop = lista.scrollHeight;                                     // rola para a última mensagem
-  return balao;                                                             // devolve o balão (para poder removê-lo depois)
+  const balao = chamyEl('div', { class: `chamy-msg chamy-msg-${autor} ${classeExtra}`.trim() });
+  if (typeof conteudo === 'string' && autor === 'chamy')
+    balao.append(chamyFormatarResposta(conteudo));
+  else if (typeof conteudo === 'string') balao.textContent = conteudo;
+  else balao.append(conteudo);
+  lista.append(balao);
+  lista.scrollTop = lista.scrollHeight;
+  return balao;
 }
 
-/** Envia a pergunta ao n8n e mostra a resposta. */
+/** Envia a pergunta ao n8n juntamente com o contexto atual do professor. */
 async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
-  const texto = String(pergunta || '').trim().slice(0, CHAMY_CONFIG.maxPergunta); // limpa e limita o tamanho
-  if (!texto || estadoChamy.enviando) return;                               // vazio ou já enviando: não faz nada
+  const texto = String(pergunta || '').trim().slice(0, CHAMY_CONFIG.maxPergunta);
+  if (!texto || estadoChamy.enviando) return;
 
-  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) {                    // URL ainda não configurada?
-    chamyAdicionarMensagem(lista, 'chamy', 'Ainda não estou conectado ao n8n. Configure a URL do webhook em js/professor/chamy/chamy.js.');
-    return;                                                                 // avisa e para
+  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) {
+    chamyAdicionarMensagem(lista, 'chamy', 'Ainda não estou conectado ao n8n. Configure a URL do webhook.');
+    return;
   }
 
-  estadoChamy.enviando = true;                                              // marca que está enviando
-  campo.value = '';                                                         // limpa a caixa de texto
-  botaoEnviar.disabled = true;                                              // trava o botão de enviar
-  chamyAdicionarMensagem(lista, 'professor', texto);                        // mostra a pergunta do professor
-  const digitando = chamyAdicionarMensagem(lista, 'chamy',                  // mostra "···" enquanto espera
+  estadoChamy.enviando = true;
+  campo.value = '';
+  botaoEnviar.disabled = true;
+  chamyAdicionarMensagem(lista, 'professor', texto);
+  const digitando = chamyAdicionarMensagem(lista, 'chamy',
     chamyEl('span', { class: 'chamy-digitando' }, [chamyEl('i'), chamyEl('i'), chamyEl('i')]), 'chamy-msg-digitando');
 
-  const controle = new AbortController();                                   // permite cancelar a requisição
-  const temporizador = setTimeout(() => controle.abort(), CHAMY_CONFIG.timeoutMs); // cancela se passar do tempo
+  const controle = new AbortController();
+  const temporizador = setTimeout(() => controle.abort(), CHAMY_CONFIG.timeoutMs);
 
   try {
-    const prof = estadoChamy.professor || {};                               // dados do professor logado
-    const resposta = await fetch(CHAMY_CONFIG.webhookUrl, {                 // chama o webhook do n8n
-      method: 'POST',                                                       // método POST
-      headers: { 'Content-Type': 'application/json' },                      // corpo em JSON
-      signal: controle.signal,                                              // liga o cancelamento por tempo
-      body: JSON.stringify({                                                // corpo enviado ao n8n:
-        token: CHAMY_CONFIG.token,                                          //   chave conferida pelo nó IF
-        pergunta: texto,                                                    //   a pergunta
-        professor_id: prof.id,                                              //   quem está perguntando (para filtrar os dados)
-        professor_nome: prof.nome,                                          //   nome, para o Chamy cumprimentar
-        sessao_id: estadoChamy.sessaoId                                     //   id da conversa (memória do agente)
+    const prof = estadoChamy.professor || {};
+
+    // Recupera dados do cache do professor para enviar no contexto (se houver)
+    const turmasCache = window.UNICHAMADA_CACHE?.get(`turmas_prof_${prof.id}`) || [];
+
+    const resposta = await fetch(CHAMY_CONFIG.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controle.signal,
+      body: JSON.stringify({
+        token: CHAMY_CONFIG.token,
+        pergunta: texto,
+        professor_id: prof.id,
+        professor_nome: prof.nome,
+        sessao_id: estadoChamy.sessaoId,
+        // Contexto inteligente puxado diretamente do estado atual da tela/cache
+        contexto_atual: {
+          turmas_visiveis: turmasCache,
+          aba_ativa: typeof abaAtivaProfessor !== 'undefined' ? abaAtivaProfessor : 'geral'
+        }
       })
     });
-    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);           // erro HTTP (401, 404, 500...) cai no catch
-    const dados = await resposta.json();                                    // lê o JSON devolvido pelo n8n
-    const textoResposta = dados.resposta || dados.output || dados.text || ''; // aceita vários nomes de campo
-    digitando.remove();                                                     // tira o "digitando…"
+
+    if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+    const dados = await resposta.json();
+    const textoResposta = dados.resposta || dados.output || dados.text || '';
+    digitando.remove();
     chamyAdicionarMensagem(lista, 'chamy', textoResposta || 'Não consegui montar uma resposta para essa pergunta.');
   } catch (erro) {
-    digitando.remove();                                                     // tira o "digitando…"
-    const msg = erro.name === 'AbortError'                                  // estourou o tempo?
+    digitando.remove();
+    const msg = erro.name === 'AbortError'
       ? 'Demorei demais para responder. Tente de novo ou faça uma pergunta mais simples.'
       : 'Não consegui falar com o servidor agora. Verifique se o n8n está no ar e tente novamente.';
-    chamyAdicionarMensagem(lista, 'chamy', msg, 'chamy-msg-erro');          // mostra o erro em vermelho
-    console.error('[Chamy]', erro);                                         // detalhe técnico no Console (F12)
+    chamyAdicionarMensagem(lista, 'chamy', msg, 'chamy-msg-erro');
+    console.error('[Chamy]', erro);
   } finally {
-    clearTimeout(temporizador);                                             // cancela o cronômetro
-    estadoChamy.enviando = false;                                           // libera para a próxima pergunta
-    botaoEnviar.disabled = false;                                           // destrava o botão de enviar
-    campo.focus();                                                          // volta o cursor para a caixa de texto
+    clearTimeout(temporizador);
+    estadoChamy.enviando = false;
+    botaoEnviar.disabled = false;
+    campo.focus();
   }
 }
 
-/** Monta o painel de conversa e o coloca na página. */
+/** Monta o painel de conversa. */
 function chamyMontarPainel() {
-  document.getElementById('chamy-painel')?.remove();                        // remove um painel antigo, se houver
+  document.getElementById('chamy-painel')?.remove();
 
-  const lista = chamyEl('div', { class: 'chamy-lista', 'aria-live': 'polite' }); // área onde ficam as mensagens
-  const campo = chamyEl('textarea', {                                       // caixa de texto da pergunta
+  const lista = chamyEl('div', { class: 'chamy-lista', 'aria-live': 'polite' });
+  const campo = chamyEl('textarea', {
     class: 'chamy-campo', rows: '1', maxlength: String(CHAMY_CONFIG.maxPergunta),
     placeholder: 'Pergunte algo sobre suas turmas…'
   });
-  const botaoEnviar = chamyEl('button', { class: 'chamy-enviar', type: 'button', title: 'Enviar' }, ['➤']); // botão ➤
+  const botaoEnviar = chamyEl('button', { class: 'chamy-enviar', type: 'button', title: 'Enviar' }, ['➤']);
 
-  const enviar = () => chamyEnviar(campo.value, lista, campo, botaoEnviar); // atalho para enviar o que está escrito
-  botaoEnviar.addEventListener('click', enviar);                            // clicar em ➤ envia
-  campo.addEventListener('keydown', (e) => {                                // ao apertar uma tecla na caixa:
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } //   Enter envia (Shift+Enter quebra linha)
+  const enviar = () => chamyEnviar(campo.value, lista, campo, botaoEnviar);
+  botaoEnviar.addEventListener('click', enviar);
+  campo.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
   });
-  campo.addEventListener('input', () => {                                   // ao digitar:
-    campo.style.height = 'auto';                                            //   zera a altura
-    campo.style.height = Math.min(campo.scrollHeight, 110) + 'px';          //   cresce até no máximo 110 px
+  campo.addEventListener('input', () => {
+    campo.style.height = 'auto';
+    campo.style.height = Math.min(campo.scrollHeight, 110) + 'px';
   });
 
-  const nome = (estadoChamy.professor?.nome || '').split(' ')[0];           // primeiro nome do professor
-  chamyAdicionarMensagem(lista, 'chamy',                                    // mensagem de boas-vindas
+  const nome = (estadoChamy.professor?.nome || '').split(' ')[0];
+  chamyAdicionarMensagem(lista, 'chamy',
     `Olá${nome ? ', ' + nome : ''}! Eu sou o **Chamy**. Posso consultar os dados das suas turmas. O que você quer saber?`);
 
-  const sugestoes = chamyEl('div', { class: 'chamy-sugestoes' },            // bloco com as perguntas prontas
-    CHAMY_SUGESTOES.map((s) => chamyEl('button', {                          // um botão para cada sugestão
+  const sugestoes = chamyEl('div', { class: 'chamy-sugestoes' },
+    CHAMY_SUGESTOES.map((s) => chamyEl('button', {
       class: 'chamy-chip', type: 'button',
-      onClick: () => { sugestoes.remove(); chamyEnviar(s, lista, campo, botaoEnviar); } // clicou: some e envia
+      onClick: () => { sugestoes.remove(); chamyEnviar(s, lista, campo, botaoEnviar); }
     }, [s])));
-  lista.append(sugestoes);                                                  // coloca as sugestões na lista
+  lista.append(sugestoes);
 
-  const painel = chamyEl('section', {                                       // a janelinha do Chamy
+  const painel = chamyEl('section', {
     id: 'chamy-painel', class: 'chamy-painel', role: 'dialog', 'aria-label': 'Chamy, assistente de dados'
   }, [
-    chamyEl('header', { class: 'chamy-topo' }, [                            // topo do painel
-      chamyEl('img', { src: CHAMY_CONFIG.icone, alt: '', class: 'chamy-topo-icone' }), // ícone do robô
-      chamyEl('div', { class: 'chamy-topo-texto' }, [                       // título e subtítulo
+    chamyEl('header', { class: 'chamy-topo' }, [
+      chamyEl('img', { src: CHAMY_CONFIG.icone, alt: '', class: 'chamy-topo-icone' }),
+      chamyEl('div', { class: 'chamy-topo-texto' }, [
         chamyEl('strong', {}, ['Chamy']),
         chamyEl('span', {}, ['Assistente'])
       ]),
-      chamyEl('button', { class: 'chamy-fechar', type: 'button', title: 'Fechar', onClick: chamyAlternar }, ['✕']) // fechar
+      chamyEl('button', { class: 'chamy-fechar', type: 'button', title: 'Fechar', onClick: chamyAlternar }, ['✕'])
     ]),
-    lista,                                                                  // mensagens
-    chamyEl('footer', { class: 'chamy-rodape' }, [campo, botaoEnviar]),     // caixa de texto + enviar
-    chamyEl('p', { class: 'chamy-aviso' }, ['']) // aviso
+    lista,
+    chamyEl('footer', { class: 'chamy-rodape' }, [campo, botaoEnviar]),
+    chamyEl('p', { class: 'chamy-aviso' }, [''])
   ]);
 
-  document.body.appendChild(painel);                                        // coloca o painel na página
-  return painel;                                                            // devolve o painel
+  document.body.appendChild(painel);
+  return painel;
 }
 
-/** Abre ou fecha o painel de conversa (usado pelo botão do robô e pelo ✕). */
+/** Abre ou fecha o painel de conversa. */
 function chamyAlternar() {
-  const painel = document.getElementById('chamy-painel') || chamyMontarPainel(); // pega o painel (ou cria na 1ª vez)
-  estadoChamy.aberto = !estadoChamy.aberto;                                 // inverte aberto/fechado
-  painel.classList.toggle('aberto', estadoChamy.aberto);                    // liga/desliga a classe que mostra o painel
-  document.getElementById('chamy-botao')?.classList.toggle('ativo', estadoChamy.aberto); // destaca o botão do robô
-  if (estadoChamy.aberto) painel.querySelector('.chamy-campo')?.focus();    // ao abrir, já deixa o cursor na caixa
+  const painel = document.getElementById('chamy-painel') || chamyMontarPainel();
+  estadoChamy.aberto = !estadoChamy.aberto;
+  painel.classList.toggle('aberto', estadoChamy.aberto);
+  document.getElementById('chamy-botao')?.classList.toggle('ativo', estadoChamy.aberto);
+  if (estadoChamy.aberto) painel.querySelector('.chamy-campo')?.focus();
 }
 
 /* ==========================================================================
    BOTÃO AO LADO DO SINO
    ========================================================================== */
 
-/** Acha o botão "Sair" do cabeçalho (procura um botão/link com exatamente esse texto). */
 function chamyAcharSair(cabecalho) {
-  return [...cabecalho.querySelectorAll('button, a')].find((el) =>          // olha todos os botões e links
-    /^\s*sair\s*$/i.test(el.textContent)                                    // texto é só "Sair"?
-  ) || null;                                                                // não achou: devolve null
+  return [...cabecalho.querySelectorAll('button, a')].find((el) =>
+    /^\s*sair\s*$/i.test(el.textContent)
+  ) || null;
 }
 
-/**
- * Procura o sino de notificações dentro do cabeçalho.
- * Tenta: classes comuns -> emoji/título "notifica" -> o item que vem logo antes do "Sair".
- */
 function chamyAcharSino(cabecalho) {
-  const porSeletor = cabecalho.querySelector(                               // 1) procura por nomes de classe prováveis
+  const porSeletor = cabecalho.querySelector(
     '.sino, .sino-notificacoes, .btn-sino, #btn-sino, .notificacoes-sino, .notif-sino, [data-sino], [data-notificacoes], [class*="sino"], [class*="notif"]'
   );
-  if (porSeletor) return porSeletor;                                        // achou: usa
+  if (porSeletor) return porSeletor;
 
-  const porTexto = [...cabecalho.querySelectorAll('button, a, div, span')].find((el) => // 2) procura pelo emoji 🔔
+  const porTexto = [...cabecalho.querySelectorAll('button, a, div, span')].find((el) =>
     el.textContent.includes('🔔') || /notifica/i.test(el.getAttribute('title') || el.getAttribute('aria-label') || '')
   );
-  if (porTexto) return porTexto;                                            // achou: usa
+  if (porTexto) return porTexto;
 
-  const sair = chamyAcharSair(cabecalho);                                   // 3) último recurso: o vizinho antes do "Sair"
-  const anterior = sair?.previousElementSibling;                            // elemento imediatamente antes do "Sair"
-  return anterior && anterior.id !== 'chamy-botao' ? anterior : null;       // (nunca o próprio robô)
+  const sair = chamyAcharSair(cabecalho);
+  const anterior = sair?.previousElementSibling;
+  return anterior && anterior.id !== 'chamy-botao' ? anterior : null;
 }
 
-/**
- * Ponto de entrada: cria o botão do robô, coloca ao lado do sino e prepara o painel.
- * @param {HTMLElement} cabecalho - Cabeçalho do painel do professor.
- * @param {Object} professor - Professor logado.
- */
 function inicializarChamy(cabecalho, professor) {
-  estadoChamy.professor = professor || {};                                  // guarda quem é o professor
-  estadoChamy.sessaoId = chamyIdSessao();                                   // id da conversa
-  estadoChamy.aberto = false;                                               // começa fechado
-  document.getElementById('chamy-botao')?.remove();                         // limpa botão antigo (se o painel foi remontado)
-  document.getElementById('chamy-painel')?.remove();                        // limpa painel antigo
+  estadoChamy.professor = professor || {};
+  estadoChamy.sessaoId = chamyIdSessao();
+  estadoChamy.aberto = false;
+  document.getElementById('chamy-botao')?.remove();
+  document.getElementById('chamy-painel')?.remove();
 
-  const botao = chamyEl('button', {                                         // o botão redondo do robô
+  const botao = chamyEl('button', {
     id: 'chamy-botao', class: 'chamy-botao', type: 'button',
     title: 'Pergunte ao Chamy', 'aria-label': 'Abrir o Chamy', onClick: chamyAlternar
-  }, [chamyEl('img', { src: CHAMY_CONFIG.icone, alt: 'Chamy' })]);          // com a imagem dentro
+  }, [chamyEl('img', { src: CHAMY_CONFIG.icone, alt: 'Chamy' })]);
 
-  chamyPosicionar(botao, cabecalho);                                        // coloca o botão no cabeçalho
+  chamyPosicionar(botao, cabecalho);
 
-  estadoChamy.observador?.disconnect();                                     // para um vigia antigo, se existir
-  let agendado = false;                                                     // evita recolocar várias vezes seguidas
-  estadoChamy.observador = new MutationObserver(() => {                     // vigia mudanças no cabeçalho
-    if (botao.isConnected || agendado) return;                              // o botão continua lá? então nada a fazer
-    agendado = true;                                                        // marca que já vai recolocar
-    setTimeout(() => {                                                      // espera 50 ms (deixa o outro módulo terminar)
+  estadoChamy.observador?.disconnect();
+  let agendado = false;
+  estadoChamy.observador = new MutationObserver(() => {
+    if (botao.isConnected || agendado) return;
+    agendado = true;
+    setTimeout(() => {
       agendado = false;
-      if (!botao.isConnected) chamyPosicionar(botao, cabecalho);            // sumiu mesmo: coloca de volta
+      if (!botao.isConnected) chamyPosicionar(botao, cabecalho);
     }, 50);
   });
-  estadoChamy.observador.observe(cabecalho, { childList: true, subtree: true }); // liga o vigia
+  estadoChamy.observador.observe(cabecalho, { childList: true, subtree: true });
 
-  estadoChamy.redimensionador?.disconnect();                                // para um observador de tamanho antigo
-  if (window.ResizeObserver) {                                              // navegador suporta?
-    estadoChamy.redimensionador = new ResizeObserver(() => {                // avisa quando o cabeçalho muda de tamanho
-      if (botao.isConnected) chamyAjustarProximidade(botao, cabecalho);     //   (inclui o momento em que ele aparece na tela)
+  estadoChamy.redimensionador?.disconnect();
+  if (window.ResizeObserver) {
+    estadoChamy.redimensionador = new ResizeObserver(() => {
+      if (botao.isConnected) chamyAjustarProximidade(botao, cabecalho);
     });
-    estadoChamy.redimensionador.observe(cabecalho);                         // liga o observador
+    estadoChamy.redimensionador.observe(cabecalho);
   }
 }
 
-/**
- * Coloca o botão na ordem [Chamy] [sino] [Sair] e o aproxima do sino.
- * Se algo der errado ou o botão ficar invisível, usa o plano B (fim do cabeçalho).
- */
 function chamyPosicionar(botao, cabecalho) {
   try {
-    const sair = chamyAcharSair(cabecalho);                                 // acha o botão "Sair"
-    let sino = chamyAcharSino(cabecalho);                                   // acha o sino
+    const sair = chamyAcharSair(cabecalho);
+    let sino = chamyAcharSino(cabecalho);
 
-    if (sino && sair) {                                                     // se achou os dois:
+    if (sino && sair) {
       while (sino.parentNode && sino.parentNode !== sair.parentNode && sino.parentNode !== cabecalho) {
-        sino = sino.parentNode;                                             //   sobe até o mesmo nível do "Sair"
-      }                                                                     //   (assim o robô não entra DENTRO do sino)
+        sino = sino.parentNode;
+      }
     }
 
-    const referencia = sino || sair;                                        // o robô entra antes do sino (ou do "Sair")
+    const referencia = sino || sair;
     if (referencia && referencia.parentNode && !referencia.contains(botao)) {
-      referencia.parentNode.insertBefore(botao, referencia);                // insere o robô antes da referência
+      referencia.parentNode.insertBefore(botao, referencia);
     } else {
-      cabecalho.appendChild(botao);                                         // plano B: fim do cabeçalho
+      cabecalho.appendChild(botao);
     }
 
-    chamyAjustarProximidade(botao, cabecalho);                              // aproxima o robô do sino (se já houver layout)
+    chamyAjustarProximidade(botao, cabecalho);
 
-    const cabecalhoVisivel = cabecalho.offsetWidth > 0;                     // o cabeçalho já aparece na tela?
-    if (cabecalhoVisivel && botao.offsetWidth === 0 && botao.offsetHeight === 0) cabecalho.appendChild(botao); // só o botão está invisível? vai pro fim
+    const cabecalhoVisivel = cabecalho.offsetWidth > 0;
+    if (cabecalhoVisivel && botao.offsetWidth === 0 && botao.offsetHeight === 0) cabecalho.appendChild(botao);
   } catch (erro) {
-    console.error('[Chamy] erro ao posicionar o botão:', erro);             // mostra o erro no Console
-    if (!botao.isConnected) cabecalho.appendChild(botao);                   // garante que o botão exista na tela
+    console.error('[Chamy] erro ao posicionar o botão:', erro);
+    if (!botao.isConnected) cabecalho.appendChild(botao);
   }
 }
 
-/**
- * Aproxima o robô do elemento que vem logo depois dele (o sino) quando sobra espaço vazio.
- * Só mede quando o cabeçalho já tem tamanho na tela; se ainda estiver escondido, espera
- * (o ResizeObserver chama esta função de novo assim que ele aparecer).
- */
 function chamyAjustarProximidade(botao, cabecalho) {
-  const vizinho = botao.nextElementSibling;                                 // elemento logo depois do robô (sino ou "Sair")
-  if (!vizinho || cabecalho.offsetWidth === 0) return;                      // sem vizinho ou sem layout ainda: tenta depois
+  const vizinho = botao.nextElementSibling;
+  if (!vizinho || cabecalho.offsetWidth === 0) return;
 
-  botao.style.marginLeft = '';                                              // tira o ajuste anterior para medir do zero
-  if (vizinho.dataset.chamyMl !== undefined) {                              // o vizinho foi alterado por nós antes?
-    vizinho.style.marginLeft = vizinho.dataset.chamyMl;                     //   devolve a margem original dele
-    delete vizinho.dataset.chamyMl;                                         //   e apaga o lembrete
+  botao.style.marginLeft = '';
+  if (vizinho.dataset.chamyMl !== undefined) {
+    vizinho.style.marginLeft = vizinho.dataset.chamyMl;
+    delete vizinho.dataset.chamyMl;
   }
 
-  const folga = vizinho.getBoundingClientRect().left                        // posição esquerda do sino
-              - botao.getBoundingClientRect().right;                        // menos a direita do robô = espaço vazio
-  if (folga > CHAMY_CONFIG.folgaMaxima) {                                   // >>> AJUSTE AQUI (folgaMaxima no topo) <<<
-    botao.style.marginLeft = 'auto';                                        // o robô passa a "empurrar" tudo para a direita
-    const mlVizinho = parseFloat(getComputedStyle(vizinho).marginLeft);     // margem esquerda atual do sino
-    if (mlVizinho > CHAMY_CONFIG.folgaMaxima) {                             // o sino também estava se empurrando para a direita?
-      vizinho.dataset.chamyMl = vizinho.style.marginLeft || '';             //   guarda a margem original para poder restaurar
-      vizinho.style.marginLeft = '0';                                       //   o sino abre mão do empurrão
+  const folga = vizinho.getBoundingClientRect().left - botao.getBoundingClientRect().right;
+  if (folga > CHAMY_CONFIG.folgaMaxima) {
+    botao.style.marginLeft = 'auto';
+    const mlVizinho = parseFloat(getComputedStyle(vizinho).marginLeft);
+    if (mlVizinho > CHAMY_CONFIG.folgaMaxima) {
+      vizinho.dataset.chamyMl = vizinho.style.marginLeft || '';
+      vizinho.style.marginLeft = '0';
     }
   }
 }
 
-window.inicializarChamy = inicializarChamy;                                 // deixa a função acessível pelo nome original
-window.inicializarChamyProfessor = inicializarChamy;                        // e pelo nome usado no professor.js
+window.inicializarChamy = inicializarChamy;
+window.inicializarChamyProfessor = inicializarChamy;

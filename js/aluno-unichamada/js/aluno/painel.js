@@ -113,7 +113,6 @@ window.MAPA_BANCO = {
 
   window.PainelAluno = { entrar, restaurar, abrir };
 
-  // Tenta restaurar a sessão automaticamente ao carregar a página
   window.addEventListener('DOMContentLoaded', () => {
     restaurar();
   });

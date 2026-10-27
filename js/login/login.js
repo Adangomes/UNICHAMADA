@@ -1,152 +1,119 @@
-/**
- * js/login/login.js
- * Componente da Tela de Login (Split Screen "UNI CHAMADAS")
- * Integrado com a autenticação de alunos via tabela 'alunos'
- */
+// Nomes das tabelas e colunas do Supabase usadas pela tela do aluno.
+// Se algo for diferente no seu banco, ajuste SÓ aqui.
+window.MAPA_BANCO = {
+  alunos:      { tabela: "alunos",      id: "id", nome: "nome", ra: "ra", email: "email" },
+  cursos:      { tabela: "cursos",      id: "id", nome: "nome" },
+  disciplinas: { tabela: "disciplinas", id: "id", nome: "nome", curso: "curso_id" },
+  turmas:      { tabela: "turmas",      id: "id", disciplina: "disciplina_id" },
+  matriculas:  { tabela: "matriculas",  aluno: "aluno_id", turma: "turma_id" },
+  chamadas:    { tabela: "chamadas",    id: "id", turma: "turma_id", data: "data" },
+  // status: nome da coluna que diz se estava presente (ex.: "presente"). Use null se a tabela só guarda quem esteve presente.
+  presencas:   { tabela: "presencas",   chamada: "chamada_id", aluno: "aluno_id", status: null }
+};
 
-function renderizarTelaLogin(container) {
-  if (!container) return;
+// Tela do aluno: cursos, disciplinas, presenças e faltas
+(function () {
+  const FREQ_MINIMA = 75; // % mínimo de frequência
+  const CHAVE = "unichamada_aluno_atual"; // Chave unificada
+  let atual = null;
 
-  container.innerHTML = `
-    <div class="login-wrapper">
-      
-      <!-- LADO ESQUERDO: BANNER E MARCA -->
-      <div class="login-banner">
-        <div class="arco-decorativo arco-topo"></div>
-        <div class="login-brand">
-          <h1 class="logo-uni">UNI</h1>
-          <span class="logo-sub">CHAMADAS</span>
-        </div>
-        <div class="arco-decorativo arco-base"></div>
-      </div>
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");
+  const pct = (p, t) => (t ? Math.round((p / t) * 100) : null);
+  const fmtData = (d) => {
+    const dt = new Date(d);
+    return isNaN(dt) ? esc(d) : dt.toLocaleDateString("pt-BR", { timeZone: String(d).length === 10 ? "UTC" : undefined });
+  };
+  const raiz = () => {
+    let el = document.getElementById("tela-aluno");
+    if (!el) { el = document.createElement("section"); el.id = "tela-aluno"; el.className = "oculto"; document.body.appendChild(el); el.addEventListener("click", clique); }
+    else if (!el.dataset.ligado) { el.dataset.ligado = "1"; el.addEventListener("click", clique); }
+    return el;
+  };
 
-      <!-- LADO DIREITO: CARD DE LOGIN -->
-      <div class="carteirinha-login">
-        <div class="carteirinha-topo">
-          <span class="selo">Sistema Acadêmico</span>
-          <h1>Acesso do Aluno</h1>
-        </div>
-        <div class="carteirinha-corpo">
-          <p class="instrucao">Digite seu RA e e-mail cadastrados para acessar suas chamadas e frequências.</p>
-          
-          <!-- Formulário principal de autenticação do aluno -->
-          <form id="form-login" novalidate>
-            
-            <!-- Campo de RA com suporte a alternância de visibilidade -->
-            <div class="campo">
-              <label for="input-ra">RA</label>
-              <div style="position: relative; display: flex; align-items: center; width: 100%;">
-                <input 
-                  id="input-ra" 
-                  name="ra" 
-                  type="password" 
-                  placeholder="Digite seu RA" 
-                  data-mono="true" 
-                  autocomplete="off" 
-                  required 
-                  style="width: 100%; padding-right: 40px;"
-                />
-                <button type="button" id="btn-toggle-ra" aria-label="Mostrar/Esconder RA" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center;">
-                  <svg id="icone-olho-ra" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #666;">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            <!-- Campo de E-mail do aluno -->
-            <div class="campo">
-              <label for="input-email">E-mail</label>
-              <input 
-                id="input-email" 
-                name="email" 
-                type="email" 
-                placeholder="Digite seu e-mail" 
-                autocomplete="off" 
-                required 
-              />
-            </div>
-            
-            <!-- Botão de submissão -->
-            <button type="submit" id="btn-entrar" class="btn-primario">Entrar</button>
-          </form>
-
-          <!-- Link de acesso rápido para colaboradores (TI) -->
-          <div style="text-align: center; margin-top: 20px;">
-            <a href="https://adangomes.github.io/UNICHAMADA/ti/" style="color: #0284c7; font-size: 14px; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-              Acesso UNICHAMADAS Colaboradores
-            </a>
-          </div>
-
-          <!-- Elemento de aviso/feedback de erro -->
-          <p id="aviso-login" class="aviso-login oculto"></p>
-        </div>
-      </div>
-
-    </div>
-  `;
-
-  // Seleciona os elementos do DOM
-  const inputRa = container.querySelector('#input-ra');
-  const inputEmail = container.querySelector('#input-email');
-  const btnToggleRa = container.querySelector('#btn-toggle-ra');
-  const formLogin = container.querySelector('#form-login');
-  const avisoLogin = container.querySelector('#aviso-login');
-  const btnEntrar = container.querySelector('#btn-entrar');
-
-  // Alternar visibilidade do RA (olho mágico)
-  if (btnToggleRa && inputRa) {
-    btnToggleRa.addEventListener('click', (e) => {
-      e.preventDefault(); 
-      const tipoAtual = inputRa.getAttribute('type');
-      inputRa.setAttribute('type', tipoAtual === 'password' ? 'text' : 'password');
-    });
+  function disciplina(d) {
+    const f = pct(d.presencas, d.total);
+    const estado = f === null ? "vazio" : f >= FREQ_MINIMA ? "ok" : "risco";
+    const aulas = d.aulas.length
+      ? d.aulas.map((a) => `<li><span>${fmtData(a.data)}</span><b class="al-tag ${a.presente ? "p" : "f"}">${a.presente ? "Presente" : "Falta"}</b></li>`).join("")
+      : `<li class="al-vazio">Nenhuma chamada registrada ainda.</li>`;
+    return `<details class="al-disc ${estado}"><summary>
+      <div class="al-linha"><span class="al-nome">${esc(d.nome)}</span><span class="al-freq">${f === null ? "—" : f + "%"}</span></div>
+      <div class="al-barra"><i style="width:${f ?? 0}%"></i></div>
+      <div class="al-meta">${d.presencas} presenças · ${d.faltas} faltas${estado === "risco" ? ` · abaixo de ${FREQ_MINIMA}%` : ""}</div>
+    </summary><ul class="al-aulas">${aulas}</ul></details>`;
   }
 
-  // Lógica de submissão do formulário consultando a tabela de alunos
-  if (formLogin) {
-    formLogin.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      avisoLogin.classList.add('oculto');
-
-      const raVal = inputRa.value.trim();
-      const emailVal = inputEmail.value.trim();
-
-      if (!raVal || !emailVal) {
-        exibirAvisoLogin(avisoLogin, 'Por favor, informe seu RA e e-mail.');
-        return;
-      }
-
-      btnEntrar.disabled = true;
-      btnEntrar.textContent = 'Validando...';
-
-      try {
-        // Valida se o módulo PainelAluno carregou corretamente
-        if (!window.PainelAluno || typeof window.PainelAluno.entrar !== 'function') {
-          throw new Error('Módulo do painel do aluno não carregado.');
-        }
-
-        // Chama a função entrar() oficial do painel.js que valida, salva na sessão correta e abre a tela
-        const sucesso = await window.PainelAluno.entrar(raVal, emailVal);
-
-        if (!sucesso) {
-          exibirAvisoLogin(avisoLogin, 'Aluno não encontrado. Verifique o RA e o e-mail informados.');
-        }
-
-      } catch (err) {
-        console.error('Erro na autenticação do aluno:', err);
-        exibirAvisoLogin(avisoLogin, 'Erro ao conectar com o banco de dados. Tente novamente.');
-      } finally {
-        btnEntrar.disabled = false;
-        btnEntrar.textContent = 'Entrar';
-      }
-    });
+  function desenhar(d) {
+    const { aluno, totais, grupos } = d, A = window.MAPA_BANCO.alunos;
+    const f = pct(totais.presencas, totais.total);
+    const corpo = grupos.length
+      ? grupos.map((g) => `<section class="al-curso"><h2>${esc(g.curso)}</h2>${g.disciplinas.map(disciplina).join("")}`).join("")
+      : `<p class="al-estado">Você ainda não está matriculado em nenhuma disciplina.</p>`;
+    
+    raiz().innerHTML = `
+      <header class="al-topo">
+        <div class="al-identidade-marca">
+          <strong>UniChamada</strong>
+          <span>Área do aluno</span>
+        </div>
+        <div class="al-acoes">
+          <button class="al-btn sec" data-acao="atualizar">Atualizar</button>
+          <button class="al-btn sec" data-acao="sair">Sair</button>
+        </div>
+      </header>
+      <main class="al-main">
+        <section class="al-ola">
+          <h1>Olá, ${esc(aluno[A.nome])}</h1>
+        </section>
+        <section class="al-resumo">
+          <div><b>${totais.presencas}</b><span>Presenças</span></div>
+          <div><b>${totais.faltas}</b><span>Faltas</span></div>
+          <div><b>${f === null ? "—" : f + "%"}</b><span>Frequência</span></div>
+        </section>${corpo}
+      </main>`;
   }
-}
 
-function exibirAvisoLogin(aviso, mensagem) {
-  if (!aviso) return;
-  aviso.textContent = mensagem;
-  aviso.classList.remove('oculto');
-}
+  async function abrir(aluno) {
+    atual = aluno;
+    const el = raiz();
+    const login = document.getElementById("tela-login");
+    if (login) login.classList.add("oculto");
+    el.classList.remove("oculto");
+    el.innerHTML = `<header class="al-topo"><div class="al-identidade-marca"><strong>UniChamada</strong><span>Área do aluno</span></div></header><p class="al-estado">Carregando dados acadêmicos...</p>`;
+    try { desenhar(await window.DadosAluno.carregar(aluno)); }
+    catch (e) {
+      console.error(e);
+      el.innerHTML = `<div class="al-estado"><p>Não foi possível carregar seus dados.</p><button class="al-btn" data-acao="atualizar">Tentar de novo</button> <button class="al-btn sec" data-acao="sair">Sair</button></div>`;
+    }
+  }
+
+  function clique(e) {
+    const acao = e.target.closest("[data-acao]")?.dataset.acao;
+    if (acao === "sair") { sessionStorage.clear(); location.reload(); }
+    if (acao === "atualizar" && atual) abrir(atual);
+  }
+
+  async function entrar(ra, email) {
+    const aluno = await window.DadosAluno.autenticar(ra, email);
+    if (!aluno) return false;
+    sessionStorage.setItem(CHAVE, JSON.stringify(aluno));
+    abrir(aluno);
+    return true;
+  }
+
+  function restaurar() {
+    try { 
+      const s = sessionStorage.getItem(CHAVE); 
+      if (!s) return false; 
+      abrir(JSON.parse(s)); 
+      return true; 
+    }
+    catch { return false; }
+  }
+
+  window.PainelAluno = { entrar, restaurar, abrir };
+
+  window.addEventListener('DOMContentLoaded', () => {
+    restaurar();
+  });
+})();

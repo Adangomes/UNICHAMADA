@@ -2,9 +2,8 @@
 .DS_Store
 Thumbs.db
 
-# Pastas de compilação/instaladores (NÃO sobem para o GitHub)
+# Saída dos instaladores (gerada automaticamente, NÃO sobe para o GitHub)
 /dist
-/build
 /out
 
 # Dependências

@@ -7,9 +7,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
+    "start:ti": "electron . --ti",
     "build": "electron-builder",
-    "build:mac": "electron-builder --mac",
-    "build:win": "electron-builder --win --x64"
+    "build:mac": "electron-builder --mac --universal --publish never",
+    "build:win": "electron-builder --win --x64 --publish never"
   },
   "dependencies": {
     "node-machine-id": "^1.1.12"
@@ -22,16 +23,40 @@
     "appId": "com.unichamada.desktop",
     "productName": "UniChamada",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!build/**",
+      "!.github/**",
+      "!*.sql"
+    ],
     "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ]
+      "target": ["dmg"],
+      "category": "public.app-category.education",
+      "identity": null,
+      "artifactName": "UniChamada-${version}-mac.${ext}"
+    },
+    "dmg": {
+      "title": "Instalar UniChamada"
     },
     "win": {
-      "target": "zip"
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "UniChamada",
+      "language": "1046",
+      "include": "build/installer.nsh",
+      "artifactName": "UniChamada-Setup-${version}.exe"
     }
   }
 }

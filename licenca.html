@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title>Ativação — UniChamada</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: "Segoe UI", system-ui, sans-serif; background: #1e2a4f; color: #fff;
+    }
+    main { width: 100%; padding: 32px; }
+    h1 { margin: 0 0 4px; font-size: 24px; }
+    p { margin: 0 0 20px; color: #b9c2e0; font-size: 14px; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; color: #b9c2e0; }
+    input {
+      width: 100%; padding: 12px; font-size: 18px; letter-spacing: 2px; text-align: center;
+      border: 1px solid #44527f; border-radius: 8px; background: #141c38; color: #fff; text-transform: uppercase;
+    }
+    input:focus { outline: 2px solid #5b7cff; border-color: transparent; }
+    button {
+      width: 100%; margin-top: 16px; padding: 12px; font-size: 15px; font-weight: 600;
+      border: 0; border-radius: 8px; background: #5b7cff; color: #fff; cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    #msg { min-height: 20px; margin-top: 14px; font-size: 13px; color: #ffb4a8; text-align: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Ativar o UniChamada</h1>
+    <p>Digite a chave serial fornecida pela TI para liberar este computador.</p>
+    <label for="serial">Chave serial</label>
+    <input id="serial" type="text" placeholder="UNI-XXXX-XXXX-XXXX" maxlength="19" autofocus>
+    <button id="ativar" type="button">Ativar</button>
+    <div id="msg" role="alert"></div>
+  </main>
+
+  <script>
+    const campo = document.getElementById('serial');
+    const botao = document.getElementById('ativar');
+    const msg = document.getElementById('msg');
+
+    // Mensagem vinda do app (ex.: licença bloqueada ou expirada)
+    msg.textContent = new URLSearchParams(location.search).get('msg') || '';
+
+    async function ativar() {
+      msg.textContent = '';
+      botao.disabled = true;
+      botao.textContent = 'Validando...';
+      try {
+        const r = await window.unichamada.ativarLicenca(campo.value);
+        if (!r.ok) msg.textContent = r.motivo || 'Não foi possível ativar.';
+      } catch (e) {
+        msg.textContent = 'Erro ao ativar. Tente novamente.';
+      } finally {
+        botao.disabled = false;
+        botao.textContent = 'Ativar';
+      }
+    }
+
+    botao.addEventListener('click', ativar);
+    campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') ativar(); });
+  </script>
+</body>
+</html>

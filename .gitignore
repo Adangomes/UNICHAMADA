@@ -1,3 +1,15 @@
 # Sistema Operacional
 .DS_Store
 Thumbs.db
+
+# Pastas de compilação/instaladores (NÃO sobem para o GitHub)
+/dist
+/build
+/out
+
+# Dependências
+/node_modules
+
+# Logs e arquivos de ambiente
+*.log
+.env

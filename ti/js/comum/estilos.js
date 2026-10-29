@@ -21,7 +21,8 @@ TI.estilos = {
       'comum/componentes/botoes_e_formularios.css',
       'comum/componentes/pilulas_barras_e_pares.css',
       'comum/componentes/estados_e_texto.css',
-      'comum/componentes/modal_e_aviso.css'
+      'comum/componentes/modal_e_aviso.css',
+      'licencas/licencas.css'
     ],
     layout: ['comum/layout/menu_lateral.css', 'comum/layout/conteudo.css', 'comum/layout/grades.css'],
     login: ['login/login.css']

@@ -10,10 +10,25 @@
   window.TI = window.TI || {};
   window.TI.telas = window.TI.telas || {};
 
+  // Helper de DOM que o resto do painel já usa (definido em dom.js)
+  const chamyEl = TI.dom.el;
+
   const estadoLicencas = {
     carregando: false,
     lista: []
   };
+
+  /** Cliente Supabase do painel (o mesmo usado em app.js: TI.db). */
+  function obterCliente() {
+    if (!TI.db) throw new Error('Conexão com o banco (TI.db) não está disponível.');
+    return TI.db;
+  }
+
+  /** Liga um evento ao elemento sem depender de como o TI.dom.el trata onClick/onSubmit. */
+  function ouvir(elemento, evento, funcao) {
+    elemento.addEventListener(evento, funcao);
+    return elemento;
+  }
 
   /**
    * Renderiza a tela principal de Licenças dentro do container do painel.
@@ -28,11 +43,11 @@
         chamyEl('h2', {}, ['Licenciamento de Software por Equipamento']),
         chamyEl('p', { class: 'subtitulo' }, ['Gerencie chaves seriais vinculadas ao patrimônio, valide máquinas e controle o acesso à rede.'])
       ]),
-      chamyEl('button', {
-        class: 'btn-primario',
-        type: 'button',
-        onClick: abrirModalNovaLicenca
-      }, ['+ Gerar Nova Licença'])
+      ouvir(
+        chamyEl('button', { class: 'btn-primario', type: 'button' }, ['+ Gerar Nova Licença']),
+        'click',
+        abrirModalNovaLicenca
+      )
     ]);
 
     // Cards de Métricas
@@ -58,7 +73,7 @@
         ]),
         chamyEl('tbody', { id: 'corpo-tabela-licencas' }, [
           chamyEl('tr', {}, [
-            chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 30px;' }, ['Carregando licenças do Supabase...'])
+            chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 30px;' }, ['Carregando licenças...'])
           ])
         ])
       ])
@@ -76,31 +91,32 @@
     ]);
   }
 
-  /** Busca as licenças cadastradas na tabela do Supabase com o join correto em ti_funcionarios */
+  /** Mostra uma mensagem simples dentro do corpo da tabela (erro, vazio etc.). */
+  function mostrarMensagemTabela(texto) {
+    const corpo = document.getElementById('corpo-tabela-licencas');
+    if (!corpo) return;
+    corpo.innerHTML = '';
+    const td = chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 20px;' }, [texto]);
+    corpo.append(chamyEl('tr', {}, [td]));
+  }
+
+  /** Busca as licenças cadastradas na tabela do Supabase com o join em ti_funcionarios */
   async function carregarDadosLicencas() {
     try {
-      // Se a variável global do cliente Supabase for supabase ou supabaseClient
-      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+      const client = obterCliente();
 
-      if (!client) {
-        console.warn('[Licenças] Cliente Supabase não encontrado. Usando dados de teste.');
-        estadoLicencas.lista = [
-          { id: '1', chave_serial: 'UNI-K9P2-4M8X-Q1W7', patrimonio: 'PC-LAB-01', setor_alocado: 'Laboratório 1', responsavel: { nome: 'Prof. Carlos Silva' }, status: 'ativa', data_expiracao: null },
-          { id: '2', chave_serial: 'UNI-A3B9-8L2Z-5H6J', patrimonio: 'NOTEBOOK-TI-02', setor_alocado: 'Coordenação TI', responsavel: { nome: 'Ana Coordenadora' }, status: 'ativa', data_expiracao: '2026-12-31T23:59:59.000Z' }
-        ];
-      } else {
-        // Chamada real ao Supabase fazendo o join com a tabela ti_funcionarios pelo responsavel_id
-        const { data, error } = await client
-          .from('licencas_software')
-          .select('*, responsavel:responsavel_id(nome, email)');
+      const { data, error } = await client
+        .from('licencas_software')
+        .select('*, responsavel:responsavel_id(nome, email)')
+        .order('criado_em', { ascending: false });
 
-        if (error) throw error;
-        estadoLicencas.lista = data || [];
-      }
+      if (error) throw error;
+      estadoLicencas.lista = data || [];
 
       atualizarInterfaceLicencas();
     } catch (erro) {
       console.error('[Licenças] Erro ao carregar do Supabase:', erro);
+      mostrarMensagemTabela('Não foi possível carregar as licenças: ' + (erro.message || erro));
     }
   }
 
@@ -123,7 +139,7 @@
     if (elBloqueadas) elBloqueadas.textContent = bloqueadas;
 
     if (total === 0) {
-      corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">Nenhuma licença gerada até o momento.</td></tr>`;
+      mostrarMensagemTabela('Nenhuma licença gerada até o momento.');
       return;
     }
 
@@ -132,6 +148,18 @@
       const setorTexto = lic.setor_alocado || 'Geral';
       const nomeResponsavel = lic.responsavel?.nome || 'Sem responsável fixo';
       const dataValidade = lic.data_expiracao ? new Date(lic.data_expiracao).toLocaleDateString('pt-BR') : 'Vitalícia';
+
+      const botaoAcao = lic.status === 'ativa'
+        ? ouvir(
+            chamyEl('button', { class: 'btn-secundario btn-acao-perigo', type: 'button' }, ['Bloquear']),
+            'click',
+            () => alterarStatus(lic.id, 'bloqueada')
+          )
+        : ouvir(
+            chamyEl('button', { class: 'btn-secundario btn-acao-sucesso', type: 'button' }, ['Ativar']),
+            'click',
+            () => alterarStatus(lic.id, 'ativa')
+          );
 
       const tr = chamyEl('tr', {}, [
         chamyEl('td', {}, [chamyEl('strong', {}, [lic.chave_serial])]),
@@ -142,11 +170,7 @@
         chamyEl('td', {}, [
           chamyEl('span', { class: `badge ${lic.status}` }, [lic.status])
         ]),
-        chamyEl('td', {}, [
-          lic.status === 'ativa'
-            ? chamyEl('button', { class: 'btn-secundario btn-acao-perigo', onClick: () => alterarStatus(lic.id, 'bloqueada') }, ['Bloquear'])
-            : chamyEl('button', { class: 'btn-secundario btn-acao-sucesso', onClick: () => alterarStatus(lic.id, 'ativa') }, ['Ativar'])
-        ])
+        chamyEl('td', {}, [botaoAcao])
       ]);
       corpo.append(tr);
     });
@@ -155,16 +179,14 @@
   /** Altera o status da licença no Supabase */
   async function alterarStatus(id, novoStatus) {
     try {
-      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+      const client = obterCliente();
 
-      if (client) {
-        const { error } = await client
-          .from('licencas_software')
-          .update({ status: novoStatus })
-          .eq('id', id);
+      const { error } = await client
+        .from('licencas_software')
+        .update({ status: novoStatus })
+        .eq('id', id);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       const licenca = estadoLicencas.lista.find(l => l.id === id);
       if (licenca) licenca.status = novoStatus;
@@ -180,41 +202,44 @@
     const modalExistente = document.getElementById('modal-gerar-licenca');
     if (modalExistente) modalExistente.remove();
 
+    const form = chamyEl('form', { id: 'form-gerar-serial' }, [
+      chamyEl('label', {}, ['Número do Patrimônio / Identificador da Máquina:']),
+      chamyEl('input', { type: 'text', id: 'input-patrimonio', placeholder: 'Ex: PC-LAB01-05', required: true }),
+
+      chamyEl('label', {}, ['Setor Alocado:']),
+      chamyEl('input', { type: 'text', id: 'input-setor', placeholder: 'Ex: Laboratório de Informática 2', required: true }),
+
+      chamyEl('label', {}, ['Funcionário Responsável (Opcional):']),
+      chamyEl('select', { id: 'select-resp-licenca' }, [
+        chamyEl('option', { value: '' }, ['Carregando funcionários...'])
+      ]),
+
+      chamyEl('label', {}, ['Validade da Licença:']),
+      chamyEl('select', { id: 'select-validade-licenca' }, [
+        chamyEl('option', { value: 'vitalicia' }, ['Vitalícia (Sem expiração)']),
+        chamyEl('option', { value: 'anual' }, ['Anual (1 Ano)']),
+        chamyEl('option', { value: 'semestral' }, ['Semestral (6 Meses)'])
+      ]),
+
+      chamyEl('div', { class: 'modal-buttons' }, [
+        chamyEl('button', { type: 'button', class: 'btn-secundario', id: 'btn-cancelar-licenca' }, ['Cancelar']),
+        chamyEl('button', { type: 'submit', class: 'btn-primario' }, ['Gerar e Salvar Serial'])
+      ])
+    ]);
+
     const modal = chamyEl('div', { id: 'modal-gerar-licenca', class: 'modal-overlay' }, [
       chamyEl('div', { class: 'modal-content' }, [
         chamyEl('h2', {}, ['Gerar Nova Licença de Software']),
-        chamyEl('form', {
-          id: 'form-gerar-serial',
-          onSubmit: async (e) => {
-            e.preventDefault();
-            await salvarNovaLicenca(modal);
-          }
-        }, [
-          chamyEl('label', {}, ['Número do Patrimônio / Identificador da Máquina:']),
-          chamyEl('input', { type: 'text', id: 'input-patrimonio', placeholder: 'Ex: PC-LAB01-05', required: true }),
-
-          chamyEl('label', {}, ['Setor Alocado:']),
-          chamyEl('input', { type: 'text', id: 'input-setor', placeholder: 'Ex: Laboratório de Informática 2', required: true }),
-
-          chamyEl('label', {}, ['Funcionário Responsável (Opcional):']),
-          chamyEl('select', { id: 'select-resp-licenca' }, [
-            chamyEl('option', { value: '' }, ['Carregando funcionários...'])
-          ]),
-
-          chamyEl('label', {}, ['Validade da Licença:']),
-          chamyEl('select', { id: 'select-validade-licenca' }, [
-            chamyEl('option', { value: 'vitalicia' }, ['Vitalícia (Sem expiração)']),
-            chamyEl('option', { value: 'anual' }, ['Anual (1 Ano)']),
-            chamyEl('option', { value: 'semestral' }, ['Semestral (6 Meses)'])
-          ]),
-
-          chamyEl('div', { class: 'modal-buttons' }, [
-            chamyEl('button', { type: 'button', class: 'btn-secundario', onClick: () => modal.remove() }, ['Cancelar']),
-            chamyEl('button', { type: 'submit', class: 'btn-primario' }, ['Gerar e Salvar Serial'])
-          ])
-        ])
+        form
       ])
     ]);
+
+    ouvir(form, 'submit', async (e) => {
+      e.preventDefault();
+      await salvarNovaLicenca(modal);
+    });
+
+    ouvir(form.querySelector('#btn-cancelar-licenca'), 'click', () => modal.remove());
 
     document.body.append(modal);
     await carregarOpcoesResponsaveisSelect();
@@ -225,22 +250,17 @@
     if (!select) return;
 
     try {
-      let funcionarios = [];
-      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+      const client = obterCliente();
 
-      if (client) {
-        // Busca da tabela correta do seu schema: ti_funcionarios
-        const { data } = await client.from('ti_funcionarios').select('id, nome, email');
-        funcionarios = data || [];
-      } else {
-        funcionarios = [
-          { id: 'uuid-1', nome: 'Adan Gomes (TI)' },
-          { id: 'uuid-2', nome: 'Coordenador TI' }
-        ];
-      }
+      const { data, error } = await client
+        .from('ti_funcionarios')
+        .select('id, nome, email')
+        .order('nome', { ascending: true });
+
+      if (error) throw error;
 
       select.innerHTML = '<option value="">Sem responsável direto</option>';
-      funcionarios.forEach(f => {
+      (data || []).forEach(f => {
         select.append(chamyEl('option', { value: f.id }, [f.nome]));
       });
     } catch (e) {
@@ -250,8 +270,8 @@
   }
 
   async function salvarNovaLicenca(modalEl) {
-    const patrimonio = document.getElementById('input-patrimonio').value;
-    const setor = document.getElementById('input-setor').value;
+    const patrimonio = document.getElementById('input-patrimonio').value.trim();
+    const setor = document.getElementById('input-setor').value.trim();
     const responsavelId = document.getElementById('select-resp-licenca').value || null;
     const tipoValidade = document.getElementById('select-validade-licenca').value;
 
@@ -259,39 +279,46 @@
     const expiracao = calcularDataExpiracao(tipoValidade);
 
     try {
-      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+      const client = obterCliente();
 
-      if (client) {
-        const { error } = await client.from('licencas_software').insert([{
-          chave_serial: novaChave,
-          patrimonio: patrimonio,
-          setor_alocado: setor,
-          responsavel_id: responsavelId,
-          status: 'ativa',
-          tipo_validade: tipoValidade,
-          data_expiracao: expiracao
-        }]);
+      const { error } = await client.from('licencas_software').insert([{
+        chave_serial: novaChave,
+        patrimonio: patrimonio,
+        setor_alocado: setor,
+        responsavel_id: responsavelId,
+        status: 'ativa',
+        tipo_validade: tipoValidade,
+        data_expiracao: expiracao
+      }]);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       modalEl.remove();
       await carregarDadosLicencas();
     } catch (err) {
       console.error('[Licenças] Erro ao salvar:', err);
-      alert('Erro ao gerar a chave serial no banco de dados.');
+      alert('Erro ao gerar a chave serial no banco de dados: ' + (err.message || err));
     }
   }
 
-  // Funções utilitárias auxiliares de suporte
+  // Funções de segurança: usa o seguranca.js (crypto.getRandomValues) quando estiver carregado.
+  // Se o seguranca.js não tiver sido carregado antes, cai numa versão local equivalente.
   function gerarChaveSerial() {
+    if (window.LicencasSeguranca) return window.LicencasSeguranca.gerarChaveSerial();
+
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const bloco = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    const bloco = () => {
+      const valores = new Uint32Array(4);
+      window.crypto.getRandomValues(valores);
+      return Array.from(valores, v => chars[v % chars.length]).join('');
+    };
     return `UNI-${bloco()}-${bloco()}-${bloco()}`;
   }
 
   function calcularDataExpiracao(tipo) {
-    if (tipo === 'vitalicia') return null;
+    if (window.LicencasSeguranca) return window.LicencasSeguranca.calcularDataExpiracao(tipo);
+
+    if (!tipo || tipo === 'vitalicia') return null;
     const data = new Date();
     if (tipo === 'anual') data.setFullYear(data.getFullYear() + 1);
     if (tipo === 'semestral') data.setMonth(data.getMonth() + 6);

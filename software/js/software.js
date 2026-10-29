@@ -1,11 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const btnDownload = document.getElementById("btn-download");
   const osBadge = document.getElementById("os-badge");
-  const osIcon = document.getElementById("os-icon");
+  const btnMainText = document.getElementById("btn-main-text");
+  const btnSubText = document.getElementById("btn-sub-text");
   const osSize = document.getElementById("os-size");
   const osReq = document.getElementById("os-req");
 
-  // Links diretos para os arquivos que você vai colocar no GitHub Releases
+  // Links diretos para os arquivos no GitHub Releases
   const macLink = "https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg";
   const winLink = "https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip";
 
@@ -15,18 +16,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (/Mac|iPod|iPhone|iPad/.test(userAgent)) {
     // É usuário de Mac
     btnDownload.href = macLink;
-    btnDownload.textContent = "Baixar UniChamada para macOS (.dmg)";
+    btnMainText.textContent = "Baixar para macOS";
+    btnSubText.textContent = "UniChamada-1.0.0-arm64.dmg";
     osBadge.textContent = "Versão 1.0.0 • macOS (Apple Silicon)";
-    osIcon.textContent = "🍏";
-    osSize.textContent = "Tamanho: ~110 MB";
-    osReq.textContent = "Requer macOS 10.12 ou superior";
+    osSize.textContent = "~110 MB";
+    osReq.textContent = "Requer macOS 10.12+";
   } else {
     // Padrão para Windows
     btnDownload.href = winLink;
-    btnDownload.textContent = "Baixar UniChamada para Windows (.zip)";
+    btnMainText.textContent = "Baixar para Windows";
+    btnSubText.textContent = "UniChamada-1.0.0-win.zip";
     osBadge.textContent = "Versão 1.0.0 • Windows (x64)";
-    osIcon.textContent = "💻";
-    osSize.textContent = "Tamanho: ~111 MB";
+    osSize.textContent = "~111 MB";
     osReq.textContent = "Requer Windows 10/11";
   }
 

@@ -13,31 +13,36 @@
 
   <!-- ================= SEÇÃO DE DOWNLOAD (SPA) ================= -->
   <section id="tela-software">
-    <div class="card">
+    <div class="card-download">
       <div class="icon-wrapper">
         <span id="os-icon" class="icon">💻</span>
       </div>
-      <span id="os-badge" class="badge">Versão 1.0.0 • Detecção Automática</span>
+      <span id="os-badge" class="badge-versao">Versão 1.0.0 • Detecção Automática</span>
       
-      <h1>UniChamada Desktop</h1>
-      <p>Aplicativo oficial para gerenciamento de chamadas e painel administrativo de TI em ambiente acadêmico.</p>
+      <h1 class="card-title">UniChamada Desktop</h1>
+      <p class="card-descricao">Aplicativo oficial para gerenciamento de chamadas e painel administrativo de TI em ambiente acadêmico.</p>
 
       <!-- Botão Dinâmico -->
-      <a id="btn-download" href="#" class="btn-download">
-         Carregando link de download...
-      </a>
+      <div class="download-options">
+        <a id="btn-download" href="#" class="btn-download primario">
+          <div class="btn-info">
+            <span id="btn-main-text" class="btn-titulo">Carregando link de download...</span>
+            <span id="btn-sub-text" class="btn-subtitulo">A detectar o seu sistema...</span>
+          </div>
+          <span class="btn-icone-arrow">↓</span>
+        </a>
+      </div>
 
-      <div class="info">
+      <div class="card-footer">
+        <span id="os-req" class="requisitos">Requisitos: --</span>
         <span id="os-size">Tamanho: --</span>
-        <span>•</span>
-        <span id="os-req">Requisitos: --</span>
       </div>
 
       <!-- Link alternativo para mudar manualmente se o user quiser -->
-      <div style="margin-top: 20px; font-size: 0.9rem;">
-        <p style="color: #666; margin-bottom: 5px;">Procurando outra plataforma?</p>
-        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg" style="color: #0066cc; text-decoration: none; margin-right: 15px;">Baixar para Mac (.dmg)</a>
-        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip" style="color: #0066cc; text-decoration: none;">Baixar para Windows (.zip)</a>
+      <div style="margin-top: 20px; font-size: 0.9rem; text-align: center;">
+        <p style="color: #666; margin-bottom: 8px;">Procurando outra plataforma?</p>
+        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg" style="color: var(--tinta); text-decoration: none; margin-right: 15px; font-weight: 500;">Baixar para Mac (.dmg)</a>
+        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip" style="color: var(--tinta); text-decoration: none; font-weight: 500;">Baixar para Windows (.zip)</a>
       </div>
     </div>
   </section>

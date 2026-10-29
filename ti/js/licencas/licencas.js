@@ -6,6 +6,10 @@
 (function () {
   'use strict';
 
+  // Garante o namespace global do TI e de telas
+  window.TI = window.TI || {};
+  window.TI.telas = window.TI.telas || {};
+
   const estadoLicencas = {
     carregando: false,
     lista: []
@@ -72,18 +76,21 @@
     ]);
   }
 
-  /** Busca as licenças cadastradas na tabela do Supabase com o join correto */
+  /** Busca as licenças cadastradas na tabela do Supabase com o join correto em ti_funcionarios */
   async function carregarDadosLicencas() {
     try {
-      if (typeof supabaseClient === 'undefined') {
+      // Se a variável global do cliente Supabase for supabase ou supabaseClient
+      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+
+      if (!client) {
         console.warn('[Licenças] Cliente Supabase não encontrado. Usando dados de teste.');
         estadoLicencas.lista = [
           { id: '1', chave_serial: 'UNI-K9P2-4M8X-Q1W7', patrimonio: 'PC-LAB-01', setor_alocado: 'Laboratório 1', responsavel: { nome: 'Prof. Carlos Silva' }, status: 'ativa', data_expiracao: null },
           { id: '2', chave_serial: 'UNI-A3B9-8L2Z-5H6J', patrimonio: 'NOTEBOOK-TI-02', setor_alocado: 'Coordenação TI', responsavel: { nome: 'Ana Coordenadora' }, status: 'ativa', data_expiracao: '2026-12-31T23:59:59.000Z' }
         ];
       } else {
-        // Chamada real ao Supabase fazendo o join com a tabela profiles pelo responsavel_id
-        const { data, error } = await supabaseClient
+        // Chamada real ao Supabase fazendo o join com a tabela ti_funcionarios pelo responsavel_id
+        const { data, error } = await client
           .from('licencas_software')
           .select('*, responsavel:responsavel_id(nome, email)');
 
@@ -107,9 +114,13 @@
     const ativas = estadoLicencas.lista.filter(l => l.status === 'ativa').length;
     const bloqueadas = total - ativas;
 
-    document.getElementById('stat-total').textContent = total;
-    document.getElementById('stat-ativas').textContent = ativas;
-    document.getElementById('stat-bloqueadas').textContent = bloqueadas;
+    const elTotal = document.getElementById('stat-total');
+    const elAtivas = document.getElementById('stat-ativas');
+    const elBloqueadas = document.getElementById('stat-bloqueadas');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elAtivas) elAtivas.textContent = ativas;
+    if (elBloqueadas) elBloqueadas.textContent = bloqueadas;
 
     if (total === 0) {
       corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">Nenhuma licença gerada até o momento.</td></tr>`;
@@ -144,8 +155,10 @@
   /** Altera o status da licença no Supabase */
   async function alterarStatus(id, novoStatus) {
     try {
-      if (typeof supabaseClient !== 'undefined') {
-        const { error } = await supabaseClient
+      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+
+      if (client) {
+        const { error } = await client
           .from('licencas_software')
           .update({ status: novoStatus })
           .eq('id', id);
@@ -213,13 +226,16 @@
 
     try {
       let funcionarios = [];
-      if (typeof supabaseClient !== 'undefined') {
-        const { data } = await supabaseClient.from('profiles').select('id, nome, email');
+      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+
+      if (client) {
+        // Busca da tabela correta do seu schema: ti_funcionarios
+        const { data } = await client.from('ti_funcionarios').select('id, nome, email');
         funcionarios = data || [];
       } else {
         funcionarios = [
-          { id: 'uuid-1', nome: 'Prof. Roberto Santos' },
-          { id: 'uuid-2', nome: 'Ana Coordenadora' }
+          { id: 'uuid-1', nome: 'Adan Gomes (TI)' },
+          { id: 'uuid-2', nome: 'Coordenador TI' }
         ];
       }
 
@@ -228,6 +244,7 @@
         select.append(chamyEl('option', { value: f.id }, [f.nome]));
       });
     } catch (e) {
+      console.error('[Licenças] Erro ao carregar responsáveis:', e);
       select.innerHTML = '<option value="">Erro ao carregar responsáveis</option>';
     }
   }
@@ -238,13 +255,14 @@
     const responsavelId = document.getElementById('select-resp-licenca').value || null;
     const tipoValidade = document.getElementById('select-validade-licenca').value;
 
-    // Função auxiliar para gerar o serial no padrão UNI-XXXX-XXXX-XXXX
     const novaChave = gerarChaveSerial();
     const expiracao = calcularDataExpiracao(tipoValidade);
 
     try {
-      if (typeof supabaseClient !== 'undefined') {
-        const { error } = await supabaseClient.from('licencas_software').insert([{
+      const client = typeof supabaseClient !== 'undefined' ? supabaseClient : (typeof supabase !== 'undefined' ? supabase : null);
+
+      if (client) {
+        const { error } = await client.from('licencas_software').insert([{
           chave_serial: novaChave,
           patrimonio: patrimonio,
           setor_alocado: setor,
@@ -280,10 +298,10 @@
     return data.toISOString();
   }
 
-  // Registra a rota/aba no sistema de navegação global do TI se existir
-  if (typeof window.registrarRotaTI !== 'undefined') {
-    window.registrarRotaTI('licencas', renderizarTelaLicencas);
-  }
+  // Registro obrigatório para o app.js encontrar a tela sem erros
+  window.TI.telas.licencasTI = {
+    render: renderizarTelaLicencas
+  };
 
   window.LicencasTI = {
     renderizar: renderizarTelaLicencas,

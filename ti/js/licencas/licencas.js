@@ -13,6 +13,8 @@
   // Helper de DOM que o resto do painel já usa (definido em dom.js)
   const chamyEl = TI.dom.el;
 
+  const COLUNAS = 8;
+
   const estadoLicencas = {
     carregando: false,
     lista: []
@@ -28,6 +30,17 @@
   function ouvir(elemento, evento, funcao) {
     elemento.addEventListener(evento, funcao);
     return elemento;
+  }
+
+  /**
+   * Status que a tela mostra. Se a licença está "ativa" mas a data de validade já passou,
+   * mostra "expirada" (só na tela; o banco é atualizado quando o app tenta validar).
+   */
+  function statusEfetivo(lic) {
+    if (lic.status === 'ativa' && lic.data_expiracao && new Date(lic.data_expiracao) < new Date()) {
+      return 'expirada';
+    }
+    return lic.status;
   }
 
   /**
@@ -67,13 +80,14 @@
             chamyEl('th', {}, ['Setor Alocado']),
             chamyEl('th', {}, ['Responsável']),
             chamyEl('th', {}, ['Validade']),
+            chamyEl('th', {}, ['Computador']),
             chamyEl('th', {}, ['Status']),
             chamyEl('th', {}, ['Ações'])
           ])
         ]),
         chamyEl('tbody', { id: 'corpo-tabela-licencas' }, [
           chamyEl('tr', {}, [
-            chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 30px;' }, ['Carregando licenças...'])
+            chamyEl('td', { colspan: String(COLUNAS), style: 'text-align: center; padding: 30px;' }, ['Carregando licenças...'])
           ])
         ])
       ])
@@ -96,7 +110,7 @@
     const corpo = document.getElementById('corpo-tabela-licencas');
     if (!corpo) return;
     corpo.innerHTML = '';
-    const td = chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 20px;' }, [texto]);
+    const td = chamyEl('td', { colspan: String(COLUNAS), style: 'text-align: center; padding: 20px;' }, [texto]);
     corpo.append(chamyEl('tr', {}, [td]));
   }
 
@@ -126,9 +140,11 @@
 
     corpo.innerHTML = '';
 
-    const total = estadoLicencas.lista.length;
-    const ativas = estadoLicencas.lista.filter(l => l.status === 'ativa').length;
-    const bloqueadas = total - ativas;
+    const lista = estadoLicencas.lista;
+    const total = lista.length;
+    // "Máquinas ativas" = licenças válidas que já foram ativadas em um computador
+    const ativas = lista.filter(l => statusEfetivo(l) === 'ativa' && l.machine_id).length;
+    const bloqueadas = lista.filter(l => statusEfetivo(l) !== 'ativa').length;
 
     const elTotal = document.getElementById('stat-total');
     const elAtivas = document.getElementById('stat-ativas');
@@ -143,23 +159,40 @@
       return;
     }
 
-    estadoLicencas.lista.forEach(lic => {
+    lista.forEach(lic => {
+      const status = statusEfetivo(lic);
       const patrimonioTexto = lic.patrimonio || 'Não informado';
       const setorTexto = lic.setor_alocado || 'Geral';
       const nomeResponsavel = lic.responsavel?.nome || 'Sem responsável fixo';
       const dataValidade = lic.data_expiracao ? new Date(lic.data_expiracao).toLocaleDateString('pt-BR') : 'Vitalícia';
+      const textoComputador = lic.machine_id
+        ? `Vinculado (${String(lic.machine_id).slice(0, 8)})`
+        : 'Aguardando ativação';
 
-      const botaoAcao = lic.status === 'ativa'
-        ? ouvir(
-            chamyEl('button', { class: 'btn-secundario btn-acao-perigo', type: 'button' }, ['Bloquear']),
-            'click',
-            () => alterarStatus(lic.id, 'bloqueada')
-          )
-        : ouvir(
-            chamyEl('button', { class: 'btn-secundario btn-acao-sucesso', type: 'button' }, ['Ativar']),
-            'click',
-            () => alterarStatus(lic.id, 'ativa')
-          );
+      // Ações: Bloquear/Ativar (quando faz sentido) e Desvincular (quando há computador vinculado)
+      const acoes = [];
+
+      if (status === 'ativa') {
+        acoes.push(ouvir(
+          chamyEl('button', { class: 'btn-secundario btn-acao-perigo', type: 'button', style: 'margin-right: 6px;' }, ['Bloquear']),
+          'click',
+          () => alterarStatus(lic.id, 'bloqueada')
+        ));
+      } else if (status === 'bloqueada') {
+        acoes.push(ouvir(
+          chamyEl('button', { class: 'btn-secundario btn-acao-sucesso', type: 'button', style: 'margin-right: 6px;' }, ['Ativar']),
+          'click',
+          () => alterarStatus(lic.id, 'ativa')
+        ));
+      }
+
+      if (lic.machine_id) {
+        acoes.push(ouvir(
+          chamyEl('button', { class: 'btn-secundario', type: 'button' }, ['Desvincular']),
+          'click',
+          () => desvincularMaquina(lic)
+        ));
+      }
 
       const tr = chamyEl('tr', {}, [
         chamyEl('td', {}, [chamyEl('strong', {}, [lic.chave_serial])]),
@@ -167,10 +200,11 @@
         chamyEl('td', {}, [setorTexto]),
         chamyEl('td', {}, [nomeResponsavel]),
         chamyEl('td', {}, [dataValidade]),
+        chamyEl('td', {}, [textoComputador]),
         chamyEl('td', {}, [
-          chamyEl('span', { class: `badge ${lic.status}` }, [lic.status])
+          chamyEl('span', { class: `badge ${status}` }, [status])
         ]),
-        chamyEl('td', {}, [botaoAcao])
+        chamyEl('td', {}, acoes)
       ]);
       corpo.append(tr);
     });
@@ -194,6 +228,35 @@
     } catch (erro) {
       console.error('[Licenças] Erro ao alterar status:', erro);
       alert('Não foi possível alterar o status da licença.');
+    }
+  }
+
+  /**
+   * Solta a licença do computador atual (limpa o machine_id).
+   * Use quando o computador foi formatado/trocado: a mesma chave poderá ser ativada em outra máquina.
+   */
+  async function desvincularMaquina(lic) {
+    const confirmou = confirm(
+      'Desvincular a licença ' + lic.chave_serial + ' do computador atual?\n\n' +
+      'O app deixará de funcionar nesse computador e a chave poderá ser ativada em outra máquina.'
+    );
+    if (!confirmou) return;
+
+    try {
+      const client = obterCliente();
+
+      const { error } = await client
+        .from('licencas_software')
+        .update({ machine_id: null })
+        .eq('id', lic.id);
+
+      if (error) throw error;
+
+      lic.machine_id = null;
+      atualizarInterfaceLicencas();
+    } catch (erro) {
+      console.error('[Licenças] Erro ao desvincular máquina:', erro);
+      alert('Não foi possível desvincular o computador: ' + (erro.message || erro));
     }
   }
 

@@ -40,8 +40,8 @@
     // Cabeçalho da Seção
     const header = chamyEl('div', { class: 'ti-secao-header' }, [
       chamyEl('div', {}, [
-        chamyEl('h2', {}, ['Licenciamento de Software por Equipamento']),
-        chamyEl('p', { class: 'subtitulo' }, ['Gerencie chaves seriais vinculadas ao patrimônio, valide máquinas e controle o acesso à rede.'])
+        chamyEl('h2', {}, ['Licenciamento de Software']),
+        chamyEl('p', { class: 'subtitulo' }, [''])
       ]),
       ouvir(
         chamyEl('button', { class: 'btn-primario', type: 'button' }, ['+ Gerar Nova Licença']),

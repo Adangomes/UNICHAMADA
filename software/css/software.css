@@ -7,15 +7,15 @@
 
 :root {
   /* Paleta Identidade Carteirinha */
-  --tinta: #1F2D50;          /* azul-tinta profundo — cor primária */
+  --tinta: #1F2D50;           /* azul-tinta profundo — cor primária */
   --tinta-clara: #34467A;
-  --papel: #F6F4EE;          /* branco-papel, levemente amarelado */
+  --papel: #F6F4EE;           /* branco-papel, levemente amarelado */
   --papel-cartao: #FFFFFF;
-  --grafite: #2B2B27;        /* texto principal */
-  --grafite-suave: #6B6B63;  /* texto secundário */
-  --coral: #D65B4A;          /* caneta de correção — accent, uso pontual */
+  --grafite: #2B2B27;         /* texto principal */
+  --grafite-suave: #6B6B63;   /* texto secundário */
+  --coral: #D65B4A;           /* caneta de correção — accent */
   --verde-aprovado: #3E7C5A;
-  --linha: #DAD5C6;          /* linhas/bordas estilo caderno */
+  --linha: #DAD5C6;           /* linhas/bordas estilo caderno */
   --amarelo-alerta: #C98A1E;
 
   /* Tipografia */
@@ -24,14 +24,14 @@
   --fonte-mono: 'IBM Plex Mono', monospace;
 
   /* Espaçamento e Borda */
-  --raio: 10px;
-  --raio-pequeno: 6px;
-  --sombra: 0 2px 10px rgba(31, 45, 80, 0.08);
-  --sombra-forte: 0 8px 28px rgba(31, 45, 80, 0.16);
+  --raio: 16px;
+  --raio-pequeno: 8px;
+  --sombra: 0 4px 20px rgba(31, 45, 80, 0.06);
+  --sombra-forte: 0 12px 36px rgba(31, 45, 80, 0.12);
 }
 
-/* Reset básico */
-* { 
+/* Reset básico corrigido */
+*, *::before, *::after { 
   box-sizing: border-box; 
 }
 
@@ -44,11 +44,10 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Fundo limpo, com leve profundidade */
 body {
   background-image:
-    radial-gradient(circle at 12% -10%, rgba(31, 45, 80, 0.06), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(214, 91, 74, 0.05), transparent 35%);
+    radial-gradient(circle at 12% -10%, rgba(31, 45, 80, 0.08), transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(214, 91, 74, 0.06), transparent 35%);
   background-attachment: fixed;
   min-height: 100vh;
 }
@@ -58,7 +57,7 @@ h1, h2, h3, h4 {
   font-family: var(--fonte-display);
   color: var(--tinta);
   margin: 0 0 .4em 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 p { 
@@ -66,164 +65,12 @@ p {
   color: var(--grafite-suave);
 }
 
-a { 
-  color: inherit; 
-  text-decoration: none;
-}
-
-code, .mono, .ra-tag, input[data-mono="true"] {
+code, .mono, .ra-tag {
   font-family: var(--fonte-mono);
-}
-
-/* Formulários e Interações */
-button {
-  font-family: var(--fonte-corpo);
-  cursor: pointer;
-  border: none;
-  border-radius: var(--raio-pequeno);
-  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease;
-}
-button:active { 
-  transform: translateY(1px); 
-}
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-a:focus-visible {
-  outline: 3px solid var(--amarelo-alerta);
-  outline-offset: 2px;
-}
-
-/* Botões do Sistema */
-.btn-primario {
-  background: var(--tinta);
-  color: #fff;
-  padding: .7em 1.3em;
-  font-weight: 600;
-  font-size: .95rem;
-  box-shadow: var(--sombra);
-}
-.btn-primario:hover { 
-  background: var(--tinta-clara); 
-}
-
-.btn-secundario {
-  background: transparent;
-  color: var(--tinta);
-  border: 1.5px solid var(--linha);
-  padding: .6em 1.1em;
-  font-weight: 500;
-}
-.btn-secundario:hover { 
-  border-color: var(--tinta); 
-}
-
-.btn-perigo {
-  background: transparent;
-  color: var(--coral);
-  border: 1.5px solid var(--coral);
-  padding: .45em .8em;
-  font-size: .82rem;
-  font-weight: 600;
-}
-.btn-perigo:hover { 
-  background: var(--coral); 
-  color: #fff; 
-}
-
-.btn-icone {
-  background: transparent;
-  color: var(--grafite-suave);
-  padding: .4em .6em;
-  font-size: .9rem;
-}
-.btn-icone:hover { 
-  color: var(--tinta); 
-}
-
-/* Campos de entrada */
-input, select, textarea {
-  font-family: var(--fonte-corpo);
-  font-size: .95rem;
-  padding: .65em .8em;
-  border: 1.5px solid var(--linha);
-  border-radius: var(--raio-pequeno);
-  background: var(--papel-cartao);
-  color: var(--grafite);
-  width: 100%;
-}
-input:focus, select:focus, textarea:focus {
-  border-color: var(--tinta);
-}
-
-label {
-  font-size: .78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: var(--grafite-suave);
-  display: block;
-  margin-bottom: .35em;
-}
-
-.campo { 
-  margin-bottom: 1.1em; 
-}
-
-/* Cartão padrão */
-.cartao {
-  background: var(--papel-cartao);
-  border: 1px solid var(--linha);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra);
-  padding: 1.4em;
-}
-
-.oculto { 
-  display: none !important; 
-}
-
-.tag {
-  display: inline-block;
-  font-family: var(--fonte-mono);
-  font-size: .74rem;
-  padding: .2em .55em;
-  border-radius: 5px;
-  background: rgba(31, 45, 80, .08);
-  color: var(--tinta);
-}
-
-/* Feedback/Toasts */
-.toast-container {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.toast {
-  background: var(--tinta);
-  color: #fff;
-  padding: .8em 1.1em;
-  border-radius: var(--raio-pequeno);
-  box-shadow: var(--sombra-forte);
-  font-size: .88rem;
-  animation: entrar-toast .2s ease;
-  max-width: 320px;
-}
-.toast.erro { background: var(--coral); }
-.toast.sucesso { background: var(--verde-aprovado); }
-
-@keyframes entrar-toast {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ==========================================================================
-   TELA DE DOWNLOAD — Estilo Ficha/Carteirinha Compacta e Profissional
+   TELA DE DOWNLOAD — Ficha Acadêmica / Carteirinha Premium
    ========================================================================== */
 
 #tela-software {
@@ -232,7 +79,168 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
 }
 
-.card {
+/* O cartão da ficha */
+.card-download {
+  background: var(--papel-cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-forte);
+  width: 100%;
+  max-width: 520px;
+  padding: 36px 32px;
+  position: relative;
+  overflow: hidden;
+  animation: surgimento .3s ease-out;
+}
+
+/* Detalhe estético de cabeçalho tipo ficha/carteirinha */
+.card-download::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--tinta) 0%, var(--tinta-clara) 70%, var(--coral) 100%);
+}
+
+.card-header {
+  margin-bottom: 24px;
+}
+
+.badge-versao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--fonte-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: rgba(31, 45, 80, 0.06);
+  color: var(--tinta);
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(31, 45, 80, 0.1);
+}
+
+.badge-versao::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: var(--verde-aprovado);
+  border-radius: 50%;
+}
+
+.card-title {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--tinta);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.card-descricao {
+  font-size: 0.95rem;
+  color: var(--grafite-suave);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Grid de Botões de Download (Windows + macOS) */
+.download-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 28px;
+  margin-bottom: 24px;
+}
+
+.btn-download {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: var(--raio-pequeno);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: 1.5px solid var(--linha);
+  background: var(--papel-cartao);
+}
+
+/* Botão de Destaque (Principal) */
+.btn-download.primario {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(31, 45, 80, 0.2);
+}
+
+.btn-download.primario:hover {
+  background: var(--tinta-clara);
+  border-color: var(--tinta-clara);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(31, 45, 80, 0.28);
+}
+
+/* Botão Secundário */
+.btn-download.secundario {
+  color: var(--tinta);
+}
+
+.btn-download.secundario:hover {
+  border-color: var(--tinta);
+  background: rgba(31, 45, 80, 0.03);
+  transform: translateY(-1px);
+}
+
+.btn-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.btn-titulo {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.btn-subtitulo {
+  font-size: 0.78rem;
+  opacity: 0.8;
+  font-family: var(--fonte-mono);
+  margin-top: 2px;
+}
+
+.btn-icone-arrow {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Rodapé do cartão */
+.card-footer {
+  border-top: 1px dashed var(--linha);
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--grafite-suave);
+}
+
+.requisitos {
+  font-family: var(--fonte-mono);
+}
+
+@keyframes surgimento {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

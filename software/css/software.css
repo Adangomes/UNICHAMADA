@@ -1,233 +1,275 @@
 /* ==========================================================================
-   BASE.CSS — Reset, variáveis de design e tipografia
-   Identidade: "carteirinha acadêmica" — ficha de estudante/professor
+   UNICHAMADA DESIGN SYSTEM — Nível Sênior (macOS / Fluent UI)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Paleta Identidade Carteirinha */
-  --tinta: #1F2D50;           /* azul-tinta profundo — cor primária */
-  --tinta-clara: #34467A;
-  --papel: #F6F4EE;           /* branco-papel, levemente amarelado */
-  --papel-cartao: #FFFFFF;
-  --grafite: #2B2B27;         /* texto principal */
-  --grafite-suave: #6B6B63;   /* texto secundário */
-  --coral: #D65B4A;           /* caneta de correção — accent */
-  --verde-aprovado: #3E7C5A;
-  --linha: #DAD5C6;           /* linhas/bordas estilo caderno */
-  --amarelo-alerta: #C98A1E;
-
-  /* Tipografia */
-  --fonte-display: 'Space Grotesk', sans-serif;
-  --fonte-corpo: 'IBM Plex Sans', sans-serif;
-  --fonte-mono: 'IBM Plex Mono', monospace;
-
-  /* Espaçamento e Borda */
-  --raio: 16px;
-  --raio-pequeno: 8px;
-  --sombra: 0 4px 20px rgba(31, 45, 80, 0.06);
-  --sombra-forte: 0 12px 36px rgba(31, 45, 80, 0.12);
+  --primary: #0F172A;
+  --primary-hover: #1E293B;
+  --accent: #2563EB;
+  --accent-glow: rgba(37, 99, 235, 0.25);
+  
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --border-glass: rgba(255, 255, 255, 0.6);
+  --text-main: #0F172A;
+  --text-muted: #475569;
+  --text-light: #64748B;
+  
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --radius-lg: 24px;
+  --radius-md: 14px;
+  
+  --shadow-float: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 
+                  0 0 0 1px rgba(15, 23, 42, 0.04);
 }
 
-/* Reset básico corrigido */
-*, *::before, *::after { 
-  box-sizing: border-box; 
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-html, body {
+body, html {
   margin: 0;
   padding: 0;
-  background: var(--papel);
-  color: var(--grafite);
-  font-family: var(--fonte-corpo);
+  width: 100%;
+  height: 100vh;
+  font-family: var(--font-sans);
+  background-color: #090D16;
+  color: var(--text-main);
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-body {
-  background-image:
-    radial-gradient(circle at 12% -10%, rgba(31, 45, 80, 0.08), transparent 40%),
-    radial-gradient(circle at 100% 0%, rgba(214, 91, 74, 0.06), transparent 35%);
-  background-attachment: fixed;
-  min-height: 100vh;
-}
-
-/* Tipografia */
-h1, h2, h3, h4 {
-  font-family: var(--fonte-display);
-  color: var(--tinta);
-  margin: 0 0 .4em 0;
-  letter-spacing: -0.02em;
-}
-
-p { 
-  line-height: 1.5; 
-  color: var(--grafite-suave);
-}
-
-code, .mono, .ra-tag {
-  font-family: var(--fonte-mono);
-}
-
-/* ==========================================================================
-   TELA DE DOWNLOAD — Ficha Acadêmica / Carteirinha Premium
-   ========================================================================== */
-
-#tela-software {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-}
-
-/* O cartão da ficha */
-.card-download {
-  background: var(--papel-cartao);
-  border: 1px solid var(--linha);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra-forte);
-  width: 100%;
-  max-width: 520px;
-  padding: 36px 32px;
-  position: relative;
-  overflow: hidden;
-  animation: surgimento .3s ease-out;
-}
-
-/* Detalhe estético de cabeçalho tipo ficha/carteirinha */
-.card-download::before {
-  content: '';
-  position: absolute;
+/* --- BACKGROUND ANIMADO SUAVE (MESH GRADIENT) --- */
+.mesh-background {
+  position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, var(--tinta) 0%, var(--tinta-clara) 70%, var(--coral) 100%);
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  overflow: hidden;
 }
 
-.card-header {
-  margin-bottom: 24px;
+.mesh-blob {
+  position: absolute;
+  filter: blur(80px);
+  opacity: 0.55;
+  animation: floatBlob 16s infinite alternate ease-in-out;
 }
 
-.badge-versao {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--fonte-mono);
-  font-size: 0.78rem;
-  font-weight: 500;
-  background: rgba(31, 45, 80, 0.06);
-  color: var(--tinta);
-  padding: 4px 10px;
-  border-radius: 20px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(31, 45, 80, 0.1);
-}
-
-.badge-versao::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background-color: var(--verde-aprovado);
+.blob-1 {
+  width: 45vw;
+  height: 45vw;
+  background: #3b82f6;
+  top: -10%;
+  left: -10%;
   border-radius: 50%;
 }
 
-.card-title {
-  font-size: 1.85rem;
-  font-weight: 700;
-  color: var(--tinta);
-  margin-bottom: 8px;
-  line-height: 1.2;
+.blob-2 {
+  width: 40vw;
+  height: 40vw;
+  background: #6366f1;
+  bottom: -15%;
+  right: -10%;
+  animation-delay: -5s;
+  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
 }
 
-.card-descricao {
-  font-size: 0.95rem;
-  color: var(--grafite-suave);
-  margin: 0;
-  line-height: 1.5;
+.blob-3 {
+  width: 35vw;
+  height: 35vw;
+  background: #0ea5e9;
+  top: 30%;
+  left: 40%;
+  animation-delay: -10s;
+  border-radius: 60% 40% 30% 70% / 50% 30% 70% 50%;
 }
 
-/* Opções de Download */
-.download-options {
+@keyframes floatBlob {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.08); }
+  100% { transform: translate(-30px, -50px) scale(0.95); }
+}
+
+/* --- CONTAINER & CARD PRINCIPAL AMPLIADO --- */
+.app-wrapper {
+  width: 100%;
+  height: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.download-card {
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  width: 100%;
+  max-width: 620px;
+  padding: 48px;
+  position: relative;
+  animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardEntrance {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cabeçalho do Card */
+.card-top-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 24px;
 }
 
-.btn-download {
+.os-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.05);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.os-badge .dot {
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+
+.app-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 12px 0;
+  letter-spacing: -0.03em;
+}
+
+.app-description {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 36px 0;
+}
+
+/* Botão de Download Principal (Imponente) */
+.btn-download-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-radius: var(--raio-pequeno);
+  background: var(--primary);
+  color: #ffffff;
+  padding: 20px 28px;
+  border-radius: var(--radius-md);
   text-decoration: none;
-  transition: all 0.2s ease;
-  border: 1.5px solid var(--linha);
-  background: var(--papel-cartao);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-download.primario {
-  background: var(--tinta);
-  border-color: var(--tinta);
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(31, 45, 80, 0.2);
-}
-
-.btn-download.primario:hover {
-  background: var(--tinta-clara);
-  border-color: var(--tinta-clara);
+.btn-download-main:hover {
+  background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(31, 45, 80, 0.28);
+  box-shadow: 0 15px 30px -5px rgba(15, 23, 42, 0.4);
 }
 
-.btn-info {
+.btn-download-main:active {
+  transform: translateY(0);
+}
+
+.btn-content {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  gap: 4px;
 }
 
-.btn-titulo {
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.btn-subtitulo {
-  font-size: 0.78rem;
-  opacity: 0.8;
-  font-family: var(--fonte-mono);
-  margin-top: 2px;
-}
-
-.btn-icone-arrow {
-  font-size: 1.2rem;
+.btn-title-text {
   font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
 }
 
-.card-footer {
-  border-top: 1px dashed var(--linha);
-  padding-top: 16px;
+.btn-subtitle-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.btn-icon-wrapper {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: transform 0.2s ease;
+}
+
+.btn-download-main:hover .btn-icon-wrapper {
+  transform: translateY(3px);
+}
+
+/* Informações de Rodapé do Card */
+.card-meta-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: var(--grafite-suave);
+  font-size: 0.85rem;
+  color: var(--text-light);
+  font-family: var(--font-mono);
 }
 
-.requisitos {
-  font-family: var(--fonte-mono);
+/* Alternativas de Plataforma */
+.platform-switch {
+  margin-top: 32px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-light);
 }
 
-@keyframes surgimento {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.platform-switch p {
+  margin: 0 0 10px 0;
+}
+
+.platform-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.platform-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.platform-links a:hover {
+  opacity: 0.75;
+  text-decoration: underline;
 }

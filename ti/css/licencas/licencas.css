@@ -1,0 +1,268 @@
+/**
+ * @fileoverview licencas.css — Estilos do Módulo de Licenciamento de Software
+ * @path css/licencas/licencas.css
+ * @description Estilização em Dark Mode e Glassmorphism para a tela de gerenciamento 
+ * de licenças, cards de métricas, tabela de controle e modais do painel de TI.
+ */
+
+/* ==========================================================================
+   1. VARIÁVEIS DE CORES E TEMA (Design Tokens do Módulo)
+   ========================================================================== */
+:root {
+  --lic-bg-principal: #0f172a;        /* Fundo escuro principal da tela */
+  --lic-bg-card: #1e293b;            /* Fundo dos cards e tabelas */
+  --lic-borda: #334155;              /* Cor padrão para bordas e divisores */
+  --lic-texto-principal: #f8fafc;    /* Cor do texto principal (alta visibilidade) */
+  --lic-texto-secundario: #94a3b8;   /* Cor de rótulos e textos auxiliares */
+  --lic-primaria: #3b82f6;           /* Azul institucional principal para botões */
+  --lic-primaria-hover: #2563eb;     /* Tom de azul mais escuro no hover */
+  --lic-sucesso: #22c55e;            /* Verde para status ativo e indicadores positivos */
+  --lic-perigo: #ef4444;             /* Vermelho para bloqueios, erros e alertas */
+}
+
+/* ==========================================================================
+   2. CABEÇALHO DA SEÇÃO (Título e Ações do Topo)
+   ========================================================================== */
+.ti-secao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ti-secao-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--lic-texto-principal);
+  margin-bottom: 6px;
+}
+
+.ti-secao-header .subtitulo {
+  color: var(--lic-texto-secundario);
+  font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   3. CARDS DE MÉTRICAS (Estatísticas em Tempo Real)
+   ========================================================================== */
+.ti-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  background: var(--lic-bg-card);
+  border: 1px solid var(--lic-borda);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.metric-card h3 {
+  font-size: 0.85rem;
+  color: var(--lic-texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.metric-card p {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--lic-texto-principal);
+}
+
+/* Modificadores de cor para os cards de métricas */
+.metric-card.ativo p {
+  color: var(--lic-sucesso);
+}
+
+.metric-card.perigo p {
+  color: var(--lic-perigo);
+}
+
+/* ==========================================================================
+   4. TABELA DE LICENÇAS (Listagem Gerencial)
+   ========================================================================== */
+.ti-table-wrapper {
+  background: var(--lic-bg-card);
+  border: 1px solid var(--lic-borda);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.ti-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ti-table th, 
+.ti-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--lic-borda);
+  font-size: 0.95rem;
+  color: var(--lic-texto-principal);
+}
+
+.ti-table th {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--lic-texto-secundario);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ti-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   5. BADGES DE STATUS (Indicadores Visuais de Ativo/Bloqueado)
+   ========================================================================== */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge.ativa {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--lic-sucesso);
+}
+
+.badge.bloqueada {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--lic-perigo);
+}
+
+/* ==========================================================================
+   6. BOTÕES E AÇÕES DO MÓDULO
+   ========================================================================== */
+.btn-primario {
+  background: var(--lic-primaria);
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primario:hover {
+  background: var(--lic-primaria-hover);
+}
+
+.btn-secundario {
+  background: transparent;
+  color: var(--lic-texto-secundario);
+  border: 1px solid var(--lic-borda);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secundario:hover {
+  color: #fff;
+  border-color: #fff;
+}
+
+/* Botões específicos de ações em linhas da tabela */
+.btn-acao-perigo {
+  color: var(--lic-perigo) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+.btn-acao-perigo:hover {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: var(--lic-perigo) !important;
+}
+
+.btn-acao-sucesso {
+  color: var(--lic-sucesso) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+.btn-acao-sucesso:hover {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border-color: var(--lic-sucesso) !important;
+}
+
+/* ==========================================================================
+   7. MODAL DE CRIAÇÃO DE CHAVES (Overlay e Formulário)
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-content {
+  background: var(--lic-bg-card);
+  border: 1px solid var(--lic-borda);
+  padding: 30px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+  margin-bottom: 24px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--lic-texto-principal);
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--lic-texto-secundario);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.modal-content select, 
+.modal-content input {
+  width: 100%;
+  background: var(--lic-bg-principal);
+  border: 1px solid var(--lic-borda);
+  padding: 12px;
+  border-radius: 8px;
+  color: var(--lic-texto-principal);
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-content select:focus, 
+.modal-content input:focus {
+  border-color: var(--lic-primaria);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}

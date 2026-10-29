@@ -3,51 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Download — UniChamada Desktop</title>
+  <title>UniChamada Desktop — Download Oficial</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
-  <!-- Estilos CSS Modulares -->
+  <!-- Estilos Globais e de Arquitetura Sênior -->
   <link rel="stylesheet" href="css/software.css" />
 </head>
 <body>
 
-  <!-- ================= SEÇÃO DE DOWNLOAD (SPA) ================= -->
-  <section id="tela-software">
-    <div class="card-download">
-      <div class="icon-wrapper">
-        <span id="os-icon" class="icon">💻</span>
-      </div>
-      <span id="os-badge" class="badge-versao">Versão 1.0.0 • Detecção Automática</span>
-      
-      <h1 class="card-title">UniChamada Desktop</h1>
-      <p class="card-descricao">Aplicativo oficial para gerenciamento de chamadas e painel administrativo de TI em ambiente acadêmico.</p>
+  <!-- Fundo Animado Suave (Mesh Gradient) -->
+  <div class="mesh-background">
+    <div class="mesh-blob blob-1"></div>
+    <div class="mesh-blob blob-2"></div>
+    <div class="mesh-blob blob-3"></div>
+  </div>
 
-      <!-- Botão Dinâmico -->
-      <div class="download-options">
-        <a id="btn-download" href="#" class="btn-download primario">
-          <div class="btn-info">
-            <span id="btn-main-text" class="btn-titulo">Carregando link de download...</span>
-            <span id="btn-sub-text" class="btn-subtitulo">A detectar o seu sistema...</span>
-          </div>
-          <span class="btn-icone-arrow">↓</span>
-        </a>
-      </div>
+  <!-- Container Principal de Renderização Dinâmica (Gerenciado via JS) -->
+  <main id="app-container" class="app-wrapper"></main>
 
-      <div class="card-footer">
-        <span id="os-req" class="requisitos">Requisitos: --</span>
-        <span id="os-size">Tamanho: --</span>
-      </div>
-
-      <!-- Link alternativo para mudar manualmente se o user quiser -->
-      <div style="margin-top: 20px; font-size: 0.9rem; text-align: center;">
-        <p style="color: #666; margin-bottom: 8px;">Procurando outra plataforma?</p>
-        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg" style="color: var(--tinta); text-decoration: none; margin-right: 15px; font-weight: 500;">Baixar para Mac (.dmg)</a>
-        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip" style="color: var(--tinta); text-decoration: none; font-weight: 500;">Baixar para Windows (.zip)</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= SCRIPTS ================= -->
+  <!-- Script de Injeção e Dinamismo Sênior -->
   <script src="js/software.js"></script>
 </body>
 </html>

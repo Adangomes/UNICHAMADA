@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <span>Build 1.0.0 • Estável</span>
       </div>
     </div>
-  `);
+  `;
 
   const primaryBtn = document.getElementById("primary-btn");
   if (primaryBtn) {

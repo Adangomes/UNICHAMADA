@@ -15,21 +15,29 @@
   <section id="tela-software">
     <div class="card">
       <div class="icon-wrapper">
-        <span class="icon">💻</span>
+        <span id="os-icon" class="icon">💻</span>
       </div>
-      <span class="badge">Versão 1.0.0 • Windows (x64)</span>
+      <span id="os-badge" class="badge">Versão 1.0.0 • Detecção Automática</span>
       
       <h1>UniChamada Desktop</h1>
       <p>Aplicativo oficial para gerenciamento de chamadas e painel administrativo de TI em ambiente acadêmico.</p>
 
-      <a id="btn-download" href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip" class="btn-download">
-         Baixar UniChamada para Windows (.zip)
+      <!-- Botão Dinâmico -->
+      <a id="btn-download" href="#" class="btn-download">
+         Carregando link de download...
       </a>
 
       <div class="info">
-        <span>Tamanho: ~111 MB</span>
+        <span id="os-size">Tamanho: --</span>
         <span>•</span>
-        <span>Requer Windows 10/11</span>
+        <span id="os-req">Requisitos: --</span>
+      </div>
+
+      <!-- Link alternativo para mudar manualmente se o user quiser -->
+      <div style="margin-top: 20px; font-size: 0.9rem;">
+        <p style="color: #666; margin-bottom: 5px;">Procurando outra plataforma?</p>
+        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg" style="color: #0066cc; text-decoration: none; margin-right: 15px;">Baixar para Mac (.dmg)</a>
+        <a href="https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip" style="color: #0066cc; text-decoration: none;">Baixar para Windows (.zip)</a>
       </div>
     </div>
   </section>

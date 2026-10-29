@@ -1,29 +1,28 @@
 /* ==========================================================================
-   UNICHAMADA DESIGN SYSTEM — Nível Sênior (macOS / Fluent UI)
+   UNICHAMADA DESIGN SYSTEM — Nível Sênior (Aurora Edition)
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --primary: #0F172A;
-  --primary-hover: #1E293B;
-  --accent: #2563EB;
-  --accent-glow: rgba(37, 99, 235, 0.25);
+  --primary: #0B132B;
+  --primary-hover: #1C2541;
+  --accent: #3A86FF;
   
-  --bg-surface: rgba(255, 255, 255, 0.85);
-  --border-glass: rgba(255, 255, 255, 0.6);
-  --text-main: #0F172A;
+  --bg-surface: rgba(255, 255, 255, 0.88);
+  --border-glass: rgba(255, 255, 255, 0.7);
+  --text-main: #0B132B;
   --text-muted: #475569;
   --text-light: #64748B;
   
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   
-  --radius-lg: 24px;
+  --radius-xl: 32px;
   --radius-md: 14px;
   
-  --shadow-float: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 
-                  0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-aurora: 0 25px 60px -15px rgba(11, 19, 43, 0.25), 
+                   0 0 0 1px rgba(255, 255, 255, 0.4) inset;
 }
 
 *, *::before, *::after {
@@ -36,67 +35,66 @@ body, html {
   width: 100%;
   height: 100vh;
   font-family: var(--font-sans);
-  background-color: #090D16;
+  background-color: #030712;
   color: var(--text-main);
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* --- BACKGROUND ANIMADO SUAVE (MESH GRADIENT) --- */
-.mesh-background {
+/* --- FUNDO ANIMADO ESTILO NOVO MACBOOK (AURORA MESH) --- */
+.aurora-background {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  background: #030712;
   overflow: hidden;
 }
 
-.mesh-blob {
+.aurora-orb {
   position: absolute;
-  filter: blur(80px);
-  opacity: 0.55;
-  animation: floatBlob 16s infinite alternate ease-in-out;
-}
-
-.blob-1 {
-  width: 45vw;
-  height: 45vw;
-  background: #3b82f6;
-  top: -10%;
-  left: -10%;
+  filter: blur(100px);
+  opacity: 0.6;
+  animation: auroraMove 18s infinite alternate ease-in-out;
   border-radius: 50%;
 }
 
-.blob-2 {
-  width: 40vw;
-  height: 40vw;
-  background: #6366f1;
-  bottom: -15%;
-  right: -10%;
-  animation-delay: -5s;
-  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+.orb-1 {
+  width: 50vw;
+  height: 50vw;
+  background: #1d4ed8;
+  top: -20%;
+  left: -10%;
 }
 
-.blob-3 {
+.orb-2 {
+  width: 45vw;
+  height: 45vw;
+  background: #4338ca;
+  bottom: -20%;
+  right: -10%;
+  animation-delay: -6s;
+}
+
+.orb-3 {
   width: 35vw;
   height: 35vw;
   background: #0ea5e9;
   top: 30%;
-  left: 40%;
-  animation-delay: -10s;
-  border-radius: 60% 40% 30% 70% / 50% 30% 70% 50%;
+  left: 35%;
+  animation-delay: -12s;
+  opacity: 0.45;
 }
 
-@keyframes floatBlob {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 30px) scale(1.08); }
-  100% { transform: translate(-30px, -50px) scale(0.95); }
+@keyframes auroraMove {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(50px, 40px) scale(1.12) rotate(45deg); }
+  100% { transform: translate(-40px, -60px) scale(0.92) rotate(90deg); }
 }
 
-/* --- CONTAINER & CARD PRINCIPAL AMPLIADO --- */
+/* --- CONTAINER E CARD GIGANTE E IMPOENTE --- */
 .app-wrapper {
   width: 100%;
   height: 100%;
@@ -108,29 +106,29 @@ body, html {
 
 .download-card {
   background: var(--bg-surface);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-float);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-aurora);
   width: 100%;
-  max-width: 620px;
-  padding: 48px;
+  max-width: 720px;
+  padding: 56px 52px;
   position: relative;
-  animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: cardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes cardEntrance {
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Cabeçalho do Card */
+/* Cabeçalho */
 .card-top-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .os-badge {
@@ -138,13 +136,13 @@ body, html {
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  background: rgba(15, 23, 42, 0.05);
+  background: rgba(11, 19, 43, 0.06);
   color: var(--primary);
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 30px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(11, 19, 43, 0.08);
 }
 
 .os-badge .dot {
@@ -152,48 +150,63 @@ body, html {
   height: 8px;
   background-color: #10b981;
   border-radius: 50%;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
 }
 
 .app-title {
-  font-size: 2.25rem;
+  font-size: 2.6rem;
   font-weight: 800;
   color: var(--primary);
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
   letter-spacing: -0.03em;
 }
 
 .app-description {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0 0 36px 0;
 }
 
-/* Botão de Download Principal (Imponente) */
-.btn-download-main {
+/* GRUPO DE BOTÕES PADRONIZADOS (SÊNIOR) */
+.download-actions-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Botão Padrão Sênior (Usado para ambos os sistemas com perfeição) */
+.btn-download-pro {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: var(--primary);
   color: #ffffff;
-  padding: 20px 28px;
+  padding: 22px 28px;
   border-radius: var(--radius-md);
   text-decoration: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3);
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(11, 19, 43, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-download-main:hover {
+.btn-download-pro:hover {
   background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 15px 30px -5px rgba(15, 23, 42, 0.4);
+  box-shadow: 0 15px 35px -5px rgba(11, 19, 43, 0.35);
 }
 
-.btn-download-main:active {
-  transform: translateY(0);
+/* Variante Secundária (Também com o mesmo design imponente, mas clean) */
+.btn-download-pro.secondary {
+  background: rgba(11, 19, 43, 0.04);
+  color: var(--primary);
+  box-shadow: none;
+  border: 1.5px solid rgba(11, 19, 43, 0.12);
+}
+
+.btn-download-pro.secondary:hover {
+  background: rgba(11, 19, 43, 0.08);
+  border-color: var(--primary);
 }
 
 .btn-content {
@@ -204,72 +217,50 @@ body, html {
 
 .btn-title-text {
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   letter-spacing: -0.01em;
 }
 
 .btn-subtitle-text {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.82rem;
+  opacity: 0.7;
 }
 
-.btn-icon-wrapper {
-  width: 42px;
-  height: 42px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+.btn-download-pro.secondary .btn-subtitle-text {
+  opacity: 0.6;
+}
+
+.btn-icon-box {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   transition: transform 0.2s ease;
 }
 
-.btn-download-main:hover .btn-icon-wrapper {
+.btn-download-pro.secondary .btn-icon-box {
+  background: rgba(11, 19, 43, 0.08);
+  color: var(--primary);
+}
+
+.btn-download-pro:hover .btn-icon-box {
   transform: translateY(3px);
 }
 
-/* Informações de Rodapé do Card */
+/* Rodapé do Card */
 .card-meta-footer {
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(11, 19, 43, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: var(--text-light);
   font-family: var(--font-mono);
-}
-
-/* Alternativas de Plataforma */
-.platform-switch {
-  margin-top: 32px;
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--text-light);
-}
-
-.platform-switch p {
-  margin: 0 0 10px 0;
-}
-
-.platform-links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.platform-links a {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: opacity 0.2s;
-}
-
-.platform-links a:hover {
-  opacity: 0.75;
-  text-decoration: underline;
 }

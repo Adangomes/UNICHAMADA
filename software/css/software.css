@@ -149,7 +149,7 @@ code, .mono, .ra-tag {
   line-height: 1.5;
 }
 
-/* Grid de Botões de Download (Windows + macOS) */
+/* Opções de Download */
 .download-options {
   display: flex;
   flex-direction: column;
@@ -170,7 +170,6 @@ code, .mono, .ra-tag {
   background: var(--papel-cartao);
 }
 
-/* Botão de Destaque (Principal) */
 .btn-download.primario {
   background: var(--tinta);
   border-color: var(--tinta);
@@ -183,17 +182,6 @@ code, .mono, .ra-tag {
   border-color: var(--tinta-clara);
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(31, 45, 80, 0.28);
-}
-
-/* Botão Secundário */
-.btn-download.secundario {
-  color: var(--tinta);
-}
-
-.btn-download.secundario:hover {
-  border-color: var(--tinta);
-  background: rgba(31, 45, 80, 0.03);
-  transform: translateY(-1px);
 }
 
 .btn-info {
@@ -219,7 +207,6 @@ code, .mono, .ra-tag {
   font-weight: 700;
 }
 
-/* Rodapé do cartão */
 .card-footer {
   border-top: 1px dashed var(--linha);
   padding-top: 16px;

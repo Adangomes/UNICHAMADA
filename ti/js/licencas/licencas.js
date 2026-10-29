@@ -1,12 +1,11 @@
 /**
- * @fileoverview Gerenciamento de Licenças e Seriais de Software — Painel TI
+ * @fileoverview Gerenciamento de Licenças e Seriais de Software por Máquina/Patrimônio — Painel TI
  * @module LicencasTI
  */
 
 (function () {
   'use strict';
 
-  // Estado local do módulo de licenças
   const estadoLicencas = {
     carregando: false,
     lista: []
@@ -22,8 +21,8 @@
     // Cabeçalho da Seção
     const header = chamyEl('div', { class: 'ti-secao-header' }, [
       chamyEl('div', {}, [
-        chamyEl('h2', {}, ['Licenciamento de Software']),
-        chamyEl('p', { class: 'subtitulo' }, ['Gerencie chaves seriais, valide acessos e bloqueie ex-funcionários em tempo real.'])
+        chamyEl('h2', {}, ['Licenciamento de Software por Equipamento']),
+        chamyEl('p', { class: 'subtitulo' }, ['Gerencie chaves seriais vinculadas ao patrimônio, valide máquinas e controle o acesso à rede.'])
       ]),
       chamyEl('button', {
         class: 'btn-primario',
@@ -35,7 +34,7 @@
     // Cards de Métricas
     const metricas = chamyEl('div', { class: 'ti-metrics-grid' }, [
       criarCardMetrica('Total Geradas', 'stat-total', '0'),
-      criarCardMetrica('Licenças Ativas', 'stat-ativas', '0', 'ativo'),
+      criarCardMetrica('Máquinas Ativas', 'stat-ativas', '0', 'ativo'),
       criarCardMetrica('Bloqueadas / Expiradas', 'stat-bloqueadas', '0', 'perigo')
     ]);
 
@@ -45,8 +44,9 @@
         chamyEl('thead', {}, [
           chamyEl('tr', {}, [
             chamyEl('th', {}, ['Chave Serial']),
-            chamyEl('th', {}, ['Usuário Vinculado']),
-            chamyEl('th', {}, ['Cargo / Perfil']),
+            chamyEl('th', {}, ['Patrimônio / Máquina']),
+            chamyEl('th', {}, ['Setor Alocado']),
+            chamyEl('th', {}, ['Responsável']),
             chamyEl('th', {}, ['Validade']),
             chamyEl('th', {}, ['Status']),
             chamyEl('th', {}, ['Ações'])
@@ -54,7 +54,7 @@
         ]),
         chamyEl('tbody', { id: 'corpo-tabela-licencas' }, [
           chamyEl('tr', {}, [
-            chamyEl('td', { colspan: '6', style: 'text-align: center; padding: 30px;' }, ['Carregando licenças do Supabase...'])
+            chamyEl('td', { colspan: '7', style: 'text-align: center; padding: 30px;' }, ['Carregando licenças do Supabase...'])
           ])
         ])
       ])
@@ -62,7 +62,6 @@
 
     container.append(header, metricas, tabelaWrapper);
 
-    // Busca os dados reais do Supabase
     await carregarDadosLicencas();
   }
 
@@ -73,20 +72,20 @@
     ]);
   }
 
-  /** Busca as licenças cadastradas na tabela do Supabase */
+  /** Busca as licenças cadastradas na tabela do Supabase com o join correto */
   async function carregarDadosLicencas() {
     try {
       if (typeof supabaseClient === 'undefined') {
         console.warn('[Licenças] Cliente Supabase não encontrado. Usando dados de teste.');
         estadoLicencas.lista = [
-          { id: '1', chave_serial: 'UNI-K9P2-4M8X-Q1W7', usuario: { nome: 'Prof. Carlos Silva', email: 'carlos@escola.com' }, cargo: 'professor', status: 'ativa', data_expiracao: null },
-          { id: '2', chave_serial: 'UNI-A3B9-8L2Z-5H6J', usuario: { nome: 'Ana Coordenadora', email: 'ana@escola.com' }, cargo: 'coordenador_academico', status: 'bloqueada', data_expiracao: '2026-12-31T23:59:59.000Z' }
+          { id: '1', chave_serial: 'UNI-K9P2-4M8X-Q1W7', patrimonio: 'PC-LAB-01', setor_alocado: 'Laboratório 1', responsavel: { nome: 'Prof. Carlos Silva' }, status: 'ativa', data_expiracao: null },
+          { id: '2', chave_serial: 'UNI-A3B9-8L2Z-5H6J', patrimonio: 'NOTEBOOK-TI-02', setor_alocado: 'Coordenação TI', responsavel: { nome: 'Ana Coordenadora' }, status: 'ativa', data_expiracao: '2026-12-31T23:59:59.000Z' }
         ];
       } else {
-        // Chamada real ao Supabase
+        // Chamada real ao Supabase fazendo o join com a tabela profiles pelo responsavel_id
         const { data, error } = await supabaseClient
           .from('licencas_software')
-          .select('*, profiles(nome, email)');
+          .select('*, responsavel:responsavel_id(nome, email)');
 
         if (error) throw error;
         estadoLicencas.lista = data || [];
@@ -113,23 +112,21 @@
     document.getElementById('stat-bloqueadas').textContent = bloqueadas;
 
     if (total === 0) {
-      corpo.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Nenhuma licença gerada até o momento.</td></tr>`;
+      corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px;">Nenhuma licença gerada até o momento.</td></tr>`;
       return;
     }
 
     estadoLicencas.lista.forEach(lic => {
-      const nomeUsuario = lic.usuario?.nome || lic.profiles?.nome || 'Não vinculado';
-      const emailUsuario = lic.usuario?.email || lic.profiles?.email || '';
+      const patrimonioTexto = lic.patrimonio || 'Não informado';
+      const setorTexto = lic.setor_alocado || 'Geral';
+      const nomeResponsavel = lic.responsavel?.nome || 'Sem responsável fixo';
       const dataValidade = lic.data_expiracao ? new Date(lic.data_expiracao).toLocaleDateString('pt-BR') : 'Vitalícia';
 
       const tr = chamyEl('tr', {}, [
         chamyEl('td', {}, [chamyEl('strong', {}, [lic.chave_serial])]),
-        chamyEl('td', {}, [
-          document.createTextNode(nomeUsuario),
-          chamyEl('br', {}),
-          chamyEl('small', { style: 'color: var(--texto-secundario);' }, [emailUsuario])
-        ]),
-        chamyEl('td', { style: 'text-transform: capitalize;' }, [String(lic.cargo || '').replace('_', ' ')]),
+        chamyEl('td', {}, [chamyEl('span', { style: 'font-weight: 500;' }, [patrimonioTexto])]),
+        chamyEl('td', {}, [setorTexto]),
+        chamyEl('td', {}, [nomeResponsavel]),
         chamyEl('td', {}, [dataValidade]),
         chamyEl('td', {}, [
           chamyEl('span', { class: `badge ${lic.status}` }, [lic.status])
@@ -144,7 +141,7 @@
     });
   }
 
-  /** Altera o status da licença no Supabase (bloqueando ou ativando o software remotamente) */
+  /** Altera o status da licença no Supabase */
   async function alterarStatus(id, novoStatus) {
     try {
       if (typeof supabaseClient !== 'undefined') {
@@ -156,7 +153,6 @@
         if (error) throw error;
       }
 
-      // Atualiza estado local e reflete na tela
       const licenca = estadoLicencas.lista.find(l => l.id === id);
       if (licenca) licenca.status = novoStatus;
       atualizarInterfaceLicencas();
@@ -166,9 +162,8 @@
     }
   }
 
-  /** Abre o modal de criação de nova chave serial */
+  /** Abre o modal de criação de nova chave serial focada em patrimônio */
   async function abrirModalNovaLicenca() {
-    // Aqui você pode usar a biblioteca de janelas/modais padrão do projeto se houver, ou criar via DOM:
     const modalExistente = document.getElementById('modal-gerar-licenca');
     if (modalExistente) modalExistente.remove();
 
@@ -182,16 +177,15 @@
             await salvarNovaLicenca(modal);
           }
         }, [
-          chamyEl('label', {}, ['Vincular ao Funcionário/Professor:']),
-          chamyEl('select', { id: 'select-func-licenca', required: true }, [
-            chamyEl('option', { value: '' }, ['Carregando funcionários...'])
-          ]),
+          chamyEl('label', {}, ['Número do Patrimônio / Identificador da Máquina:']),
+          chamyEl('input', { type: 'text', id: 'input-patrimonio', placeholder: 'Ex: PC-LAB01-05', required: true }),
 
-          chamyEl('label', {}, ['Cargo / Perfil no Software:']),
-          chamyEl('select', { id: 'select-cargo-licenca', required: true }, [
-            chamyEl('option', { value: 'professor' }, ['Professor']),
-            chamyEl('option', { value: 'coordenador_academico' }, ['Coordenador Acadêmico']),
-            chamyEl('option', { value: 'coordenador_ti' }, ['Coordenador de TI'])
+          chamyEl('label', {}, ['Setor Alocado:']),
+          chamyEl('input', { type: 'text', id: 'input-setor', placeholder: 'Ex: Laboratório de Informática 2', required: true }),
+
+          chamyEl('label', {}, ['Funcionário Responsável (Opcional):']),
+          chamyEl('select', { id: 'select-resp-licenca' }, [
+            chamyEl('option', { value: '' }, ['Carregando funcionários...'])
           ]),
 
           chamyEl('label', {}, ['Validade da Licença:']),
@@ -210,11 +204,11 @@
     ]);
 
     document.body.append(modal);
-    await carregarOpcoesFuncionariosSelect();
+    await carregarOpcoesResponsaveisSelect();
   }
 
-  async function carregarOpcoesFuncionariosSelect() {
-    const select = document.getElementById('select-func-licenca');
+  async function carregarOpcoesResponsaveisSelect() {
+    const select = document.getElementById('select-resp-licenca');
     if (!select) return;
 
     try {
@@ -225,24 +219,26 @@
       } else {
         funcionarios = [
           { id: 'uuid-1', nome: 'Prof. Roberto Santos' },
-          { id: 'uuid-2', nome: 'Profª. Juliana Lima' }
+          { id: 'uuid-2', nome: 'Ana Coordenadora' }
         ];
       }
 
-      select.innerHTML = '<option value="">Selecione o usuário...</option>';
+      select.innerHTML = '<option value="">Sem responsável direto</option>';
       funcionarios.forEach(f => {
         select.append(chamyEl('option', { value: f.id }, [f.nome]));
       });
     } catch (e) {
-      select.innerHTML = '<option value="">Erro ao carregar usuários</option>';
+      select.innerHTML = '<option value="">Erro ao carregar responsáveis</option>';
     }
   }
 
   async function salvarNovaLicenca(modalEl) {
-    const usuarioId = document.getElementById('select-func-licenca').value;
-    const cargo = document.getElementById('select-cargo-licenca').value;
+    const patrimonio = document.getElementById('input-patrimonio').value;
+    const setor = document.getElementById('input-setor').value;
+    const responsavelId = document.getElementById('select-resp-licenca').value || null;
     const tipoValidade = document.getElementById('select-validade-licenca').value;
 
+    // Função auxiliar para gerar o serial no padrão UNI-XXXX-XXXX-XXXX
     const novaChave = gerarChaveSerial();
     const expiracao = calcularDataExpiracao(tipoValidade);
 
@@ -250,9 +246,11 @@
       if (typeof supabaseClient !== 'undefined') {
         const { error } = await supabaseClient.from('licencas_software').insert([{
           chave_serial: novaChave,
-          usuario_id: usuarioId,
-          cargo: cargo,
+          patrimonio: patrimonio,
+          setor_alocado: setor,
+          responsavel_id: responsavelId,
           status: 'ativa',
+          tipo_validade: tipoValidade,
           data_expiracao: expiracao
         }]);
 
@@ -267,12 +265,26 @@
     }
   }
 
+  // Funções utilitárias auxiliares de suporte
+  function gerarChaveSerial() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const bloco = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `UNI-${bloco()}-${bloco()}-${bloco()}`;
+  }
+
+  function calcularDataExpiracao(tipo) {
+    if (tipo === 'vitalicia') return null;
+    const data = new Date();
+    if (tipo === 'anual') data.setFullYear(data.getFullYear() + 1);
+    if (tipo === 'semestral') data.setMonth(data.getMonth() + 6);
+    return data.toISOString();
+  }
+
   // Registra a rota/aba no sistema de navegação global do TI se existir
   if (typeof window.registrarRotaTI !== 'undefined') {
     window.registrarRotaTI('licencas', renderizarTelaLicencas);
   }
 
-  // Exporta globalmente caso precise chamar direto
   window.LicencasTI = {
     renderizar: renderizarTelaLicencas,
     recarregar: carregarDadosLicencas

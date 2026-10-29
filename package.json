@@ -1,0 +1,47 @@
+{
+  "name": "unichamada-desktop",
+  "version": "1.0.0",
+  "description": "UniChamada — aplicativo desktop (professor e painel TI)",
+  "main": "main.js",
+  "author": "UniChamada",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "start:ti": "electron . --modo=ti",
+    "dist": "CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64"
+  },
+  "dependencies": {
+    "node-machine-id": "^1.1.12"
+  },
+  "devDependencies": {
+    "electron": "33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "br.unichamada.app",
+    "productName": "UniChamada",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "config.js",
+      "index.html",
+      "ti/**/*",
+      "css/**/*",
+      "js/**/*"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

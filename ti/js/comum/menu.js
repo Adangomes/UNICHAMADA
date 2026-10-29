@@ -11,7 +11,8 @@ TI.menu = {
         { titulo: 'Coordenação', itens: [
           { rota: 'triagem', rotulo: 'Triagem' },
           { rota: 'aprovacoes', rotulo: 'Aprovações de deploy' },
-          { rota: 'equipe', rotulo: 'Equipe de TI' }
+          { rota: 'equipe', rotulo: 'Equipe de TI' },
+          { rota: 'licencas', rotulo: 'Licenças de Software' }
         ] },
         { titulo: 'Acompanhamento', itens: [
           { rota: 'visao-geral', rotulo: 'Visão geral' },

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Aplicativo oficial para gerenciamento de chamadas e painel administrativo em ambiente acadêmico.",
   "main": "main.js",
-  "author": "Seu Nome / Equipe Acadêmica",
+  "author": "Adalberto Gomes",
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
@@ -31,12 +31,15 @@
       "!dist/**",
       "!build/**",
       "!.github/**",
-      "!*.sql"
+      "!*.sql",
+      "!releases/**",
+      "!skills/**",
+      "!banco-de-dados/**",
+      "!docker-compose.yml",
+      "!README.md"
     ],
     "mac": {
-      "target": [
-        "dmg"
-      ],
+      "target": ["dmg", "pkg"],
       "category": "public.app-category.education",
       "identity": null,
       "artifactName": "UniChamada-${version}-mac.${ext}"
@@ -44,14 +47,12 @@
     "dmg": {
       "title": "Instalar UniChamada"
     },
+    "pkg": {
+      "installLocation": "/Applications"
+    },
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
+        { "target": "nsis", "arch": ["x64"] }
       ]
     },
     "nsis": {

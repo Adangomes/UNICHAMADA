@@ -1,0 +1,13 @@
+CONTRATO DE LICENÇA DE USUÁRIO FINAL (EULA) - UNICHAMADA
+
+Ao instalar e utilizar o UniChamada, você concorda com os seguintes termos:
+
+1. FINALIDADE E PORTFÓLIO: O software UniChamada é um projeto desenvolvido para fins de demonstração técnica, portfólio de software e uso exclusivamente acadêmico/institucional.
+
+2. ATIVAÇÃO E LICENCIAMENTO: A utilização das funcionalidades do sistema é condicionada à validação de uma Chave Serial (Serial Key) autêntica fornecida pelos administradores autorizados. A instalação sem uma chave válida limita ou impede a utilização integral do software.
+
+3. RESTRIÇÕES: É estritamente proibida a cópia, engenharia reversa, modificação, comercialização ou redistribuição não autorizada deste software fora do escopo acadêmico/institucional permitido.
+
+4. ISENÇÃO DE RESPONSABILIDADE: O software é fornecido "no estado em que se encontra" (AS IS), sem garantias implícitas ou explícitas de funcionamento ininterrupto fora dos cenários homologados.
+
+Clique em "Eu Aceito" para concordar com estes termos e prosseguir com a instalação.

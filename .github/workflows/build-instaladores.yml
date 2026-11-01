@@ -1,0 +1,44 @@
+name: Gerar instaladores (Windows e Mac)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: build:win
+            artefato: UniChamada-Windows
+            arquivos: dist/*.exe
+          - os: macos-latest
+            script: build:mac
+            artefato: UniChamada-Mac
+            arquivos: |
+              dist/*.dmg
+              dist/*.pkg
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Gerar o instalador
+        run: npm run ${{ matrix.script }}
+
+      - name: Guardar o instalador
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artefato }}
+          path: ${{ matrix.arquivos }}

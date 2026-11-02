@@ -276,3 +276,12 @@
 .ti-table td .btn-secundario:last-child {
   margin-right: 0; /* Remove a margem do último botão */
 }
+
+
+/* Garante que os botões de ação com cores específicas tenham exatamente o mesmo tamanho do botão secundário padrão */
+.ti-table td .btn-secundario.btn-acao-perigo,
+.ti-table td .btn-secundario.btn-acao-sucesso {
+  padding: 6px 14px; /* O mesmo padding do .btn-secundario padrão */
+  font-size: 0.85rem; /* O mesmo tamanho de fonte do .btn-secundario padrão */
+  border-radius: 8px; /* O mesmo arredondamento */
+}

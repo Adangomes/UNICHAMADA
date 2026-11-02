@@ -297,3 +297,22 @@
   gap: 10px;
   margin-top: 8px;
 }
+
+/* ==========================================================================
+   9. BOTÕES DA COLUNA AÇÕES: UM EM CIMA DO OUTRO, MESMA LARGURA
+   (fica no fim do arquivo para valer sobre as regras anteriores)
+   ========================================================================== */
+.ti-table td:last-child {
+  white-space: normal;
+}
+
+.ti-table td:last-child .btn-secundario {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  margin: 0 0 6px 0 !important; /* sobrescreve o margin-right inline que o JS coloca */
+}
+
+.ti-table td:last-child .btn-secundario:last-child {
+  margin-bottom: 0 !important;
+}

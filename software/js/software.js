@@ -3,17 +3,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const releases = {
     mac: {
-      name: "macOS (Apple Silicon)",
-      file: "UniChamada-1.0.0-arm64.dmg",
-      url: "https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-arm64.dmg",
-      size: "~110 MB",
+      name: "macOS (Universal)",
+      file: "UniChamada-mac.dmg",
+      url: "https://github.com/Adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-mac.dmg",
+      size: "~172 MB",
       req: "macOS 10.12+"
     },
     win: {
       name: "Windows (x64)",
-      file: "UniChamada-1.0.0-win.zip",
-      url: "https://github.com/adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-1.0.0-win.zip",
-      size: "~111 MB",
+      file: "UniChamada-Setup.exe",
+      url: "https://github.com/Adangomes/UNICHAMADA/releases/download/v1.0.0/UniChamada-Setup.exe",
+      size: "~78 MB",
       req: "Windows 10/11"
     }
   };
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const primaryOS = isMac ? releases.mac : releases.win;
   const secondaryOS = isMac ? releases.win : releases.mac;
   const primaryLabel = isMac ? "Baixar para macOS" : "Baixar para Windows";
-  const secondaryLabel = isMac ? "Baixar para Windows (ZIP)" : "Baixar para macOS (DMG)";
+  const secondaryLabel = isMac ? "Baixar para Windows (.exe)" : "Baixar para macOS (.dmg)";
 
   container.innerHTML = `
     <div class="download-card">

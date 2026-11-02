@@ -98,7 +98,7 @@
   background: var(--lic-bg-card);
   border: 1px solid var(--lic-borda);
   border-radius: 10px;
-  overflow: hidden;
+  overflow-x: auto; /* com 8 colunas, em telas estreitas a tabela rola para o lado em vez de cortar */
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
@@ -129,8 +129,13 @@
   border-bottom: none;
 }
 
+/* Última coluna (Ações): os botões ficam lado a lado, sem quebrar de linha */
+.ti-table td:last-child {
+  white-space: nowrap;
+}
+
 /* ==========================================================================
-   5. BADGES DE STATUS (Indicadores Visuais de Ativo/Bloqueado)
+   5. BADGES DE STATUS (Indicadores Visuais de Ativo/Bloqueado/Expirado)
    ========================================================================== */
 .badge {
   display: inline-block;
@@ -147,7 +152,8 @@
   color: var(--lic-sucesso);
 }
 
-.badge.bloqueada {
+.badge.bloqueada,
+.badge.expirada {
   background: var(--lic-perigo-bg);
   color: var(--lic-perigo);
 }
@@ -188,27 +194,46 @@
   border-color: var(--lic-texto-principal);
 }
 
-/* Botões específicos de ações em linhas da tabela */
-.btn-acao-perigo {
-  color: var(--lic-perigo) !important;
-  border-color: var(--lic-perigo) !important;
-  background: var(--lic-perigo-bg) !important;
-}
-.btn-acao-perigo:hover {
-  opacity: 0.85;
+/* ==========================================================================
+   7. BOTÕES DE AÇÃO NA TABELA (Bloquear / Ativar / Desvincular)
+   Todos com o mesmo tamanho e o mesmo visual claro. A cor só aparece ao
+   passar o mouse, tocar com o dedo (:active) ou navegar pelo teclado (:focus-visible).
+   ========================================================================== */
+.ti-table td .btn-secundario {
+  display: inline-block;
+  vertical-align: middle;
+  box-sizing: border-box;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.25;
+  border-radius: 8px;
 }
 
-.btn-acao-sucesso {
-  color: var(--lic-sucesso) !important;
-  border-color: var(--lic-sucesso) !important;
-  background: var(--lic-sucesso-bg) !important;
+.ti-table td .btn-secundario:last-child {
+  margin-right: 0; /* Remove a margem do último botão */
 }
-.btn-acao-sucesso:hover {
-  opacity: 0.85;
+
+/* Bloquear: claro por padrão, vermelho ao passar o mouse/dedo */
+.ti-table td .btn-secundario.btn-acao-perigo:hover,
+.ti-table td .btn-secundario.btn-acao-perigo:active,
+.ti-table td .btn-secundario.btn-acao-perigo:focus-visible {
+  color: var(--lic-perigo);
+  border-color: var(--lic-perigo);
+  background: var(--lic-perigo-bg);
+}
+
+/* Ativar: claro por padrão, verde ao passar o mouse/dedo */
+.ti-table td .btn-secundario.btn-acao-sucesso:hover,
+.ti-table td .btn-secundario.btn-acao-sucesso:active,
+.ti-table td .btn-secundario.btn-acao-sucesso:focus-visible {
+  color: var(--lic-sucesso);
+  border-color: var(--lic-sucesso);
+  background: var(--lic-sucesso-bg);
 }
 
 /* ==========================================================================
-   7. MODAL DE CRIAÇÃO DE CHAVES (Overlay e Formulário)
+   8. MODAL DE CRIAÇÃO DE CHAVES (Overlay e Formulário)
    ========================================================================== */
 .modal-overlay {
   position: fixed;
@@ -271,21 +296,4 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 8px;
-}
-
-.ti-table td .btn-secundario:last-child {
-  margin-right: 0; /* Remove a margem do último botão */
-}
-
-/* ==========================================================================
-   PADRONIZAÇÃO EXATA DOS BOTÕES DE AÇÃO NA TABELA
-   ========================================================================== */
-.ti-table td .btn-secundario.btn-acao-perigo,
-.ti-table td .btn-secundario.btn-acao-sucesso {
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  border-radius: 8px;
-  line-height: normal;
-  display: inline-block;
-  vertical-align: middle;
 }

@@ -272,22 +272,6 @@
   gap: 10px;
   margin-top: 8px;
 }
-/* ==========================================================================
-   AJUSTE DE PROPORÇÃO DOS BOTÕES DE AÇÃO NA TABELA
-   ========================================================================== */
-.ti-table td:last-child {
-  white-space: nowrap; /* Garante que os botões fiquem estritamente na mesma linha */
-  width: 1%; /* Força a coluna a ocupar apenas o espaço necessário */
-}
-
-.ti-table td .btn-secundario {
-  padding: 5px 10px; /* Reduz o preenchimento interno para ficarem compactos */
-  font-size: 0.75rem; /* Ajusta a proporção da fonte */
-  margin-right: 4px;  /* Pequeno espaçamento lateral entre os botões */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
 
 .ti-table td .btn-secundario:last-child {
   margin-right: 0; /* Remove a margem do último botão */

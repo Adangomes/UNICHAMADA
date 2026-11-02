@@ -2,9 +2,16 @@ name: Gerar instaladores (Windows e Mac)
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release que vai receber os instaladores (ex.: v1.0.0)'
+        default: 'v1.0.0'
   push:
     tags:
       - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -42,3 +49,29 @@ jobs:
         with:
           name: ${{ matrix.artefato }}
           path: ${{ matrix.arquivos }}
+
+  publicar:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar os instaladores gerados
+        uses: actions/download-artifact@v4
+        with:
+          path: instaladores
+
+      - name: Publicar na página Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          mkdir -p publicar
+          cp "$(find instaladores -name '*.exe' | head -n 1)" publicar/UniChamada-Setup.exe
+          cp "$(find instaladores -name '*.pkg' | head -n 1)" publicar/UniChamada-mac.pkg
+          cp "$(find instaladores -name '*.dmg' | head -n 1)" publicar/UniChamada-mac.dmg
+          ls -lh publicar
+
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+                 --title "UniChamada $TAG" --notes "Instaladores do UniChamada para Windows e Mac."
+
+          gh release upload "$TAG" publicar/* --repo "$GITHUB_REPOSITORY" --clobber

@@ -36,10 +36,14 @@
       "!skills/**",
       "!banco-de-dados/**",
       "!docker-compose.yml",
-      "!README.md"
+      "!README.md",
+      "!software/**"
     ],
     "mac": {
-      "target": ["dmg", "pkg"],
+      "target": [
+        "dmg",
+        "pkg"
+      ],
       "category": "public.app-category.education",
       "identity": null,
       "artifactName": "UniChamada-${version}-mac.${ext}"
@@ -52,7 +56,12 @@
     },
     "win": {
       "target": [
-        { "target": "nsis", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {

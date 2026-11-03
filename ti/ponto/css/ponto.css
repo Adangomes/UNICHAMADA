@@ -1,0 +1,588 @@
+.ti-ponto {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: clamp(18px, 4vw, 36px);
+  border: 1px solid #e1e7ef;
+  border-radius: 16px;
+  background: #fff;
+  color: #17243a;
+  box-shadow: 0 12px 36px rgb(26 49 79 / 7%);
+}
+
+.ti-ponto *,
+.ti-ponto *::before,
+.ti-ponto *::after {
+  box-sizing: border-box;
+}
+
+.ti-ponto-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ti-ponto-sobretitulo {
+  margin: 0 0 6px;
+  color: #66809f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.ti-ponto h1 {
+  margin: 0;
+  color: #142a47;
+  font-size: clamp(1.6rem, 5vw, 2rem);
+}
+
+.ti-ponto-estado {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #edf2f8;
+  color: #536780;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ti-ponto-estado.ok {
+  background: #e8f7ef;
+  color: #187447;
+}
+
+.ti-ponto-estado.erro {
+  background: #fff0ef;
+  color: #a6332b;
+}
+
+.ti-ponto-horario {
+  margin: 24px 0 0;
+  padding: 20px 10px;
+  border-top: 1px solid #edf0f4;
+  border-bottom: 1px solid #edf0f4;
+  text-align: center;
+}
+
+.ti-ponto-relogio {
+  margin: 0;
+  color: #142a47;
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(2.4rem, 9vw, 3.5rem);
+  font-weight: 750;
+  letter-spacing: -0.06em;
+}
+
+.ti-ponto-data {
+  margin: 5px 0 0;
+  color: #71819a;
+  text-transform: capitalize;
+}
+
+.ti-ponto-funcionario {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0;
+  color: #1c2f49;
+}
+
+.ti-ponto-funcionario span {
+  color: #71819a;
+  font-size: 0.88rem;
+}
+
+.ti-ponto-aviso {
+  margin: 20px 0;
+  padding: 14px 16px;
+  border: 1px solid #f0dfb5;
+  border-radius: 12px;
+  background: #fff9e9;
+  color: #745a1c;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.ti-ponto-aviso strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.ti-ponto-aviso p {
+  margin: 0;
+}
+
+.ti-ponto-form-id {
+  margin: 20px 0;
+}
+
+.ti-ponto-form-id label,
+.ti-ponto-foto h2 {
+  display: block;
+  margin: 0 0 8px;
+  color: #1c2f49;
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.ti-ponto-linha-id {
+  display: flex;
+  gap: 9px;
+}
+
+.ti-ponto input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd6e4;
+  border-radius: 10px;
+  color: #17243a;
+}
+
+.ti-ponto button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #cbd6e4;
+  border-radius: 10px;
+  background: #fff;
+  color: #294361;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.ti-ponto button:hover:not(:disabled) {
+  border-color: #347ac5;
+  background: #f3f8ff;
+}
+
+.ti-ponto button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ti-ponto-foto {
+  margin: 22px 0;
+  padding-top: 20px;
+  border-top: 1px solid #edf0f4;
+}
+
+.ti-ponto-foto > p {
+  margin: 0 0 12px;
+  color: #536780;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.ti-ponto-foto video,
+.ti-ponto-foto img {
+  display: block;
+  width: min(100%, 460px);
+  max-height: 360px;
+  margin: 12px auto;
+  border-radius: 12px;
+  background: #101827;
+  object-fit: contain;
+}
+
+.ti-ponto-acoes-foto,
+.ti-ponto-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.ti-ponto button.primario {
+  border-color: #1d5eaa;
+  background: #1d5eaa;
+  color: #fff;
+}
+
+.ti-ponto-acoes button {
+  flex: 1 1 180px;
+}
+
+.ti-ponto-mensagem {
+  min-height: 1.5em;
+  margin: 16px 0 0;
+  color: #536780;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.ti-ponto-mensagem.erro {
+  color: #a6332b;
+}
+
+.ti-ponto-mensagem.ok {
+  color: #187447;
+}
+
+.ti-ponto-nota {
+  margin: 12px 0 0;
+  color: #71819a;
+  font-size: 0.78rem;
+}
+
+.ti-ponto-coordenacao {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ti-ponto-coord-batida {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 18px;
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 1px solid #e3e0d9;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgb(26 49 79 / 4%);
+}
+
+.ti-ponto-coord-batida .ti-ponto-horario {
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.ti-ponto-coord-batida .ti-ponto-relogio {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+}
+
+.ti-ponto-coord-batida .ti-ponto-aviso {
+  margin: 12px 0;
+}
+
+.ti-ponto-coord-batida .ti-ponto-form-id {
+  margin: 12px 0;
+}
+
+.ti-ponto-coord-batida .ti-ponto-foto {
+  margin: 12px 0 0;
+  padding-top: 12px;
+}
+
+.ti-ponto-coordenacao .ti-ponto-cabecalho {
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ti-ponto-coord-sub {
+  margin-top: 6px;
+  color: #5b6585;
+}
+
+.ti-ponto-resumos {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ti-ponto-resumo,
+.ti-ponto-painel {
+  min-width: 0;
+  border: 1px solid #e3e0d9;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgb(26 49 79 / 4%);
+}
+
+.ti-ponto-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+}
+
+.ti-ponto-resumo span {
+  color: #5b6585;
+  font-size: 0.83rem;
+}
+
+.ti-ponto-resumo strong {
+  color: #1f2a4d;
+  font-size: 1.65rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ti-ponto-painel {
+  margin-top: 18px;
+  padding: clamp(16px, 2.5vw, 24px);
+}
+
+.ti-ponto-secao-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ti-ponto-secao-cabecalho h2 {
+  margin: 0 0 5px;
+  color: #1f2a4d;
+  font-size: 1.18rem;
+}
+
+.ti-ponto-secao-cabecalho p,
+.ti-ponto-ajuste-rodape span {
+  color: #5b6585;
+  font-size: 0.87rem;
+  line-height: 1.45;
+}
+
+.ti-ponto-filtros,
+.ti-ponto-ajuste {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.ti-ponto-filtros label,
+.ti-ponto-ajuste label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: #293959;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.ti-ponto-coordenacao input,
+.ti-ponto-coordenacao select,
+.ti-ponto-coordenacao textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid #cbd6e4;
+  border-radius: 9px;
+  background: #fff;
+  color: #17243a;
+  font: inherit;
+}
+
+.ti-ponto-coordenacao textarea {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.ti-ponto-coordenacao .ti-ponto-filtros button,
+.ti-ponto-coordenacao .ti-ponto-ajuste button {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid #cbd6e4;
+  border-radius: 9px;
+  background: #fff;
+  color: #294361;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.ti-ponto-coordenacao .ti-ponto-ajuste button.primario {
+  border-color: #1d5eaa;
+  background: #1d5eaa;
+  color: #fff;
+}
+
+.ti-ponto-coordenacao button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ti-ponto-tabela-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #eeebe4;
+  border-radius: 10px;
+}
+
+.ti-ponto-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  text-align: left;
+}
+
+.ti-ponto-tabela th,
+.ti-ponto-tabela td {
+  padding: 11px 12px;
+  border-bottom: 1px solid #eeebe4;
+  vertical-align: top;
+}
+
+.ti-ponto-tabela th {
+  background: #f7f6f2;
+  color: #53617d;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.ti-ponto-tabela tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ti-ponto-tabela td:first-child {
+  min-width: 150px;
+  color: #1f2a4d;
+  font-weight: 700;
+}
+
+.ti-ponto-tabela td small {
+  display: block;
+  margin-top: 3px;
+  color: #71819a;
+  font-weight: 500;
+}
+
+.ti-ponto-status {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e8f7ef;
+  color: #187447;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ti-ponto-status.intervalo {
+  background: #fff3d4;
+  color: #745a1c;
+}
+
+.ti-ponto-status.encerrada {
+  background: #edf2f8;
+  color: #536780;
+}
+
+.ti-ponto-evento {
+  display: block;
+  min-width: 150px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.ti-ponto-evento:last-child {
+  margin-bottom: 0;
+}
+
+.ti-ponto-tabela .negativo {
+  color: #a6332b;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ti-ponto-tabela .positivo {
+  color: #187447;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ti-ponto-vazio,
+.ti-ponto-feedback {
+  padding: 12px;
+  border-radius: 9px;
+  background: #f7f6f2;
+  color: #536780;
+}
+
+.ti-ponto-feedback {
+  margin: 0 0 14px;
+}
+
+.ti-ponto-feedback.erro {
+  background: #fff0ef;
+  color: #a6332b;
+}
+
+.ti-ponto-feedback.ok {
+  background: #e8f7ef;
+  color: #187447;
+}
+
+.ti-ponto-motivo {
+  grid-column: 1 / -1;
+}
+
+.ti-ponto-ajuste-rodape {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ti-ponto-ajuste-rodape span {
+  max-width: 600px;
+}
+
+.ti-ponto-coordenacao input:focus-visible,
+.ti-ponto-coordenacao select:focus-visible,
+.ti-ponto-coordenacao textarea:focus-visible,
+.ti-ponto-coordenacao button:focus-visible {
+  outline: 3px solid #87b9f1;
+  outline-offset: 2px;
+}
+
+.ti-ponto input:focus-visible,
+.ti-ponto button:focus-visible {
+  outline: 3px solid #87b9f1;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .ti-ponto-cabecalho {
+    flex-direction: column;
+  }
+
+  .ti-ponto-linha-id {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 900px) {
+  .ti-ponto-resumos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ti-ponto-filtros,
+  .ti-ponto-ajuste {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ti-ponto-resumos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ti-ponto-filtros,
+  .ti-ponto-ajuste {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ti-ponto-secao-cabecalho,
+  .ti-ponto-ajuste-rodape {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ti-ponto-motivo,
+  .ti-ponto-ajuste-rodape {
+    grid-column: auto;
+  }
+}

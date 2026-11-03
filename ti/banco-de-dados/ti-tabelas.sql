@@ -3,7 +3,7 @@
 -- Arquivo: ti/banco-de-dados/ti-tabelas.sql
 --
 -- O que este arquivo cria (tudo com o prefixo "ti_"):
---   ti_funcionarios         equipe de TI (nome, RA, e-mail, setor, papel)
+--   ti_funcionarios         equipe de TI (nome, ID do crachá, e-mail, setor, papel)
 --   ti_chamados             chamados (infraestrutura, acesso, erro no sistema...)
 --   ti_chamados_comentarios conversa do chamado, com nota interna
 --   ti_demandas             mudanças no sistema (quadro do desenvolvedor)
@@ -23,13 +23,14 @@
 -- 1) TABELAS
 -- -----------------------------------------------------------------------------
 
--- Equipe de TI. Quem cria as contas é o fluxo do n8n (chave de administrador fica
--- só no servidor), nunca o navegador.
+-- Equipe de TI. As contas de acesso são criadas previamente no Supabase Auth
+-- e vinculadas ao cadastro do funcionário.
 create table if not exists public.ti_funcionarios (
   id            uuid primary key default gen_random_uuid(),
   auth_user_id  uuid unique references auth.users (id) on delete set null,
   nome          text not null,
-  ra            text not null unique,
+  ra            text unique,
+  id_funcionarios text,
   email         text not null unique,
   setor         text not null check (setor in (
                   'coordenacao', 'infraestrutura', 'dev_frontend', 'dev_backend',
@@ -464,10 +465,10 @@ revoke update, delete on public.ti_auditoria from authenticated;
 --   b) Rode o comando abaixo trocando os 3 valores:
 --
 -- insert into public.ti_funcionarios (auth_user_id, nome, ra, email, setor, papel)
--- select id, 'SEU NOME COMPLETO', 'SEU_RA', email, 'coordenacao', 'coordenador_ti'
+-- select id, 'SEU NOME COMPLETO', null, email, 'coordenacao', 'coordenador_ti'
 -- from auth.users
 -- where email = 'seu-email@exemplo.com';
 --
---   As demais pessoas da equipe serão cadastradas pela tela "Equipe de TI"
---   (via n8n), nunca direto no banco.
+--   O ID do crachá é gerado automaticamente depois de executar
+--   ti-fotos-funcionarios.sql. As demais pessoas são cadastradas pela tela "Equipe de TI".
 -- -----------------------------------------------------------------------------

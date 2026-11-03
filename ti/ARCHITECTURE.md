@@ -304,7 +304,7 @@ Os grupos `base`, `layout` e `login` estão em `TI.estilos.GRUPOS` (`js/comum/es
 
 | Tabela | O que guarda | Colunas principais | Arquivo que mexe |
 |---|---|---|---|
-| `ti_funcionarios` | a equipe de TI | nome, ra, email, setor, papel, ativo | `data/funcionarios.js` |
+| `ti_funcionarios` | a equipe de TI | nome, ra (legado/opcional), id_funcionarios (ID do crachá), email, setor, papel, ativo | `data/funcionarios.js` |
 | `ti_chamados` | chamados (projetor, rede, acesso, erro) | codigo, titulo, categoria, prioridade, status, grupo_destino, responsavel_id, local_texto, patrimonio, prazo_em | `data/chamados.js` |
 | `ti_chamados_comentarios` | conversa e notas internas | chamado_id, autor_nome, texto, interno | `data/comentarios.js` |
 | `ti_demandas` | mudanças no sistema | codigo, titulo, area, status, grupo_destino, responsavel_id, aprovado_por | `data/demandas.js` |

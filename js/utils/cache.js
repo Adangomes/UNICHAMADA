@@ -6,18 +6,20 @@ window.UNICHAMADA_CACHE = {
   store: new Map(),
 
   // Define um valor no cache com tempo de vida em segundos (padrão: 5 minutos)
-  set(key, data, ttlSeconds = 300) {
+  set(key, data, ttlSeconds = 300, persistSession = true) {
     const expiry = Date.now() + ttlSeconds * 1000;
     const item = { data, expiry };
     
     // Salva na memória RAM da aplicação
     this.store.set(key, item);
     
-    // Opcional: Salva também no sessionStorage para persistir se trocar de aba/recarregar
-    try {
-      sessionStorage.setItem(`cache_${key}`, JSON.stringify(item));
-    } catch (e) {
-      console.warn("Não foi possível salvar no sessionStorage", e);
+    // Dados sensíveis podem permanecer somente na memória desta tela/sessão.
+    if (persistSession) {
+      try {
+        sessionStorage.setItem(`cache_${key}`, JSON.stringify(item));
+      } catch (e) {
+        console.warn("Não foi possível salvar no sessionStorage", e);
+      }
     }
   },
 

@@ -6,6 +6,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ## [Não lançado]
 
+### Adicionado
+- Gestão de ponto exclusiva da coordenação com resumo diário, filtros por período/funcionário, apuração
+  de horas e saldo contra 8h, exportação CSV e ajustes com justificativa/auditoria.
+- Regras de servidor para janela de entrada e saída/retorno do almoço, além de cálculo sinalizado quando
+  uma jornada longa não possui batidas de intervalo.
+
 ### Corrigido
 - O quadro de demandas e seus diálogos inicializam o próprio namespace antes de registrar as telas,
   evitando falhas quando os scripts são servidos em cache ou fora de ordem.
@@ -99,3 +105,40 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Observações
 - Testado com um Supabase **simulado** (65 verificações automáticas no navegador). Ainda não foi testado
   contra o Supabase e o n8n reais.
+
+
+
+
+# Changelog
+
+## [1.0.0] — Atualização de 01–02/11/2026
+
+### Adicionado
+- **Instalador profissional para Windows (`UniChamada-Setup.exe`)**, com assistente em português: boas-vindas, escolha da pasta de instalação, barra de progresso e tela final. Inclui desinstalador, imagem lateral personalizada e ícone próprio do UniChamada.
+- **Dois atalhos na área de trabalho** no Windows: `UniChamada` (professor, aluno e coordenação acadêmica) e `UniChamada - Painel TI` (coordenação de TI e funcionários). Os dois abrem o mesmo programa.
+- **Instaladores para Mac**: `UniChamada-mac.pkg` (com assistente de instalação) e `UniChamada-mac.dmg` (arrastar para Aplicativos). No Mac, os dois modos ficam no menu do aplicativo e no menu do Dock.
+- **Ativação por chave serial antes de abrir o sistema.** Na primeira abertura, o app pede a chave (`UNI-XXXX-XXXX-XXXX`), valida no Supabase e vincula a licença ao computador. Se a licença for bloqueada ou expirar, o app volta a pedir a chave. Sem internet, o app abre por até 7 dias após a última validação.
+- **Painel de TI → Licenças:**
+  - coluna **Computador**, que mostra "Aguardando ativação" ou "Vinculado";
+  - botão **Desvincular**, que libera a chave para ser ativada em outro computador;
+  - status **expirada** mostrado pela data de validade;
+  - o card "Máquinas Ativas" passa a contar só licenças válidas já ativadas.
+- **Publicação automática dos instaladores:** o GitHub Actions gera o `.exe`, o `.pkg` e o `.dmg` e os envia para a página Releases com nomes fixos. A página de download pode apontar sempre para a versão mais nova.
+
+### Alterado
+- **Tabela de licenças:** os botões da coluna Ações ficaram do mesmo tamanho, claros por padrão, empilhados, e só mudam de cor ao passar o mouse ou tocar com o dedo (vermelho em Bloquear, verde em Ativar). A tabela ganhou rolagem horizontal em telas estreitas e o selo "expirada" ganhou cor.
+- **Tela de licenças:** passou a usar a conexão do painel e a mesma geração de chaves segura do `seguranca.js`. Em caso de erro, a mensagem aparece na tabela, e os dados de teste foram removidos.
+- **Segurança do aplicativo:** páginas sem acesso direto ao Node.js, links externos abrem no navegador e a ativação da licença é checada antes de qualquer tela.
+- **Empacotamento:** o app deixa de fora arquivos que não usa (releases, skills, banco-de-dados, docker-compose, README, software e arquivos .sql).
+
+### Corrigido
+- Erro `chamyEl is not defined`, que impedia a tela de licenças de abrir.
+- Erro de permissão (`42501`) ao ler a tabela de licenças, resolvido com a permissão da tabela e uma regra de acesso restrita a funcionários de TI.
+- Versão do Windows que saía como pasta compactada, sem instalador.
+- Chave serial gerada com `Math.random` na tela de licenças, agora gerada por `crypto.getRandomValues`.
+- Arquivo `.DS_Store` do Mac removido do repositório.
+
+### Observações
+- Os instaladores não têm assinatura digital, então o Windows pode mostrar o aviso do SmartScreen ("Mais informações → Executar assim mesmo") e o Mac pede clique direito → Abrir na primeira vez.
+- Versões antigas baixadas antes dessa atualização não pedem chave serial e não recebem atualização automática. Para usar a licença, é preciso instalar pelo instalador novo.
+- A alteração dos botões da tabela de licenças aparece no site (GitHub Pages) imediatamente, e no app instalado só depois de um novo build.

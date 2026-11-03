@@ -1,8 +1,18 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { machineIdSync } = require('node-machine-id');
 const cfg = require('./desktop-config');
+
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'unichamada-models',
+  privileges: {
+    standard: true,
+    secure: true,
+    supportFetchAPI: true,
+    corsEnabled: true
+  }
+}]);
 
 // Necessário para as notificações do Windows funcionarem
 app.setAppUserModelId('com.unichamada.desktop');
@@ -208,6 +218,38 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   app.on('second-instance', (_e, argv) => iniciarModo(lerModo(argv)));
   app.whenReady().then(() => {
+    const modelosPermitidos = new Set([
+      'tiny_face_detector_model-weights_manifest.json',
+      'tiny_face_detector_model.bin',
+      'face_landmark_68_model-weights_manifest.json',
+      'face_landmark_68_model.bin',
+      'face_recognition_model-weights_manifest.json',
+      'face_recognition_model.bin'
+    ]);
+
+    protocol.handle('unichamada-models', async (request) => {
+      const url = new URL(request.url);
+      const nome = decodeURIComponent(url.pathname.slice(1));
+      if (url.hostname !== 'models' || !modelosPermitidos.has(nome)) {
+        return new Response('Not found', { status: 404 });
+      }
+
+      try {
+        const arquivo = path.join(__dirname, 'ti', 'ponto', 'models', nome);
+        const conteudo = await fs.promises.readFile(arquivo);
+        return new Response(conteudo, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Content-Type': nome.endsWith('.json') ? 'application/json' : 'application/octet-stream'
+          }
+        });
+      } catch (erro) {
+        console.error(`Não foi possível carregar o modelo facial ${nome}:`, erro);
+        return new Response('Model file unavailable', { status: 404 });
+      }
+    });
+
     criarMenus();
     iniciarModo(lerModo(process.argv));
   });

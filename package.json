@@ -8,16 +8,24 @@
   "scripts": {
     "start": "electron .",
     "start:ti": "electron . --ti",
+    "build:ponto": "esbuild ti/ponto/src/MeuPonto.jsx --bundle --minify --platform=browser --target=chrome120 --jsx=automatic --outfile=ti/ponto/ponto.bundle.js",
+    "prebuild": "npm run build:ponto",
+    "prebuild:mac": "npm run build:ponto",
+    "prebuild:win": "npm run build:ponto",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac --universal --publish never",
     "build:win": "electron-builder --win --x64 --publish never"
   },
   "dependencies": {
-    "node-machine-id": "^1.1.12"
+    "@vladmandic/face-api": "^1.7.15",
+    "node-machine-id": "^1.1.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "electron": "^33.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.25.5"
   },
   "build": {
     "appId": "com.unichamada.desktop",

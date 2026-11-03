@@ -7,6 +7,8 @@ window.TI = window.TI || {};
 TI.app = {
   raiz: null,
   layout: null,
+  _desmontarTela: null,
+  _navegacao: 0,
 
   async iniciar() {
     const { el } = TI.dom;
@@ -59,6 +61,11 @@ TI.app = {
   },
 
   async mostrarLogin(mensagem) {
+    this._navegacao++;
+    if (this._desmontarTela) {
+      this._desmontarTela();
+      this._desmontarTela = null;
+    }
     this.layout = null;
     sessionStorage.removeItem('ti_ultima_rota');
     await TI.estilos.carregar(TI.estilos.GRUPOS.login);
@@ -85,6 +92,7 @@ TI.app = {
   },
 
   async navegar(rota, params) {
+    const navegacao = ++this._navegacao;
     const f = TI.sessao.funcionario;
     const def = TI.rotas.tabela[rota];
     
@@ -98,14 +106,25 @@ TI.app = {
     const alvo = TI.rotas.tabela[rota];
     const tela = TI.telas[alvo.tela];
     const conteudo = this.layout.conteudo;
+    if (this._desmontarTela) {
+      this._desmontarTela();
+      this._desmontarTela = null;
+    }
     this.layout.marcarAtivo(alvo.menu);
     conteudo.replaceChildren(TI.ui.carregando());
     window.scrollTo(0, 0);
     try {
       await TI.estilos.carregar(alvo.css);
+      if (navegacao !== this._navegacao) return;
       conteudo.replaceChildren();
-      await tela.render(conteudo, this.ctx, params || {});
+      const desmontar = await tela.render(conteudo, this.ctx, params || {});
+      if (navegacao !== this._navegacao) {
+        if (typeof desmontar === 'function') desmontar();
+        return;
+      }
+      if (typeof desmontar === 'function') this._desmontarTela = desmontar;
     } catch (err) {
+      if (navegacao !== this._navegacao) return;
       console.error('[TI] erro na tela', rota, err);
       conteudo.replaceChildren(TI.ui.erro('Não foi possível abrir esta tela: ' + err.message));
     }

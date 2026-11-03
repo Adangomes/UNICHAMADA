@@ -1,2 +1,45 @@
 /* coordenador_ti/coordenacao/equipe_de_ti.css — tela "Equipe de TI" e a janela de cadastro de funcionário
    (js/coordenador_ti/coordenacao/equipe/). Hoje usa só os componentes comuns. */
+
+.ti-foto-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ti-foto-area {
+  display: grid;
+  width: min(100%, 360px);
+  min-height: 0;
+  margin-top: 12px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.ti-foto-area.ativo {
+  min-height: 180px;
+  background: #101827;
+}
+
+.ti-modal-corpo input.ti-input[hidden] {
+  display: none !important;
+}
+
+.ti-foto-video[hidden],
+.ti-foto-previa[hidden] {
+  display: none !important;
+}
+
+.ti-foto-video,
+.ti-foto-previa {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.ti-foto-info {
+  margin: 8px 0 0;
+}

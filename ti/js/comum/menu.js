@@ -20,6 +20,9 @@ TI.menu = {
           { rota: 'quadro', rotulo: 'Quadro de demandas' },
           { rota: 'metricas', rotulo: 'Métricas' },
           { rota: 'auditoria', rotulo: 'Auditoria' }
+        ] },
+        { titulo: 'Jornada', itens: [
+          { rota: 'meu-ponto', rotulo: 'Gestão de ponto' }
         ] }
       ];
     }
@@ -29,11 +32,16 @@ TI.menu = {
 
     // 2. Menu para a equipe de Infraestrutura
     if (grupo === 'infraestrutura') {
-      return [{ titulo: 'Atendimento', itens: [
-        { rota: 'meus-chamados-infra', rotulo: 'Meus chamados' },
-        { rota: 'fila', rotulo: 'Fila da infraestrutura' },
-        { rota: 'visao-geral', rotulo: 'Visão geral' }
-      ] }];
+      return [
+        { titulo: 'Atendimento', itens: [
+          { rota: 'meus-chamados-infra', rotulo: 'Meus chamados' },
+          { rota: 'fila', rotulo: 'Fila da infraestrutura' },
+          { rota: 'visao-geral', rotulo: 'Visão geral' }
+        ] },
+        { titulo: 'Jornada', itens: [
+          { rota: 'meu-ponto', rotulo: 'Meu ponto' }
+        ] }
+      ];
     }
 
     // 3. Menu para os demais funcionários (Banco, Power BI, Devs)
@@ -51,6 +59,11 @@ TI.menu = {
       itensTrabalho.push({ rota: 'quadro', rotulo: 'Quadro de demandas' });
     }
 
-    return [{ titulo: 'Trabalho', itens: itensTrabalho }];
+    return [
+      { titulo: 'Trabalho', itens: itensTrabalho },
+      { titulo: 'Jornada', itens: [
+        { rota: 'meu-ponto', rotulo: 'Meu ponto' }
+      ] }
+    ];
   }
 };

@@ -169,16 +169,27 @@ TI.telas.login = {
         botao.textContent = 'Entrando…';
 
         try {
-          let logouComoCoordenador = false;
+          const { data: dadosAuth, error: erroAuth } = await TI.db.auth.signInWithPassword({
+            email: valEmail,
+            password: valSenha
+          });
 
-          try {
-            await TI.sessao.entrar(valEmail, valSenha);
-            logouComoCoordenador = true;
-          } catch (authErr) {}
-
-          if (logouComoCoordenador) {
+          if (!erroAuth) {
+            try {
+              await TI.sessao._carregar(dadosAuth.user);
+            } catch (erroCadastro) {
+              throw new Error(
+                'A conta autenticou no Supabase, mas não está vinculada a um cadastro ativo de funcionário. Peça à coordenação para conferir o vínculo do e-mail.'
+              );
+            }
             await opcoes.aoEntrar();
             return;
+          }
+
+          const { data: sessaoExistente, error: erroSessaoExistente } = await TI.db.auth.getSession();
+          if (erroSessaoExistente) throw erroSessaoExistente;
+          if (sessaoExistente?.session) {
+            throw new Error('Há uma sessão Supabase de outra conta. Saia dela e tente novamente.');
           }
 
           const { data: funcionarios, error: dbErr } = await TI.db
@@ -193,7 +204,27 @@ TI.telas.login = {
             throw new Error('E-mail ou senha incorretos (ou conta inativa).');
           }
 
-          TI.sessao.funcionario = funcionario;
+          const { data: dadosSessao, error: erroSessao } = await TI.db.auth.getSession();
+          if (erroSessao) throw erroSessao;
+          const usuarioAuth = dadosSessao?.session?.user;
+          if (!usuarioAuth) {
+            throw new Error(
+              'A senha antiga foi reconhecida, mas não autenticou no Supabase. Use “Esqueci minha senha” para definir a senha da conta Supabase Auth e tente entrar novamente.'
+            );
+          }
+          if (usuarioAuth.email?.toLowerCase() !== valEmail) {
+            throw new Error('A sessão Supabase aberta pertence a outra conta. Saia e entre com o e-mail correto.');
+          }
+
+          const funcionarioVinculado = await TI.dados.funcionarios.buscarPorAuth(usuarioAuth.id);
+          if (!funcionarioVinculado?.ativo || funcionarioVinculado.id !== funcionario.id) {
+            throw new Error(
+              'A conta Supabase Auth não está vinculada a este cadastro de funcionário. Peça à coordenação para conferir o vínculo do e-mail.'
+            );
+          }
+
+          TI.sessao.funcionario = funcionarioVinculado;
+          localStorage.setItem('unichamada_ti_user', JSON.stringify(funcionarioVinculado));
           await opcoes.aoEntrar();
 
         } catch (err) {

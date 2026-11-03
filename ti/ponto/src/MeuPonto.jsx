@@ -527,7 +527,11 @@ function MeuPonto({ funcionarioSessao, somenteRegistro = false }) {
     window.TI.db.auth.getUser().then(({ data, error }) => {
       if (!ativo) return;
       if (error) {
-        setErroSessao(error.message);
+        setErroSessao(
+          error.message === 'Auth session missing!'
+            ? 'Sua sessão do Supabase expirou ou não foi criada. Saia do painel e entre novamente com a conta vinculada ao seu cadastro.'
+            : error.message
+        );
       } else if (!data?.user) {
         setErroSessao('Entre no painel de TI com a conta do funcionário antes de registrar o ponto.');
       } else {

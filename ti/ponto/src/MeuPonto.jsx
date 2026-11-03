@@ -518,28 +518,38 @@ function MeuPonto({ funcionarioSessao, somenteRegistro = false }) {
   const [horario, setHorario] = useState(new Date());
   const videoRef = useRef(null);
   const tituloId = somenteRegistro ? 'ti-ponto-coordenador-titulo' : 'meu-ponto-titulo';
-  const fotoTituloId = somenteRegistro
-    ? 'ti-ponto-coordenador-foto-titulo'
-    : 'ti-ponto-foto-titulo';
 
   useEffect(() => {
     let ativo = true;
-    window.TI.db.auth.getUser().then(({ data, error }) => {
-      if (!ativo) return;
-      if (error) {
-        setErroSessao(
-          error.message === 'Auth session missing!'
-            ? 'Sua sessão do Supabase expirou ou não foi criada. Saia do painel e entre novamente com a conta vinculada ao seu cadastro.'
-            : error.message
-        );
-      } else if (!data?.user) {
+
+    async function validarSessaoOuFuncionario() {
+      try {
+        const { data, error } = await window.TI.db.auth.getUser();
+        if (!ativo) return;
+
+        if (data?.user) {
+          setUsuario(data.user);
+          return;
+        }
+
+        // Fallback robusto: se a sessão nativa falhar mas o login corporativo ocorreu via RPC
+        const funcionarioSalvo = localStorage.getItem('unichamada_ti_user');
+        if (funcionarioSalvo) {
+          const funcObj = JSON.parse(funcionarioSalvo);
+          setUsuario({ id: funcObj.auth_user_id || funcObj.id, email: funcObj.email });
+          if (!idCracha && funcObj.id_funcionarios) {
+            setIdCracha(funcObj.id_funcionarios);
+          }
+          return;
+        }
+
         setErroSessao('Entre no painel de TI com a conta do funcionário antes de registrar o ponto.');
-      } else {
-        setUsuario(data.user);
+      } catch (error) {
+        if (ativo) setErroSessao(error.message || 'Não foi possível validar a sessão.');
       }
-    }).catch((error) => {
-      if (ativo) setErroSessao(error.message || 'Não foi possível validar a sessão.');
-    });
+    }
+
+    validarSessaoOuFuncionario();
 
     const timer = window.setInterval(() => setHorario(new Date()), 1000);
     return () => {
@@ -812,76 +822,56 @@ function MeuPonto({ funcionarioSessao, somenteRegistro = false }) {
               onChange={(event) => setIdCracha(event.target.value)}
               disabled={!usuario || carregando}
             />
-            <button type="submit" disabled={!usuario || carregando || !idCracha.trim()}>
-              {carregando ? 'Aguarde…' : 'Consultar ID'}
+            <button type="submit" disabled={!usuario || carregando}>
+              {carregando ? 'Consultando…' : 'Confirmar ID'}
             </button>
           </div>
         </form>
       )}
 
-      {somenteRegistro && !funcionario && (
-        <button
-          type="button"
-          onClick={consultarFuncionario}
-          disabled={!usuario || carregando || !idCracha.trim()}
-        >
-          {carregando ? 'Confirmando seu cadastro…' : 'Confirmar meu cadastro'}
-        </button>
-      )}
-
       {funcionario && (
-        <section className="ti-ponto-foto" aria-labelledby={fotoTituloId}>
-          <h2 id={fotoTituloId}>{somenteRegistro ? 'Confirme sua identidade' : 'Conferência facial'}</h2>
-          <p>{somenteRegistro
-            ? 'Abra a câmera e valide seu rosto para liberar as batidas.'
-            : 'A captura é temporária e não fica salva no Supabase.'}</p>
-          {stream && <video ref={videoRef} autoPlay playsInline muted aria-label="Prévia da câmera" />}
-          <div className="ti-ponto-acoes-foto">
-            <button type="button" onClick={abrirCamera} disabled={carregando}>
-              {rostoVerificado ? 'Verificar novamente' : stream ? 'Reiniciar câmera' : 'Abrir câmera'}
+        <div className="ti-ponto-painel-camera">
+          {!stream && !rostoVerificado && (
+            <button type="button" className="ti-btn-camera" onClick={abrirCamera} disabled={carregando}>
+              Abrir câmera para conferência facial
             </button>
-            {stream && (
-              <button type="button" className="primario" onClick={verificarRosto} disabled={carregando}>
-                Verificar rosto
-              </button>
-            )}
-          </div>
-        </section>
-      )}
+          )}
 
-      {rostoVerificado && (
-        <div className="ti-ponto-acoes" aria-label="Ações de ponto">
-          {TIPOS_BATIDA.map(([tipo, rotulo]) => (
-            <button
-              type="button"
-              key={tipo}
-              onClick={() => registrarPonto(tipo)}
-              disabled={carregando}
-            >
-              {rotulo}
-            </button>
-          ))}
+          {stream && (
+            <div className="ti-camera-container">
+              <video ref={videoRef} playsInline muted />
+              <button type="button" className="ti-btn-capturar" onClick={verificarRosto} disabled={carregando}>
+                Capturar e conferir rosto
+              </button>
+            </div>
+          )}
+
+          {rostoVerificado && (
+            <div className="ti-botoes-batida">
+              <p className="ti-ponto-ok">Rosto verificado com sucesso! Escolha o tipo de batida:</p>
+              <div className="ti-grid-batidas">
+                {TIPOS_BATIDA.map(([tipo, rotulo]) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    className={`ti-btn-batida ${tipo}`}
+                    onClick={() => registrarPonto(tipo)}
+                    disabled={carregando}
+                  >
+                    {rotulo}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      <p className={`ti-ponto-mensagem${tipoMensagem ? ` ${tipoMensagem}` : ''}`} role="status" aria-live="polite">
-        {mensagem}
-      </p>
-      <p className="ti-ponto-nota">O horário oficial é gerado pelo banco de dados.</p>
+      {mensagem && (
+        <p className={`ti-ponto-mensagem ${tipoMensagem}`} role={tipoMensagem === 'erro' ? 'alert' : 'status'}>
+          {mensagem}
+        </p>
+      )}
     </section>
   );
 }
-
-window.TI = window.TI || {};
-window.TI.telas = window.TI.telas || {};
-window.TI.telas.meuPonto = {
-  render(container, ctx) {
-    const root = createRoot(container);
-    if (ctx.f?.papel === 'coordenador_ti') {
-      root.render(<GestaoPonto funcionarioSessao={ctx.f} />);
-    } else {
-      root.render(<MeuPonto funcionarioSessao={ctx.f} />);
-    }
-    return () => root.unmount();
-  }
-};

@@ -181,6 +181,7 @@ TI.telas.login = {
             return;
           }
 
+          // 1. Valida na tabela de funcionários via função RPC
           const { data: funcionarios, error: dbErr } = await TI.db
             .rpc('verificar_login_funcionario', {
               p_email: valEmail,
@@ -193,7 +194,20 @@ TI.telas.login = {
             throw new Error('E-mail ou senha incorretos (ou conta inativa).');
           }
 
+          // 2. Tenta autenticar no Supabase Auth em segundo plano para suprir a exigência de sessão do "Meu Ponto"
+          try {
+            await TI.db.auth.signInWithPassword({
+              email: valEmail,
+              password: valSenha
+            });
+          } catch (sessionErr) {
+            console.warn("Sessão nativa do Auth secundária ignorada, prosseguindo com dados do funcionário.");
+          }
+
+          // 3. Define a sessão e salva o funcionário contendo o id_funcionarios (crachá)
           TI.sessao.funcionario = funcionario;
+          localStorage.setItem('unichamada_ti_user', JSON.stringify(funcionario));
+          
           await opcoes.aoEntrar();
 
         } catch (err) {

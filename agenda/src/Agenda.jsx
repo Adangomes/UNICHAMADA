@@ -688,9 +688,6 @@ function Agenda({ perfil, cliente }) {
               <span>Use “Novo item” para adicionar algo à sua agenda.</span>
             </div>}
       </section>
-      <footer className="agenda-rodape">
-        Títulos, descrições e notas são cifrados neste dispositivo antes de serem enviados. A chave usa RA e ID, que não são segredos. Datas, tipos, status e prioridades ficam visíveis ao Supabase.
-      </footer>
     </section>
   );
 }

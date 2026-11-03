@@ -336,7 +336,6 @@ function GestaoPonto({ funcionarioSessao }) {
         <div>
           <p className="ti-ponto-sobretitulo">JORNADA DA EQUIPE</p>
           <h1 id="meu-ponto-titulo">Gestão de ponto</h1>
-          <p className="ti-ponto-coord-sub">Apuração, consultas e ajustes auditados da jornada.</p>
         </div>
         <span className="ti-ponto-estado ok">Coordenação</span>
       </header>
@@ -502,7 +501,6 @@ function GestaoPonto({ funcionarioSessao }) {
         </form>
       </section>
 
-      <p className="ti-ponto-nota">O sistema não bloqueia a saída antes de 8 horas: calcula o saldo real do dia. A pausa de café, quando houver, é opcional e não exige batida.</p>
     </section>
   );
 }

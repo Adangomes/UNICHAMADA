@@ -108,9 +108,6 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 
 
-
-# Changelog
-
 ## [1.0.0] — Atualização de 01–02/11/2026
 
 ### Adicionado

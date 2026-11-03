@@ -9,6 +9,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 ### Adicionado
 - Gestão de ponto exclusiva da coordenação com resumo diário, filtros por período/funcionário, apuração
   de horas e saldo contra 8h, exportação CSV e ajustes com justificativa/auditoria.
+- Atualização em tempo real da gestão de ponto quando uma batida ou ajuste é registrado.
 - Regras de servidor para janela de entrada e saída/retorno do almoço, além de cálculo sinalizado quando
   uma jornada longa não possui batidas de intervalo.
 

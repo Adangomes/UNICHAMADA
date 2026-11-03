@@ -61,6 +61,21 @@ alter table public.ti_ponto_trabalho
 create index if not exists ti_ponto_funcionario_data_idx
   on public.ti_ponto_trabalho (funcionario_id, data_local, registrado_em);
 
+do $$
+begin
+  if not exists (
+    select 1
+      from pg_publication_tables
+     where pubname = 'supabase_realtime'
+       and schemaname = 'public'
+       and tablename = 'ti_ponto_trabalho'
+  ) then
+    alter publication supabase_realtime
+      add table public.ti_ponto_trabalho;
+  end if;
+end;
+$$;
+
 alter table public.ti_ponto_trabalho enable row level security;
 revoke all on public.ti_ponto_trabalho from anon, authenticated;
 grant select on public.ti_ponto_trabalho to authenticated;

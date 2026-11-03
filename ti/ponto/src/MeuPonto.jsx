@@ -197,6 +197,30 @@ function GestaoPonto({ funcionarioSessao }) {
   }, [inicio, fim, funcionarioFiltro]);
 
   useEffect(() => {
+    let ativo = true;
+    const canal = TI.db
+      .channel('ti-ponto-tempo-real')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ti_ponto_trabalho' },
+        () => {
+          TI.dados.ponto.limparCache();
+          void carregar(true);
+        }
+      )
+      .subscribe((status, falha) => {
+        if (!ativo || (status !== 'CHANNEL_ERROR' && status !== 'TIMED_OUT')) return;
+        console.error('Falha na atualização em tempo real do ponto:', falha || status);
+        setErro('A atualização em tempo real foi interrompida. Use Atualizar para buscar os dados novamente.');
+      });
+
+    return () => {
+      ativo = false;
+      void TI.db.removeChannel(canal);
+    };
+  }, [inicio, fim, funcionarioFiltro]);
+
+  useEffect(() => {
     const timer = window.setInterval(() => setAgora(new Date()), 60000);
     return () => window.clearInterval(timer);
   }, []);

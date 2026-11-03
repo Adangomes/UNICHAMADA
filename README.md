@@ -43,7 +43,7 @@ O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta perfor
 
 1. A Agenda está disponível nos painéis acadêmicos e de TI sem exigir Supabase Auth. Cada perfil tem uma agenda própria identificada pelo tipo e ID de cadastro que o painel já conhece.
 2. Execute `banco-de-dados/unichamada-agenda.sql` no Supabase para criar as tabelas `unichamada_agenda_*` e habilitar Realtime. O script não altera as tabelas acadêmicas nem uma tabela legada chamada `agenda`.
-3. Títulos, descrições e notas são cifrados no navegador com AES-GCM antes de serem enviados. A chave é derivada automaticamente do RA e do ID do perfil; não é necessário criar nem digitar frase-senha. O mesmo cadastro deve ser usado em todos os dispositivos.
+3. Títulos, descrições e notas são cifrados no navegador com AES-GCM antes de serem enviados. A chave é derivada automaticamente do RA e do ID quando há RA; em perfis sem RA, como alguns cadastros de TI, usa o tipo e o ID do perfil. Não é necessário criar nem digitar frase-senha. O mesmo cadastro deve ser usado em todos os dispositivos. A senha de login não é usada nem armazenada pela Agenda.
 4. **Limite de segurança sem identidade autenticada pelo banco:** as políticas permitem aos clientes do projeto acessar os registros cifrados. O banco não recebe os textos em claro, mas datas, status, prioridades e horários ficam visíveis; outros clientes também podem acessar, apagar ou substituir os dados cifrados. RA e ID não são segredos fortes; alguém com acesso ao projeto poderá tentar decifrar as anotações. Essa opção prioriza praticidade, não isolamento criptográfico contra terceiros.
 
 ---

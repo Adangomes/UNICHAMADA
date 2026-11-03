@@ -11,6 +11,8 @@ O `index.html` só carrega scripts: as telas são montadas por JavaScript.
    nessa ordem. O cadastro com foto e o ID do crachá ficam habilitados pelas migrações. Depois rode
    `banco-de-dados/verificar-instalacao.sql`: todas as linhas devem mostrar **OK**
    (a última só passa depois do passo 2).
+   Em **Authentication > Settings**, habilite **Allow anonymous sign-ins** para o
+   login legado dos funcionários usar uma sessão técnica protegida pelas políticas RLS.
 2. **Sua conta de coordenador.**
    - Supabase > **Authentication > Users > Add user**, com e-mail e senha (marque "Auto Confirm User").
    - Rode, no SQL Editor, o comando que está comentado no final do `ti-tabelas.sql`
@@ -21,13 +23,16 @@ O `index.html` só carrega scripts: as telas são montadas por JavaScript.
 4. **Endereços de retorno.** Supabase > **Authentication > URL Configuration**:
    coloque o endereço da pasta `ti/` (ex.: `https://SEU-USUARIO.github.io/UNICHAMADA/ti/`)
    em **Site URL** e em **Redirect URLs**. É para onde o link de convite e o "esqueci minha senha" voltam.
-5. **Cadastrar funcionário.** Crie a conta dele em Supabase > **Authentication > Users**.
-   Depois, no sistema, cadastre os dados com o mesmo e-mail e tire ou selecione a foto.
+5. **Cadastrar funcionário.** Para novos cadastros, crie a conta dele em Supabase >
+   **Authentication > Users** antes de preencher os dados e a foto no sistema. Funcionários
+   legados que já estão cadastrados sem conta Auth continuam entrando com o e-mail e a senha
+   já usados no painel; após validar essas credenciais, o sistema cria uma identidade anônima
+   técnica vinculada ao cadastro, sem conta Auth com e-mail/senha.
    O Supabase gera um ID sequencial para o crachá (UC0100, UC0101, ...) e o mostra após o cadastro.
    O ID também fica visível na lista da equipe. Funcionários já cadastrados recebem seus IDs
    automaticamente ao executar a migração de fotos.
-6. **Ponto.** O funcionário entra com a própria conta no aplicativo e informa o ID impresso no crachá.
-   O sistema confirma que esse ID corresponde à conta autenticada, compara localmente o rosto da câmera
+6. **Ponto.** O funcionário entra com o e-mail e a senha já usados no painel e informa o ID impresso no crachá.
+   O sistema confirma que esse ID corresponde ao cadastro vinculado à sessão técnica, compara localmente o rosto da câmera
    com a foto de referência cadastrada e descarta a captura. A batida não envia nem guarda a foto.
    A entrada normal é entre 06:00 e 13:15; almoço pode começar às 11:00, 12:00, 13:00 ou 14:00,
    com retorno após pelo menos uma hora. A saída final não é bloqueada por saldo de horas.
@@ -72,8 +77,8 @@ O `index.html` só carrega scripts: as telas são montadas por JavaScript.
 
 - O cadastro de funcionários usa a sessão do coordenador, uma função SQL e o Storage privado; não depende do n8n.
 - A chave `service_role` do Supabase **nunca** vai para o aplicativo ou para o navegador.
-- As tabelas `ti_` não são acessíveis pela chave anon do site público: só quem entra com e-mail e
-  senha e está cadastrado em `ti_funcionarios`.
+- As tabelas `ti_` não são acessíveis pela chave anon sem sessão. O funcionário só recebe uma sessão
+  anônima após validar e-mail e senha legados no banco; não é criada uma conta Auth com e-mail/senha.
 - Só o coordenador de TI consegue aprovar e publicar uma demanda (o banco impõe isso).
 - "Desativar" um funcionário tira o acesso ao painel na hora (as regras do banco checam `ativo`).
 

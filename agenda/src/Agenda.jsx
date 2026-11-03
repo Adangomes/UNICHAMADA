@@ -163,10 +163,13 @@ async function idAgenda(perfil) {
 
 function segredoAgenda(perfil) {
   const ra = String(perfil?.ra || '').trim().toUpperCase();
-  if (!ra || perfil?.id === undefined || perfil.id === null) {
-    throw new Error('Seu cadastro precisa ter RA e ID para gerar a chave da agenda. Peça à coordenação para conferir os dados.');
+  if (perfil?.id === undefined || perfil.id === null) {
+    throw new Error('Não foi possível gerar a chave da agenda porque o perfil não tem ID.');
   }
-  return `unichamada-agenda:${ra}:${perfil.id}`;
+  const identificador = ra
+    ? `ra:${ra}`
+    : `perfil:${perfil.papel}:${perfil.id}`;
+  return `unichamada-agenda:${identificador}:${perfil.id}`;
 }
 
 function Agenda({ perfil, cliente }) {
@@ -534,8 +537,8 @@ function Agenda({ perfil, cliente }) {
         <form className="agenda-cartao agenda-form-seguranca" onSubmit={configurarOuDesbloquear}>
           <p>
             {estado === 'configurar'
-              ? 'A chave será gerada automaticamente usando seu RA e ID. Os textos são cifrados neste dispositivo antes de serem enviados.'
-              : 'A chave é gerada automaticamente usando o RA e o ID do seu cadastro.'}
+              ? 'A chave será gerada automaticamente usando seu RA e ID, se houver RA no cadastro. Para perfis sem RA, será usado o ID do perfil.'
+              : 'A chave é gerada automaticamente com os dados do perfil.'}
           </p>
           <p className="agenda-privacidade">
             Use o mesmo cadastro nos dispositivos em que abrir a agenda. Se o RA ou ID mudar, os textos cifrados podem ficar irrecuperáveis.

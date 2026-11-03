@@ -4,6 +4,7 @@
 --
 -- O que este arquivo cria (tudo com o prefixo "ti_"):
 --   ti_funcionarios         equipe de TI (nome, ID do crachá, e-mail, setor, papel)
+--   ti_sessoes_legadas      identidades anônimas vinculadas após validar o login legado
 --   ti_chamados             chamados (infraestrutura, acesso, erro no sistema...)
 --   ti_chamados_comentarios conversa do chamado, com nota interna
 --   ti_demandas             mudanças no sistema (quadro do desenvolvedor)
@@ -13,9 +14,10 @@
 -- Como usar: Supabase > SQL Editor > colar tudo > Run.
 -- Pode ser executado mais de uma vez (usa "if not exists" / "drop ... if exists").
 --
--- SEGURANÇA: o login do TI usa o Supabase Auth (e-mail + senha). As tabelas abaixo
--- NÃO são acessíveis pela chave "anon" (a usada por professores/coordenadores no site).
--- Só quem está logado e cadastrado em ti_funcionarios consegue ler/escrever.
+-- SEGURANÇA: coordenadores usam Supabase Auth com e-mail e senha. Funcionários
+-- podem usar o login legado; após a validação, uma identidade anônima é vinculada
+-- ao cadastro para aplicar as mesmas regras RLS e de Storage. A chave anon sem
+-- sessão não acessa as tabelas abaixo.
 -- =============================================================================
 
 
@@ -23,8 +25,8 @@
 -- 1) TABELAS
 -- -----------------------------------------------------------------------------
 
--- Equipe de TI. As contas de acesso são criadas previamente no Supabase Auth
--- e vinculadas ao cadastro do funcionário.
+-- Equipe de TI. A coordenação usa contas Auth vinculadas; funcionários também
+-- podem entrar pelo fluxo legado validado pelo banco.
 create table if not exists public.ti_funcionarios (
   id            uuid primary key default gen_random_uuid(),
   auth_user_id  uuid unique references auth.users (id) on delete set null,
@@ -41,6 +43,15 @@ create table if not exists public.ti_funcionarios (
   criado_em     timestamptz not null default now(),
   criado_por    uuid references public.ti_funcionarios (id)
 );
+
+create table if not exists public.ti_sessoes_legadas (
+  auth_user_id uuid primary key references auth.users (id) on delete cascade,
+  funcionario_id uuid not null references public.ti_funcionarios (id) on delete cascade,
+  criado_em timestamptz not null default now()
+);
+
+alter table public.ti_sessoes_legadas enable row level security;
+revoke all on public.ti_sessoes_legadas from public, anon, authenticated;
 
 -- Chamados: algo quebrou ou foi pedido (projetor, rede, acesso, erro no sistema...).
 create table if not exists public.ti_chamados (
@@ -158,8 +169,18 @@ create or replace function public.ti_meu_id()
 returns uuid
 language sql stable security definer set search_path = public
 as $$
-  select id from public.ti_funcionarios
-  where auth_user_id = auth.uid() and ativo
+  select f.id
+  from public.ti_funcionarios as f
+  where f.ativo
+    and (
+      f.auth_user_id = auth.uid()
+      or exists (
+        select 1
+        from public.ti_sessoes_legadas as s
+        where s.auth_user_id = auth.uid()
+          and s.funcionario_id = f.id
+      )
+    )
   limit 1;
 $$;
 
@@ -167,10 +188,7 @@ create or replace function public.ti_e_funcionario()
 returns boolean
 language sql stable security definer set search_path = public
 as $$
-  select exists (
-    select 1 from public.ti_funcionarios
-    where auth_user_id = auth.uid() and ativo
-  );
+  select public.ti_meu_id() is not null;
 $$;
 
 create or replace function public.ti_e_coordenador()
@@ -179,7 +197,7 @@ language sql stable security definer set search_path = public
 as $$
   select exists (
     select 1 from public.ti_funcionarios
-    where auth_user_id = auth.uid() and ativo and papel = 'coordenador_ti'
+    where id = public.ti_meu_id() and ativo and papel = 'coordenador_ti'
   );
 $$;
 
@@ -198,7 +216,30 @@ as $$
            else 'coordenacao'
          end
   from public.ti_funcionarios
-  where auth_user_id = auth.uid() and ativo
+  where id = public.ti_meu_id() and ativo
+  limit 1;
+$$;
+
+create or replace function public.ti_meu_funcionario()
+returns table (
+  id uuid,
+  auth_user_id uuid,
+  nome text,
+  ra text,
+  id_funcionarios text,
+  email text,
+  setor text,
+  papel text,
+  ativo boolean,
+  criado_em timestamptz,
+  criado_por uuid
+)
+language sql stable security definer set search_path = public
+as $$
+  select f.id, f.auth_user_id, f.nome, f.ra, f.id_funcionarios, f.email,
+         f.setor, f.papel, f.ativo, f.criado_em, f.criado_por
+  from public.ti_funcionarios as f
+  where f.id = public.ti_meu_id() and f.ativo
   limit 1;
 $$;
 
@@ -206,10 +247,71 @@ revoke all on function public.ti_meu_id()         from public, anon;
 revoke all on function public.ti_e_funcionario()  from public, anon;
 revoke all on function public.ti_e_coordenador()  from public, anon;
 revoke all on function public.ti_meu_grupo()      from public, anon;
+revoke all on function public.ti_meu_funcionario() from public, anon;
 grant execute on function public.ti_meu_id()        to authenticated;
 grant execute on function public.ti_e_funcionario() to authenticated;
 grant execute on function public.ti_e_coordenador() to authenticated;
 grant execute on function public.ti_meu_grupo()     to authenticated;
+grant execute on function public.ti_meu_funcionario() to authenticated;
+
+-- A equipe mantém o login legado. Uma identidade Auth anônima dá ao banco um
+-- contexto verificável para RLS e Storage, sem criar conta de e-mail para o funcionário.
+-- Requer a RPC verificar_login_funcionario(text, text), usada pelo login legado atual.
+create or replace function public.ti_vincular_sessao_legada(
+  p_email text,
+  p_senha text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_auth_user_id uuid := auth.uid();
+  v_funcionario_id uuid;
+  v_funcionario_vinculado uuid;
+begin
+  if v_auth_user_id is null
+     or (auth.jwt() ->> 'is_anonymous') is distinct from 'true' then
+    raise exception 'É necessária uma sessão anônima para validar o login legado.';
+  end if;
+
+  execute
+    'select id from public.verificar_login_funcionario($1, $2) limit 1'
+    into v_funcionario_id
+    using trim(p_email), p_senha;
+
+  if v_funcionario_id is null then
+    raise exception 'E-mail ou senha incorretos (ou conta inativa).';
+  end if;
+
+  if not exists (
+    select 1 from public.ti_funcionarios
+    where id = v_funcionario_id and ativo and papel <> 'coordenador_ti'
+      and auth_user_id is null
+  ) then
+    raise exception 'Este cadastro já está vinculado a outra conta. Peça à coordenação para conferir o acesso.';
+  end if;
+
+  insert into public.ti_sessoes_legadas (auth_user_id, funcionario_id)
+  values (v_auth_user_id, v_funcionario_id)
+  on conflict (auth_user_id) do nothing;
+
+  select funcionario_id
+    into v_funcionario_vinculado
+    from public.ti_sessoes_legadas
+   where auth_user_id = v_auth_user_id;
+
+  if v_funcionario_vinculado is distinct from v_funcionario_id then
+    raise exception 'Esta sessão já está vinculada a outro funcionário. Saia e entre novamente.';
+  end if;
+
+  return v_funcionario_id;
+end;
+$$;
+
+revoke all on function public.ti_vincular_sessao_legada(text, text) from public, anon;
+grant execute on function public.ti_vincular_sessao_legada(text, text) to authenticated;
 
 
 -- -----------------------------------------------------------------------------

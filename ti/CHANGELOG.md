@@ -14,7 +14,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   uma jornada longa não possui batidas de intervalo.
 
 ### Corrigido
-- Login legado de funcionário não é mais aceito sem sessão Supabase Auth vinculada ao cadastro, evitando falhas de autenticação ao registrar o ponto.
+- Funcionários voltam a entrar pelo login legado; uma sessão anônima técnica, vinculada após validar as credenciais no banco, mantém o ponto e as fotos privadas protegidos sem exigir conta Auth de e-mail.
 - O quadro de demandas e seus diálogos inicializam o próprio namespace antes de registrar as telas,
   evitando falhas quando os scripts são servidos em cache ou fora de ordem.
 - Corrigido erro de sintaxe no renderizador das colunas, que impedia o carregamento do quadro Kanban.

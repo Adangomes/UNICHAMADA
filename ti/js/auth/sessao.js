@@ -1,5 +1,5 @@
 /**
- * sessao.js — quem está logado (e-mail + senha pelo Supabase Auth) e qual é o seu papel/setor.
+ * sessao.js — identidade autenticada e cadastro de funcionário ativo.
  */
 window.TI = window.TI || {};
 
@@ -44,7 +44,7 @@ TI.sessao = {
       return false;
     }
 
-    const f = await TI.dados.funcionarios.buscarPorAuth(user.id);
+    const f = await TI.dados.funcionarios.buscarSessao();
     if (!f || !f.ativo) {
       await this.sair();
       throw new Error('Esta conta não tem acesso ao painel de TI.');
@@ -63,6 +63,42 @@ TI.sessao = {
 
     if (error) throw new Error('E-mail ou senha incorretos.');
     return await this._carregar(data.user);
+  },
+
+  async entrarLegado(email, senha) {
+    const { data: sessaoAtual, error: erroSessao } = await TI.db.auth.getSession();
+    if (erroSessao) throw erroSessao;
+    if (sessaoAtual?.session) {
+      const { error } = await TI.db.auth.signOut();
+      if (error) throw error;
+    }
+
+    const { data, error } = await TI.db.auth.signInAnonymously();
+    if (error) {
+      throw new Error(
+        'Não foi possível iniciar a sessão segura do funcionário. Ative o acesso anônimo em Authentication > Settings no Supabase e tente novamente.'
+      );
+    }
+
+    const { error: erroVinculo } = await TI.db.rpc('ti_vincular_sessao_legada', {
+      p_email: String(email).trim(),
+      p_senha: senha
+    });
+    if (erroVinculo) {
+      const { error: erroLimpeza } = await TI.db.auth.signOut();
+      if (erroLimpeza) console.error('Falha ao limpar a sessão anônima sem vínculo:', erroLimpeza);
+      throw new Error(
+        erroVinculo.message || 'Não foi possível vincular a sessão ao cadastro do funcionário.'
+      );
+    }
+
+    try {
+      return await this._carregar(data.user);
+    } catch (erroCadastro) {
+      const { error: erroLimpeza } = await TI.db.auth.signOut();
+      if (erroLimpeza) console.error('Falha ao limpar a sessão anônima do funcionário:', erroLimpeza);
+      throw erroCadastro;
+    }
   },
 
   sairLocal() {

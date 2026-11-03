@@ -7,8 +7,9 @@ TI.dados.funcionarios = {
     const d = TI.dados.tratar(resp);
     return d || [];
   },
-  async buscarPorAuth(authUserId) {
-    return TI.dados.tratar(await TI.db.from('ti_funcionarios').select('*').eq('auth_user_id', authUserId).maybeSingle());
+  async buscarSessao() {
+    const funcionarios = TI.dados.tratar(await TI.db.rpc('ti_meu_funcionario'));
+    return funcionarios && funcionarios.length ? funcionarios[0] : null;
   },
   async atualizar(id, campos) {
     return TI.dados.tratar(await TI.db.from('ti_funcionarios').update(campos).eq('id', id).select().single());

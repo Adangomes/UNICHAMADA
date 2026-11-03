@@ -58,6 +58,16 @@ const ABAS_PROFESSOR = [
   { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
   { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
   {
+    chave: 'agenda',
+    rotulo: 'Agenda',
+    render: (container, professor) => window.UnichamadaAgendaUI.montar(container, {
+      papel: 'professor',
+      id: professor.id,
+      nome: professor.nome,
+      ra: professor.ra
+    })
+  },
+  {
     chave: 'chat',
     rotulo: 'Chat',
     render: async (container, professor) => {
@@ -178,6 +188,7 @@ async function selecionarAbaProfessor(chave, nav) {
  * @returns {Promise<void>}
  */
 async function renderizarAbaAtivaProfessor() {
+  if (abaAtivaProfessor !== 'agenda') window.UnichamadaAgendaUI?.parar();
   if (pararAssinaturaAbaProfessor) { 
     pararAssinaturaAbaProfessor(); 
     pararAssinaturaAbaProfessor = null; 

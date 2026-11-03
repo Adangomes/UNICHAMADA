@@ -15,6 +15,20 @@ const ABAS_COORDENADOR = [
   { chave: 'disciplinas', rotulo: 'Disciplinas', grupo: 'Cadastros', render: async () => await renderSecaoDisciplinas(elementoConteudoCoordenador) },
   { chave: 'turmas', rotulo: 'Turmas', grupo: 'Cadastros', render: async () => await renderSecaoTurmas(elementoConteudoCoordenador) },
   { chave: 'matriculas', rotulo: 'Matrículas', grupo: 'Cadastros', render: async () => await renderSecaoMatriculas(elementoConteudoCoordenador) },
+  {
+    chave: 'agenda',
+    rotulo: 'Agenda',
+    render: async () => {
+      const usuario = sessaoCoordenador?.dados;
+      if (!usuario?.id) throw new Error('Não foi possível identificar o coordenador da sessão.');
+      window.UnichamadaAgendaUI.montar(elementoConteudoCoordenador, {
+        papel: 'coordenador',
+        id: usuario.id,
+        nome: usuario.nome,
+        ra: usuario.ra
+      });
+    }
+  },
   { chave: 'notificacoes', rotulo: 'Notificações', render: async () => await renderSecaoNotificacoes(elementoConteudoCoordenador) },
   {
     // Chat com os professores (js/coordenador/chat/chat.js)
@@ -182,6 +196,7 @@ async function selecionarAbaCoordenador(chave, nav) {
  * Pega a aba ativa na lista ABAS_COORDENADOR e chama a função de render dela.
  */
 async function renderizarAbaAtivaCoordenador() {
+  if (abaAtivaCoordenador !== 'agenda') window.UnichamadaAgendaUI?.parar();
   // Desliga o tempo real do chat ao sair da aba Chat (evita conexão aberta à toa)
   if (window.ChatDados) window.ChatDados.cancelar();
   if (abaAtivaCoordenador !== 'relatorios' && window.Relatorios) {

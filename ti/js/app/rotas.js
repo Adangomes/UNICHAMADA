@@ -7,6 +7,7 @@ window.TI = window.TI || {};
 TI.rotas = {
   // css = arquivos de css/ que a tela usa (além dos comuns). Cada tela carrega só o da sua seção.
   tabela: {
+    'agenda':              { tela: 'agenda',             menu: 'agenda',              css: [] },
     'meu-ponto':           { tela: 'meuPonto',          menu: 'meu-ponto',          css: ['../ponto/css/ponto.css'] },
     'licencas':            { tela: 'licencasTI',        menu: 'licencas',            css: ['licencas/licencas.css'] },
     'visao-geral':         { tela: 'visaoGeral',        menu: 'visao-geral',         css: ['coordenador_ti/acompanhamento/visao_geral.css'] },

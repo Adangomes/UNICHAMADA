@@ -23,7 +23,8 @@ TI.menu = {
         ] },
         { titulo: 'Jornada', itens: [
           { rota: 'meu-ponto', rotulo: 'Gestão de ponto' }
-        ] }
+        ] },
+        { titulo: '', itens: [{ rota: 'agenda', rotulo: 'Agenda' }] }
       ];
     }
 
@@ -40,7 +41,8 @@ TI.menu = {
         ] },
         { titulo: 'Jornada', itens: [
           { rota: 'meu-ponto', rotulo: 'Meu ponto' }
-        ] }
+        ] },
+        { titulo: '', itens: [{ rota: 'agenda', rotulo: 'Agenda' }] }
       ];
     }
 
@@ -63,7 +65,8 @@ TI.menu = {
       { titulo: 'Trabalho', itens: itensTrabalho },
       { titulo: 'Jornada', itens: [
         { rota: 'meu-ponto', rotulo: 'Meu ponto' }
-      ] }
+      ] },
+      { titulo: '', itens: [{ rota: 'agenda', rotulo: 'Agenda' }] }
     ];
   }
 };

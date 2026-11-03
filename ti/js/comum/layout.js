@@ -16,7 +16,7 @@ TI.layout = {
 
     const itensMenu = [];
     const secoes = TI.menu.itens(f).map((secao) => el('div', { class: 'ti-menu-secao' }, [
-      el('div', { class: 'ti-menu-titulo' }, [secao.titulo]),
+      ...(secao.titulo ? [el('div', { class: 'ti-menu-titulo' }, [secao.titulo])] : []),
       ...secao.itens.map((item) => {
         const botao = el('button', {
           class: 'ti-menu-item', type: 'button', 'data-rota': item.rota,

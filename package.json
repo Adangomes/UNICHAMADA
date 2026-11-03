@@ -9,9 +9,10 @@
     "start": "electron .",
     "start:ti": "electron . --ti",
     "build:ponto": "esbuild ti/ponto/src/MeuPonto.jsx --bundle --minify --platform=browser --target=chrome120 --jsx=automatic --outfile=ti/ponto/ponto.bundle.js",
-    "prebuild": "npm run build:ponto",
-    "prebuild:mac": "npm run build:ponto",
-    "prebuild:win": "npm run build:ponto",
+    "build:agenda": "esbuild agenda/src/Agenda.jsx --bundle --minify --platform=browser --target=chrome120 --jsx=automatic --outfile=agenda.bundle.js",
+    "prebuild": "npm run build:ponto && npm run build:agenda",
+    "prebuild:mac": "npm run build:ponto && npm run build:agenda",
+    "prebuild:win": "npm run build:ponto && npm run build:agenda",
     "build": "electron-builder",
     "build:mac": "electron-builder --mac --universal --publish never",
     "build:win": "electron-builder --win --x64 --publish never"

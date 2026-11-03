@@ -1,0 +1,366 @@
+.agenda {
+  --agenda-azul: #20304f;
+  --agenda-azul-claro: #edf2fb;
+  --agenda-borda: #dce3ed;
+  --agenda-texto: #25324a;
+  --agenda-suave: #64748b;
+  color: var(--agenda-texto);
+  display: grid;
+  gap: 1.1rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.agenda * {
+  box-sizing: border-box;
+}
+
+.agenda-cabecalho,
+.agenda-acoes-topo,
+.agenda-abas,
+.agenda-form-cabecalho,
+.agenda-form-acoes,
+.agenda-lista-cabecalho,
+.agenda-item-meta,
+.agenda-item-acoes {
+  align-items: center;
+  display: flex;
+  gap: .75rem;
+}
+
+.agenda-cabecalho,
+.agenda-form-cabecalho,
+.agenda-lista-cabecalho {
+  justify-content: space-between;
+}
+
+.agenda-cabecalho > div:first-child > p {
+  color: #647ba0;
+  font-size: .73rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  margin: 0 0 .35rem;
+}
+
+.agenda-cabecalho h1 {
+  color: var(--agenda-azul);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin: 0;
+}
+
+.agenda-acoes-topo {
+  color: var(--agenda-suave);
+  flex-wrap: wrap;
+  font-size: .82rem;
+  justify-content: flex-end;
+}
+
+.agenda-abas {
+  border-bottom: 1px solid var(--agenda-borda);
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.agenda-abas > button:not(.agenda-botao) {
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: #64748b;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: .8rem 1rem;
+}
+
+.agenda-abas > button.ativo {
+  border-bottom-color: #315a91;
+  color: var(--agenda-azul);
+}
+
+.agenda-abas > .agenda-botao {
+  margin-left: auto;
+}
+
+.agenda-botao {
+  background: white;
+  border: 1px solid var(--agenda-borda);
+  border-radius: 9px;
+  color: var(--agenda-azul);
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  min-height: 40px;
+  padding: .55rem .9rem;
+}
+
+.agenda-botao:hover,
+.agenda-link:hover {
+  background: var(--agenda-azul-claro);
+}
+
+.agenda-botao:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.agenda-botao.primario {
+  background: var(--agenda-azul);
+  border-color: var(--agenda-azul);
+  color: white;
+}
+
+.agenda-botao.primario:hover {
+  background: #30466d;
+}
+
+.agenda-cartao,
+.agenda-lista,
+.agenda-item {
+  background: white;
+  border: 1px solid var(--agenda-borda);
+  border-radius: 13px;
+  box-shadow: 0 5px 20px rgb(34 48 73 / 5%);
+}
+
+.agenda-lista {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.agenda-lista-cabecalho {
+  margin-bottom: 1rem;
+}
+
+.agenda-lista-cabecalho h2,
+.agenda-form-cabecalho h2 {
+  color: var(--agenda-azul);
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.agenda-lista-cabecalho span {
+  color: var(--agenda-suave);
+  font-size: .85rem;
+}
+
+.agenda-itens {
+  display: grid;
+  gap: .7rem;
+}
+
+.agenda-item {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.agenda-item-conteudo {
+  min-width: 0;
+}
+
+.agenda-item-meta {
+  color: var(--agenda-suave);
+  flex-wrap: wrap;
+  font-size: .76rem;
+}
+
+.agenda-item-meta > span:first-child {
+  color: #365582;
+  font-weight: 800;
+}
+
+.agenda-item-meta .prioridade {
+  background: #eef2f8;
+  border-radius: 99px;
+  color: #52647e;
+  padding: .18rem .5rem;
+  text-transform: capitalize;
+}
+
+.agenda-item-meta .prioridade.alta,
+.agenda-item-meta .prioridade.urgente {
+  background: #fff0ed;
+  color: #b54735;
+}
+
+.agenda-item h3 {
+  color: var(--agenda-azul);
+  font-size: 1rem;
+  margin: .55rem 0 .25rem;
+  overflow-wrap: anywhere;
+}
+
+.agenda-item p {
+  color: #536176;
+  line-height: 1.5;
+  margin: .25rem 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.agenda-item small {
+  color: var(--agenda-suave);
+  display: inline-block;
+  margin-top: .35rem;
+}
+
+.agenda-item-acoes {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.agenda-item-acoes select,
+.agenda-form-item input,
+.agenda-form-item select,
+.agenda-form-item textarea,
+.agenda-form-seguranca input {
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: var(--agenda-texto);
+  font: inherit;
+  min-height: 40px;
+  padding: .5rem .65rem;
+}
+
+.agenda-link {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: #315a91;
+  cursor: pointer;
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+  padding: .45rem .55rem;
+}
+
+.agenda-link.perigo {
+  color: #b54735;
+}
+
+.agenda-vazio,
+.agenda-estado {
+  align-items: center;
+  color: var(--agenda-suave);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  justify-content: center;
+  min-height: 150px;
+  text-align: center;
+}
+
+.agenda-vazio strong {
+  color: var(--agenda-azul);
+}
+
+.agenda-form-item {
+  display: grid;
+  gap: .9rem;
+  padding: 1.2rem;
+}
+
+.agenda-form-item label,
+.agenda-form-seguranca label {
+  color: #42516a;
+  display: grid;
+  font-size: .85rem;
+  font-weight: 700;
+  gap: .35rem;
+}
+
+.agenda-form-linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+
+.agenda-form-linha label {
+  flex: 1 1 150px;
+}
+
+.agenda-form-item textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.agenda-form-acoes {
+  display: flex;
+  gap: .65rem;
+  justify-content: flex-end;
+}
+
+.agenda-feedback {
+  background: #eff6ff;
+  border: 1px solid #c8d9f0;
+  border-radius: 8px;
+  color: #315a91;
+  margin: 0;
+  padding: .75rem .9rem;
+}
+
+.agenda-feedback.erro {
+  background: #fff3f1;
+  border-color: #f0c4bd;
+  color: #a23829;
+}
+
+.agenda-rodape,
+.agenda-privacidade {
+  color: var(--agenda-suave);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.agenda-seguranca {
+  max-width: 720px;
+}
+
+.agenda-form-seguranca {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 4vw, 1.6rem);
+}
+
+.agenda-form-seguranca > p:first-child {
+  color: #536176;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.agenda-form-seguranca .agenda-privacidade {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .agenda-cabecalho,
+  .agenda-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .agenda-acoes-topo {
+    justify-content: space-between;
+  }
+
+  .agenda-abas {
+    gap: .1rem;
+  }
+
+  .agenda-abas > button:not(.agenda-botao) {
+    padding: .7rem .55rem;
+  }
+
+  .agenda-abas > .agenda-botao {
+    margin: .4rem 0;
+    width: 100%;
+  }
+
+  .agenda-item-acoes {
+    justify-content: flex-start;
+  }
+}

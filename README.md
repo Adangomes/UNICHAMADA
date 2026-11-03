@@ -28,7 +28,7 @@ O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta perfor
 
 - **Camada de Abstração:** Isolamento da lógica do SDK do Supabase através do módulo `db.js`, facilitando testes e futuras migrações.
 - **Automação Orientada a Eventos (n8n + Supabase Webhooks):** O front-end persiste eventos diretamente no banco de dados. O Supabase aciona assincronamente os fluxos do **n8n** via *Database Webhooks* (Server-to-Server), garantindo execução resiliente sem expor endpoints diretamente ao cliente e evitando problemas de CORS no navegador.
-- **Acesso:** O painel principal confere RA + e-mail no cadastro; não usa Supabase Auth. Esse acesso não é autenticação forte.
+- **Acesso:** Os perfis acadêmicos mantêm seus fluxos atuais de entrada. O painel de TI mantém seu próprio fluxo, sem exigir que todo funcionário tenha uma conta Supabase Auth.
 - **UI/UX Produtiva:** Layout responsivo otimizado para operação diária, incluindo suporte a modo "Telão" para salas de aula.
 
 ---
@@ -39,7 +39,12 @@ O projeto adota uma filosofia *no-build* e *serverless*, priorizando alta perfor
 2. **Database Webhooks:** No painel do Supabase (em *Database > Webhooks*), configure os gatilhos para tabelas como `notificacoes` (evento `INSERT`) para disparar requisições HTTP automáticas ao webhook do seu servidor **n8n**.
 3. **Realtime:** Habilite o recurso Realtime para as tabelas `chamadas` e `presencas` no Supabase para sincronização instantânea do Telão.
 
-> **Nota de Segurança:** O login de coordenadores e professores valida RA e e-mail contra os cadastros no banco; não usa Supabase Auth nem envia código por e-mail. Esse modo é simples para demonstração/portfólio, mas RA e e-mail não são fatores de autenticação seguros. Para proteger dados acadêmicos reais em produção, migre para autenticação individual com políticas RLS adequadas.
+### Agenda
+
+1. A Agenda está disponível nos painéis acadêmicos e de TI sem exigir Supabase Auth. Cada perfil tem uma agenda própria identificada pelo tipo e ID de cadastro que o painel já conhece.
+2. Execute `banco-de-dados/unichamada-agenda.sql` no Supabase para criar as tabelas `unichamada_agenda_*` e habilitar Realtime. O script não altera as tabelas acadêmicas nem uma tabela legada chamada `agenda`.
+3. Títulos, descrições e notas são cifrados no navegador com AES-GCM antes de serem enviados. A chave é derivada automaticamente do RA e do ID do perfil; não é necessário criar nem digitar frase-senha. O mesmo cadastro deve ser usado em todos os dispositivos.
+4. **Limite de segurança sem identidade autenticada pelo banco:** as políticas permitem aos clientes do projeto acessar os registros cifrados. O banco não recebe os textos em claro, mas datas, status, prioridades e horários ficam visíveis; outros clientes também podem acessar, apagar ou substituir os dados cifrados. RA e ID não são segredos fortes; alguém com acesso ao projeto poderá tentar decifrar as anotações. Essa opção prioriza praticidade, não isolamento criptográfico contra terceiros.
 
 ---
 

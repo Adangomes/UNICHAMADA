@@ -57,6 +57,7 @@ window.MAPA_BANCO = {
           <span>Área do aluno</span>
         </div>
         <div class="al-acoes">
+          <button class="al-btn sec" data-acao="agenda">Agenda</button>
           <button class="al-btn sec" data-acao="atualizar">Atualizar</button>
           <button class="al-btn sec" data-acao="sair">Sair</button>
         </div>
@@ -91,6 +92,27 @@ window.MAPA_BANCO = {
     const acao = e.target.closest("[data-acao]")?.dataset.acao;
     if (acao === "sair") { sessionStorage.clear(); location.reload(); }
     if (acao === "atualizar" && atual) abrir(atual);
+    if (acao === "agenda" && atual) {
+      const el = raiz();
+      el.querySelector(".al-main")?.classList.add("oculto");
+      let painelAgenda = el.querySelector(".al-agenda-wrap");
+      if (!painelAgenda) {
+        painelAgenda = document.createElement("section");
+        painelAgenda.className = "al-agenda-wrap";
+        painelAgenda.innerHTML = '<button class="al-btn sec" type="button" data-acao="voltar-agenda">Voltar ao painel</button><div id="agenda-aluno-root"></div>';
+        el.appendChild(painelAgenda);
+      }
+      painelAgenda.classList.remove("oculto");
+      window.UnichamadaAgendaUI.montar(
+        painelAgenda.querySelector("#agenda-aluno-root"),
+        { papel: "aluno", id: atual.id, nome: atual.nome, ra: atual.ra }
+      );
+    }
+    if (acao === "voltar-agenda") {
+      window.UnichamadaAgendaUI.parar();
+      raiz().querySelector(".al-agenda-wrap")?.remove();
+      raiz().querySelector(".al-main")?.classList.remove("oculto");
+    }
   }
 
   async function entrar(ra, email) {

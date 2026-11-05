@@ -185,7 +185,7 @@ async function abrirModalChamada(turma, professor) {
       areaCodigo,
       areaBarraTempo,
       criarElemento('p', { class: 'chamada-instrucao' }, [
-        'O aluno lê o QR Code (ou acessa o link), confirma RA, e-mail, rosto e localização, e por fim digita este código.'
+        ''
       ])
     ]),
     criarElemento('div', { class: 'chamada-lado-lista' }, [

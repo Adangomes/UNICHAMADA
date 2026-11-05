@@ -3,6 +3,11 @@
  * ------------------------------------------------------------------
  * A chave anon é pública e deve ser configurada em config.js. Nunca
  * coloque uma chave service_role neste arquivo ou no front-end.
+ *
+ * Observação: o Realtime do Supabase foi removido. A tela só é
+ * atualizada automaticamente quando a alteração é feita neste mesmo
+ * navegador (evento 'banco-atualizado'). Alterações feitas por outras
+ * pessoas aparecem ao recarregar a página.
  */
 
 const SUPABASE_URL = window.UNICHAMADA_CONFIG?.supabaseUrl || '';
@@ -28,9 +33,6 @@ function criarClienteSupabase() {
 }
 
 const supabaseClient = criarClienteSupabase();
-const ouvintesBanco = new Set();
-let canalBanco = null;
-let contadorCanais = 0;
 
 function notificarAtualizacaoBanco() {
   window.dispatchEvent(new CustomEvent('banco-atualizado'));
@@ -41,23 +43,6 @@ function exigirClienteSupabase() {
     throw new Error('Supabase indisponível. Confira js/data/config.js e a conexão.');
   }
   return supabaseClient;
-}
-
-function notificarOuvintesRealtime() {
-  ouvintesBanco.forEach((callback) => callback());
-}
-
-function garantirCanalRealtime() {
-  if (!supabaseClient || canalBanco || ouvintesBanco.size === 0) return;
-
-  canalBanco = supabaseClient
-    .channel(`unichamada-db-${++contadorCanais}`)
-    .on('postgres_changes', { event: '*', schema: 'public' }, notificarOuvintesRealtime)
-    .subscribe((status) => {
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        console.error(`Falha na assinatura Realtime do Supabase: ${status}`);
-      }
-    });
 }
 
 async function dbListar(tabela) {
@@ -134,17 +119,7 @@ async function dbRemover(tabela, id) {
 
 function dbAoAtualizar(callback) {
   window.addEventListener('banco-atualizado', callback);
-  ouvintesBanco.add(callback);
-  garantirCanalRealtime();
-
-  return () => {
-    window.removeEventListener('banco-atualizado', callback);
-    ouvintesBanco.delete(callback);
-    if (ouvintesBanco.size === 0 && canalBanco) {
-      supabaseClient.removeChannel(canalBanco);
-      canalBanco = null;
-    }
-  };
+  return () => window.removeEventListener('banco-atualizado', callback);
 }
 
 function dbConfiguracaoValida() {

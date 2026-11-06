@@ -11,11 +11,12 @@
    CONFIGURAÇÃO — dados do seu n8n e ajustes do botão
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (hospedado permanentemente no Render)
+  // URL de PRODUÇÃO do nó Webhook do n8n (hospedado no Render)
   webhookUrl: 'https://n8n-ypdx.onrender.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
-  timeoutMs: 60000,
+  // O plano gratuito do Render "dorme" e pode levar +50s para acordar
+  timeoutMs: 90000,
   maxPergunta: 500,
   folgaMaxima: 24
 };
@@ -105,13 +106,14 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
   const texto = String(pergunta || '').trim().slice(0, CHAMY_CONFIG.maxPergunta);
   if (!texto || estadoChamy.enviando) return;
 
-  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) {
+  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI') || CHAMY_CONFIG.webhookUrl.includes('SEU-APP')) {
     chamyAdicionarMensagem(lista, 'chamy', 'Ainda não estou conectado ao n8n. Configure a URL do webhook.');
     return;
   }
 
   estadoChamy.enviando = true;
   campo.value = '';
+  campo.style.height = 'auto';
   botaoEnviar.disabled = true;
   chamyAdicionarMensagem(lista, 'professor', texto);
   const digitando = chamyAdicionarMensagem(lista, 'chamy',
@@ -145,7 +147,10 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
     });
 
     if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-    const dados = await resposta.json();
+    const bruto = await resposta.text();
+    let dados;
+    try { dados = JSON.parse(bruto); } catch (e) { dados = { resposta: bruto }; }
+    if (Array.isArray(dados)) dados = dados[0] || {};
     const textoResposta = dados.resposta || dados.output || dados.text || '';
     digitando.remove();
     chamyAdicionarMensagem(lista, 'chamy', textoResposta || 'Não consegui montar uma resposta para essa pergunta.');

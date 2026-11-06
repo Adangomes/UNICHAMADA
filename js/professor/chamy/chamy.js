@@ -11,8 +11,8 @@
    CONFIGURAÇÃO — dados do seu n8n e ajustes do botão
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (via túnel Cloudflare)
-  webhookUrl: 'https://characteristics-encoding-fuel-weeks.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+  // URL de PRODUÇÃO do nó Webhook do n8n (hospedado permanentemente no Render)
+  webhookUrl: 'https://n8n-ypdx.onrender.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
   timeoutMs: 60000,

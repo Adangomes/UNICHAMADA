@@ -11,15 +11,13 @@
    CONFIGURAÇÃO — dados do seu n8n e ajustes do botão
    ========================================================================== */
 const CHAMY_CONFIG = {
-  // URL de PRODUÇÃO do nó Webhook do n8n (hospedado no Render)
-  webhookUrl: 'https://n8n-ypdx.onrender.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
+  // URL de PRODUÇÃO do nó Webhook do n8n (via túnel Cloudflare)
+  webhookUrl: 'https://characteristics-encoding-fuel-weeks.trycloudflare.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
   timeoutMs: 60000,
   maxPergunta: 500,
-  folgaMaxima: 24,
-  // Intervalo de ping em segundos (12 minutos para evitar que o Render durma após 15 min)
-  pingIntervalMs: 12 * 60 * 1000 
+  folgaMaxima: 24
 };
 
 // Perguntas prontas que aparecem como botões quando o painel abre
@@ -36,12 +34,11 @@ const estadoChamy = {
   professor: null,
   sessaoId: '',
   observador: null,
-  redimensionador: null,
-  pingTimer: null
+  redimensionador: null
 };
 
 /* ==========================================================================
-   UTILITÁRIOS & ANTI-SLEEP (ACORDA RENDER)
+   UTILITÁRIOS
    ========================================================================== */
 
 /** Cria um elemento HTML com atributos e filhos. */
@@ -55,37 +52,6 @@ function chamyEl(tag, attrs = {}, filhos = []) {
   });
   [].concat(filhos).forEach((f) => el.append(f));
   return el;
-}
-
-/** Dispara um ping silencioso em segundo plano para manter o Render acordado */
-function chamyAcordarServidor() {
-  if (!CHAMY_CONFIG.webhookUrl || CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) return;
-  
-  // Pega a URL base do Render (remove a rota do webhook para bater na raiz ou usa fetch leve)
-  try {
-    const urlObj = new URL(CHAMY_CONFIG.webhookUrl);
-    const baseUrl = `${urlObj.protocol}//${urlObj.host}/`;
-
-    // Fetch silencioso em segundo plano
-    fetch(baseUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {
-      // Ignora erros de CORS propositais na raiz, o objetivo é apenas acordar a instância
-    });
-  } catch (e) {
-    // Silencia qualquer exceção de URL inválida
-  }
-}
-
-/** Configura o ciclo de pings automáticos para burlar o sleep do Render */
-function chamyIniciarAntiSleep() {
-  if (estadoChamy.pingTimer) clearInterval(estadoChamy.pingTimer);
-  
-  // Dá o primeiro tiro logo na inicialização
-  chamyAcordarServidor();
-
-  // Repete a cada 12 minutos em segundo plano
-  estadoChamy.pingTimer = setInterval(() => {
-    chamyAcordarServidor();
-  }, CHAMY_CONFIG.pingIntervalMs);
 }
 
 /** Converte o texto da resposta em nós seguros (negrito e listas). */
@@ -291,9 +257,6 @@ function inicializarChamy(cabecalho, professor) {
   estadoChamy.aberto = false;
   document.getElementById('chamy-botao')?.remove();
   document.getElementById('chamy-painel')?.remove();
-
-  // Inicia o mecanismo invisível para manter o Render acordado
-  chamyIniciarAntiSleep();
 
   const botao = chamyEl('button', {
     id: 'chamy-botao', class: 'chamy-botao', type: 'button',

@@ -15,10 +15,11 @@ const CHAMY_CONFIG = {
   webhookUrl: 'https://n8n-ypdx.onrender.com/webhook/3fe52560-8e23-4407-8185-b40535e199ec',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
-  // O plano gratuito do Render "dorme" e pode levar +50s para acordar
-  timeoutMs: 90000,
+  timeoutMs: 60000,
   maxPergunta: 500,
-  folgaMaxima: 24
+  folgaMaxima: 24,
+  // Intervalo de ping em segundos (12 minutos para evitar que o Render durma após 15 min)
+  pingIntervalMs: 12 * 60 * 1000 
 };
 
 // Perguntas prontas que aparecem como botões quando o painel abre
@@ -35,11 +36,12 @@ const estadoChamy = {
   professor: null,
   sessaoId: '',
   observador: null,
-  redimensionador: null
+  redimensionador: null,
+  pingTimer: null
 };
 
 /* ==========================================================================
-   UTILITÁRIOS
+   UTILITÁRIOS & ANTI-SLEEP (ACORDA RENDER)
    ========================================================================== */
 
 /** Cria um elemento HTML com atributos e filhos. */
@@ -53,6 +55,37 @@ function chamyEl(tag, attrs = {}, filhos = []) {
   });
   [].concat(filhos).forEach((f) => el.append(f));
   return el;
+}
+
+/** Dispara um ping silencioso em segundo plano para manter o Render acordado */
+function chamyAcordarServidor() {
+  if (!CHAMY_CONFIG.webhookUrl || CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) return;
+  
+  // Pega a URL base do Render (remove a rota do webhook para bater na raiz ou usa fetch leve)
+  try {
+    const urlObj = new URL(CHAMY_CONFIG.webhookUrl);
+    const baseUrl = `${urlObj.protocol}//${urlObj.host}/`;
+
+    // Fetch silencioso em segundo plano
+    fetch(baseUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {
+      // Ignora erros de CORS propositais na raiz, o objetivo é apenas acordar a instância
+    });
+  } catch (e) {
+    // Silencia qualquer exceção de URL inválida
+  }
+}
+
+/** Configura o ciclo de pings automáticos para burlar o sleep do Render */
+function chamyIniciarAntiSleep() {
+  if (estadoChamy.pingTimer) clearInterval(estadoChamy.pingTimer);
+  
+  // Dá o primeiro tiro logo na inicialização
+  chamyAcordarServidor();
+
+  // Repete a cada 12 minutos em segundo plano
+  estadoChamy.pingTimer = setInterval(() => {
+    chamyAcordarServidor();
+  }, CHAMY_CONFIG.pingIntervalMs);
 }
 
 /** Converte o texto da resposta em nós seguros (negrito e listas). */
@@ -106,14 +139,13 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
   const texto = String(pergunta || '').trim().slice(0, CHAMY_CONFIG.maxPergunta);
   if (!texto || estadoChamy.enviando) return;
 
-  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI') || CHAMY_CONFIG.webhookUrl.includes('SEU-APP')) {
+  if (CHAMY_CONFIG.webhookUrl.startsWith('COLE_AQUI')) {
     chamyAdicionarMensagem(lista, 'chamy', 'Ainda não estou conectado ao n8n. Configure a URL do webhook.');
     return;
   }
 
   estadoChamy.enviando = true;
   campo.value = '';
-  campo.style.height = 'auto';
   botaoEnviar.disabled = true;
   chamyAdicionarMensagem(lista, 'professor', texto);
   const digitando = chamyAdicionarMensagem(lista, 'chamy',
@@ -147,10 +179,7 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
     });
 
     if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-    const bruto = await resposta.text();
-    let dados;
-    try { dados = JSON.parse(bruto); } catch (e) { dados = { resposta: bruto }; }
-    if (Array.isArray(dados)) dados = dados[0] || {};
+    const dados = await resposta.json();
     const textoResposta = dados.resposta || dados.output || dados.text || '';
     digitando.remove();
     chamyAdicionarMensagem(lista, 'chamy', textoResposta || 'Não consegui montar uma resposta para essa pergunta.');
@@ -262,6 +291,9 @@ function inicializarChamy(cabecalho, professor) {
   estadoChamy.aberto = false;
   document.getElementById('chamy-botao')?.remove();
   document.getElementById('chamy-painel')?.remove();
+
+  // Inicia o mecanismo invisível para manter o Render acordado
+  chamyIniciarAntiSleep();
 
   const botao = chamyEl('button', {
     id: 'chamy-botao', class: 'chamy-botao', type: 'button',

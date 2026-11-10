@@ -9,12 +9,12 @@ window.MAPA_BANCO = {
   presencas:   { tabela: "presencas",   chamada: "chamada_id", aluno: "aluno_id", status: null }
 };
 
-// Tela do aluno com menu lateral estilo Dashboard
+// Tela do aluno com menu lateral estilo painel do professor
 (function () {
   const FREQ_MINIMA = 75;
   const CHAVE = "unichamada_aluno_atual";
   let atual = null;
-  let abaAtiva = "dashboard"; // Aba inicial padrão
+  let abaAtiva = "dashboard";
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");
   const pct = (p, t) => (t ? Math.round((p / t) * 100) : null);
@@ -52,7 +52,6 @@ window.MAPA_BANCO = {
         </div>`;
     }
 
-    // Conteúdo padrão: Dashboard (Resumo + Cursos/Disciplinas)
     const { aluno, totais, grupos } = d, A = window.MAPA_BANCO.alunos;
     const f = pct(totais.presencas, totais.total);
     const corpo = grupos.length
@@ -73,32 +72,45 @@ window.MAPA_BANCO = {
   }
 
   function desenhar(d) {
+    const estiloItem = (aba) => `
+      text-align: left; 
+      background: ${abaAtiva === aba ? '#1b2a47' : 'transparent'}; 
+      color: ${abaAtiva === aba ? '#ffffff' : '#333333'}; 
+      border: none; 
+      padding: 10px 16px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: ${abaAtiva === aba ? '600' : '400'}; 
+      width: 100%;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    `;
+
     raiz().innerHTML = `
-      <header class="al-topo">
-        <div class="al-identidade-marca">
-          <strong>UniChamada</strong>
-          <span>Área do aluno</span>
+      <header class="al-topo" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+        <div class="al-identidade-marca" style="display: flex; flex-direction: column;">
+          <strong style="font-size: 1.1rem; color: #1b2a47;">UniChamada</strong>
+          <span style="font-size: 0.8rem; color: #64748b;">Área do aluno</span>
         </div>
-        <div class="al-acoes">
-          <button class="al-btn sec" data-acao="atualizar">Atualizar</button>
-          <button class="al-btn sec" data-acao="sair">Sair</button>
+        <div class="al-acoes" style="display: flex; gap: 10px;">
+          <button class="al-btn sec" data-acao="atualizar" style="padding: 6px 14px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer;">Atualizar</button>
+          <button class="al-btn sec" data-acao="sair" style="padding: 6px 14px; border: 1px solid #cbd5e1; background: #fff; border-radius: 4px; cursor: pointer;">Sair</button>
         </div>
       </header>
-      <div class="al-dashboard-layout" style="display: flex; min-height: calc(100vh - 60px);">
-        <!-- Menu Lateral -->
-        <aside class="al-menu-lateral" style="width: 260px; background: #f8f9fa; border-right: 1px solid #e9ecef; padding: 20px 10px; display: flex; flex-direction: column; gap: 8px;">
-          <button class="al-menu-item ${abaAtiva === 'dashboard' ? 'ativo' : ''}" data-aba="dashboard" style="text-align: left; background: ${abaAtiva === 'dashboard' ? '#e2e8f0' : 'transparent'}; border: none; padding: 12px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%;">📊 Dashboard</button>
-          <button class="al-menu-item ${abaAtiva === 'chamadas' ? 'ativo' : ''}" data-aba="chamadas" style="text-align: left; background: ${abaAtiva === 'chamadas' ? '#e2e8f0' : 'transparent'}; border: none; padding: 12px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%;">📋 Chamadas Ativas</button>
-          <button class="al-menu-item" data-acao="agenda" style="text-align: left; background: transparent; border: none; padding: 12px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%;">📅 Agenda</button>
+      <div class="al-dashboard-layout" style="display: flex; min-height: calc(100vh - 70px);">
+        <!-- Menu Lateral idêntico ao do professor -->
+        <aside class="al-menu-lateral" style="width: 240px; background: #f8fafc; border-right: 1px solid #e2e8f0; padding: 24px 12px; display: flex; flex-direction: column; gap: 6px;">
+          <button style="${estiloItem('dashboard')}" data-aba="dashboard">Dashboard</button>
+          <button style="${estiloItem('chamadas')}" data-aba="chamadas">Chamadas Ativas</button>
+          <button style="text-align: left; background: transparent; color: #333333; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 400; width: 100%; font-size: 0.95rem;" data-acao="agenda">Agenda</button>
         </aside>
         
         <!-- Área Principal de Conteúdo -->
-        <main class="al-main-conteudo" style="flex: 1; padding: 30px; background: #fff; overflow-y: auto;">
+        <main class="al-main-conteudo" style="flex: 1; padding: 30px; background: #fdfdfd; overflow-y: auto;">
           ${renderizarConteudo(d)}
         </main>
       </div>`;
 
-    // Se estiver na aba de chamadas ativas, inicializa o componente de chamada
     if (abaAtiva === "chamadas" && window.AlunoChamada && window.AlunoChamada.montar) {
       window.AlunoChamada.montar(document.getElementById("aluno-chamada-root"), d.aluno);
     }
@@ -113,7 +125,7 @@ window.MAPA_BANCO = {
     el.innerHTML = `<header class="al-topo"><div class="al-identidade-marca"><strong>UniChamada</strong><span>Área do aluno</span></div></header><p class="al-estado">Carregando dados acadêmicos...</p>`;
     try { 
       const dados = await window.DadosAluno.carregar(alunoObj);
-      window._dadosAlunoCache = dados; // Salva cache para alternar abas sem recarregar tudo
+      window._dadosAlunoCache = dados; 
       desenhar(dados); 
     }
     catch (e) {

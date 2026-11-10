@@ -1,5 +1,4 @@
 // Nomes das tabelas e colunas do Supabase usadas pela tela do aluno.
-// Se algo for diferente no seu banco, ajuste SÓ aqui.
 window.MAPA_BANCO = {
   alunos:      { tabela: "alunos",      id: "id", nome: "nome", ra: "ra", email: "email" },
   cursos:      { tabela: "cursos",      id: "id", nome: "nome" },
@@ -7,14 +6,13 @@ window.MAPA_BANCO = {
   turmas:      { tabela: "turmas",      id: "id", disciplina: "disciplina_id" },
   matriculas:  { tabela: "matriculas",  aluno: "aluno_id", turma: "turma_id" },
   chamadas:    { tabela: "chamadas",    id: "id", turma: "turma_id", data: "data" },
-  // status: nome da coluna que diz se estava presente (ex.: "presente"). Use null se a tabela só guarda quem esteve presente.
   presencas:   { tabela: "presencas",   chamada: "chamada_id", aluno: "aluno_id", status: null }
 };
 
-// Tela do aluno: cursos, disciplinas, presenças e faltas
+// Tela do aluno: cursos, disciplinas, presenças, faltas e chamada ativa
 (function () {
-  const FREQ_MINIMA = 75; // % mínimo de frequência
-  const CHAVE = "unichamada_aluno_atual"; // Chave unificada
+  const FREQ_MINIMA = 75;
+  const CHAVE = "unichamada_aluno_atual";
   let atual = null;
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");
@@ -23,6 +21,7 @@ window.MAPA_BANCO = {
     const dt = new Date(d);
     return isNaN(dt) ? esc(d) : dt.toLocaleDateString("pt-BR", { timeZone: String(d).length === 10 ? "UTC" : undefined });
   };
+
   const raiz = () => {
     let el = document.getElementById("tela-aluno");
     if (!el) { el = document.createElement("section"); el.id = "tela-aluno"; el.className = "oculto"; document.body.appendChild(el); el.addEventListener("click", clique); }
@@ -62,26 +61,37 @@ window.MAPA_BANCO = {
           <button class="al-btn sec" data-acao="sair">Sair</button>
         </div>
       </header>
-      <main class="al-main">
-        <section class="al-ola">
-          <h1>Olá, ${esc(aluno[A.nome])}</h1>
-        </section>
-        <section class="al-resumo">
-          <div><b>${totais.presencas}</b><span>Presenças</span></div>
-          <div><b>${totais.faltas}</b><span>Faltas</span></div>
-          <div><b>${f === null ? "—" : f + "%"}</b><span>Frequência</span></div>
-        </section>${corpo}
-      </main>`;
+      <div class="al-layout-principal" style="display: grid; grid-template-columns: 1fr 320px; gap: 20px; padding: 20px;">
+        <main class="al-main">
+          <section class="al-ola">
+            <h1>Olá, ${esc(aluno[A.nome])}</h1>
+          </section>
+          <section class="al-resumo">
+            <div><b>${totais.presencas}</b><span>Presenças</span></div>
+            <div><b>${totais.faltas}</b><span>Faltas</span></div>
+            <div><b>${f === null ? "—" : f + "%"}</b><span>Frequência</span></div>
+          </section>${corpo}
+        </main>
+        <aside class="al-sidebar" style="background: var(--bg-card, #fff); padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          <h3>Chamada Ativa</h3>
+          <div id="aluno-chamada-root"></div>
+        </aside>
+      </div>`;
+
+    // Inicializa o componente de chamada ativa na barra lateral
+    if (window.AlunoChamada && window.AlunoChamada.montar) {
+      window.AlunoChamada.montar(document.getElementById("aluno-chamada-root"), aluno);
+    }
   }
 
-  async function abrir(aluno) {
-    atual = aluno;
+  async function abrir(alunoObj) {
+    atual = alunoObj;
     const el = raiz();
     const login = document.getElementById("tela-login");
     if (login) login.classList.add("oculto");
     el.classList.remove("oculto");
     el.innerHTML = `<header class="al-topo"><div class="al-identidade-marca"><strong>UniChamada</strong><span>Área do aluno</span></div></header><p class="al-estado">Carregando dados acadêmicos...</p>`;
-    try { desenhar(await window.DadosAluno.carregar(aluno)); }
+    try { desenhar(await window.DadosAluno.carregar(alunoObj)); }
     catch (e) {
       console.error(e);
       el.innerHTML = `<div class="al-estado"><p>Não foi possível carregar seus dados.</p><button class="al-btn" data-acao="atualizar">Tentar de novo</button> <button class="al-btn sec" data-acao="sair">Sair</button></div>`;
@@ -90,11 +100,15 @@ window.MAPA_BANCO = {
 
   function clique(e) {
     const acao = e.target.closest("[data-acao]")?.dataset.acao;
-    if (acao === "sair") { sessionStorage.clear(); location.reload(); }
+    if (acao === "sair") { 
+      if (window.AlunoChamada) window.AlunoChamada.parar();
+      sessionStorage.clear(); 
+      location.reload(); 
+    }
     if (acao === "atualizar" && atual) abrir(atual);
     if (acao === "agenda" && atual) {
       const el = raiz();
-      el.querySelector(".al-main")?.classList.add("oculto");
+      el.querySelector(".al-layout-principal")?.classList.add("oculto");
       let painelAgenda = el.querySelector(".al-agenda-wrap");
       if (!painelAgenda) {
         painelAgenda = document.createElement("section");
@@ -111,7 +125,7 @@ window.MAPA_BANCO = {
     if (acao === "voltar-agenda") {
       window.UnichamadaAgendaUI.parar();
       raiz().querySelector(".al-agenda-wrap")?.remove();
-      raiz().querySelector(".al-main")?.classList.remove("oculto");
+      raiz().querySelector(".al-layout-principal")?.classList.remove("oculto");
     }
   }
 

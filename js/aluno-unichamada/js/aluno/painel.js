@@ -1,4 +1,5 @@
 // Nomes das tabelas e colunas do Supabase usadas pela tela do aluno.
+// Se algo for diferente no seu banco, ajuste SÓ aqui.
 window.MAPA_BANCO = {
   alunos:      { tabela: "alunos",      id: "id", nome: "nome", ra: "ra", email: "email" },
   cursos:      { tabela: "cursos",      id: "id", nome: "nome" },
@@ -6,13 +7,14 @@ window.MAPA_BANCO = {
   turmas:      { tabela: "turmas",      id: "id", disciplina: "disciplina_id" },
   matriculas:  { tabela: "matriculas",  aluno: "aluno_id", turma: "turma_id" },
   chamadas:    { tabela: "chamadas",    id: "id", turma: "turma_id", data: "data" },
+  // status: nome da coluna que diz se estava presente (ex.: "presente"). Use null se a tabela só guarda quem esteve presente.
   presencas:   { tabela: "presencas",   chamada: "chamada_id", aluno: "aluno_id", status: null }
 };
 
 // Tela do aluno: cursos, disciplinas, presenças, faltas e chamada ativa
 (function () {
-  const FREQ_MINIMA = 75;
-  const CHAVE = "unichamada_aluno_atual";
+  const FREQ_MINIMA = 75; // % mínimo de frequência
+  const CHAVE = "unichamada_aluno_atual"; // Chave unificada
   let atual = null;
 
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, "");
@@ -21,7 +23,7 @@ window.MAPA_BANCO = {
     const dt = new Date(d);
     return isNaN(dt) ? esc(d) : dt.toLocaleDateString("pt-BR", { timeZone: String(d).length === 10 ? "UTC" : undefined });
   };
-
+  
   const raiz = () => {
     let el = document.getElementById("tela-aluno");
     if (!el) { el = document.createElement("section"); el.id = "tela-aluno"; el.className = "oculto"; document.body.appendChild(el); el.addEventListener("click", clique); }
@@ -61,8 +63,8 @@ window.MAPA_BANCO = {
           <button class="al-btn sec" data-acao="sair">Sair</button>
         </div>
       </header>
-      <div class="al-layout-principal" style="display: grid; grid-template-columns: 1fr 320px; gap: 20px; padding: 20px;">
-        <main class="al-main">
+      <div class="al-layout-principal" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; max-width: 1300px; margin: 0 auto; align-items: flex-start;">
+        <main class="al-main" style="flex: 1; min-width: 300px;">
           <section class="al-ola">
             <h1>Olá, ${esc(aluno[A.nome])}</h1>
           </section>
@@ -72,8 +74,8 @@ window.MAPA_BANCO = {
             <div><b>${f === null ? "—" : f + "%"}</b><span>Frequência</span></div>
           </section>${corpo}
         </main>
-        <aside class="al-sidebar" style="background: var(--bg-card, #fff); padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-          <h3>Chamada Ativa</h3>
+        <aside class="al-sidebar" style="width: 340px; min-width: 280px; background: var(--bg-card, #fff); padding: 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+          <h3 style="margin-top: 0; font-size: 1.1rem; color: #222; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 12px;">Chamada Ativa</h3>
           <div id="aluno-chamada-root"></div>
         </aside>
       </div>`;

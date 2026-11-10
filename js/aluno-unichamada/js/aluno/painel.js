@@ -55,6 +55,17 @@ window.MAPA_BANCO = {
         <div id="aluno-chamada-root"></div>`;
     }
 
+    if (abaAtiva === "trabalhos") {
+      return `
+        <div class="secao-cabecalho">
+          <div>
+            <h2>Trabalhos e Perguntas</h2>
+            <p>Responda às perguntas enviadas pelo professor durante a aula ativa.</p>
+          </div>
+        </div>
+        <div id="aluno-trabalho-root"></div>`;
+    }
+
     if (abaAtiva === "agenda") {
       return `
         <div class="secao-cabecalho">
@@ -103,11 +114,12 @@ window.MAPA_BANCO = {
         </header>
 
         <div class="painel-corpo">
-          <!-- Menu lateral padrão igual ao do professor/coordenador -->
+          <!-- Menu lateral com a nova opção Trabalhos -->
           <aside class="painel-nav">
             <div class="painel-nav-grupo">
               <button class="${abaAtiva === 'dashboard' ? 'ativo' : ''}" data-aba="dashboard">Dashboard</button>
               <button class="${abaAtiva === 'chamadas' ? 'ativo' : ''}" data-aba="chamadas">Chamadas Ativas</button>
+              <button class="${abaAtiva === 'trabalhos' ? 'ativo' : ''}" data-aba="trabalhos">Trabalhos</button>
               <button class="${abaAtiva === 'agenda' ? 'ativo' : ''}" data-aba="agenda">Agenda</button>
             </div>
           </aside>
@@ -119,9 +131,16 @@ window.MAPA_BANCO = {
         </div>
       </div>`;
 
+    // Para componentes ativos ao trocar de aba
+    if (window.AlunoChamada) window.AlunoChamada.parar();
+    if (window.AlunoTrabalho) window.AlunoTrabalho.parar();
+
     // Inicializa os componentes dependendo da aba ativa
     if (abaAtiva === "chamadas" && window.AlunoChamada && window.AlunoChamada.montar) {
       window.AlunoChamada.montar(document.getElementById("aluno-chamada-root"), d.aluno);
+    }
+    if (abaAtiva === "trabalhos" && window.AlunoTrabalho && window.AlunoTrabalho.montar) {
+      window.AlunoTrabalho.montar(document.getElementById("aluno-trabalho-root"), d.aluno);
     }
     if (abaAtiva === "agenda" && window.UnichamadaAgendaUI && atual) {
       window.UnichamadaAgendaUI.montar(
@@ -152,7 +171,6 @@ window.MAPA_BANCO = {
   function clique(e) {
     const aba = e.target.closest("[data-aba]")?.dataset.aba;
     if (aba) {
-      // Para a agenda se sair dela
       if (abaAtiva === "agenda" && window.UnichamadaAgendaUI) {
         try { window.UnichamadaAgendaUI.parar(); } catch(err) {}
       }
@@ -164,6 +182,7 @@ window.MAPA_BANCO = {
     const acao = e.target.closest("[data-acao]")?.dataset.acao;
     if (acao === "sair") { 
       if (window.AlunoChamada) window.AlunoChamada.parar();
+      if (window.AlunoTrabalho) window.AlunoTrabalho.parar();
       if (window.UnichamadaAgendaUI) try { window.UnichamadaAgendaUI.parar(); } catch(err) {}
       sessionStorage.clear(); 
       location.reload(); 

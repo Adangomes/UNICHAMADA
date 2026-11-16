@@ -49,7 +49,7 @@ window.MAPA_BANCO = {
         <div class="secao-cabecalho">
           <div>
             <h2>Chamadas Ativas</h2>
-            <p>Acompanhe e confirme sua presença nas aulas em andamento.</p>
+            <p></p>
           </div>
         </div>
         <div id="aluno-chamada-root"></div>`;

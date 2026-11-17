@@ -55,7 +55,7 @@ window.MAPA_BANCO = {
         <div id="aluno-chamada-root"></div>`;
     }
 
-    if (abaAtiva === "trabalhos") {
+    if (abaAtiva === "atividades") {
       return `
         <div class="secao-cabecalho">
           <div>

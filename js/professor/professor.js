@@ -58,6 +58,17 @@ const ABAS_PROFESSOR = [
   { chave: 'chamadas', rotulo: 'Chamadas', render: (container, prof) => renderAbaChamadas(container, prof) },
   { chave: 'turmas', rotulo: 'Minhas turmas', render: (container, prof) => renderAbaTurmas(container, prof) },
   {
+    chave: 'atividades',
+    rotulo: 'Atividades',
+    render: (container) => {
+      container.innerHTML = '';
+      if (!window.ProfessorTrabalho) {
+        throw new Error('O módulo ProfessorTrabalho não foi carregado.');
+      }
+      window.ProfessorTrabalho.montar(container);
+    }
+  },
+  {
     chave: 'agenda',
     rotulo: 'Agenda',
     render: (container, professor) => window.UnichamadaAgendaUI.montar(container, {

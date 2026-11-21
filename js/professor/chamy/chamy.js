@@ -146,7 +146,8 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
 
     if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
     const dados = await resposta.json();
-    const textoResposta = dados.resposta || dados.output || dados.text || '';
+    const item = Array.isArray(dados) ? dados[0] : dados;
+    const textoResposta = item?.resposta || item?.output || item?.text || '';
     digitando.remove();
     chamyAdicionarMensagem(lista, 'chamy', textoResposta || 'Não consegui montar uma resposta para essa pergunta.');
   } catch (erro) {

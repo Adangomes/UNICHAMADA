@@ -12,7 +12,7 @@
    ========================================================================== */
 const CHAMY_CONFIG = {
   // URL de PRODUÇÃO do nó Webhook do n8n (via túnel Cloudflare)
-  webhookUrl: 'https://dramatic-groundwater-zero-remained.trycloudflare.com/cc6bb548-8ef6-407f-ba8b-0c9d048f52d6',
+  webhookUrl: 'https://dramatic-groundwater-zero-remained.trycloudflare.com/06595a6a-3aed-4a85-b409-31b92fd8f217',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
   timeoutMs: 60000,

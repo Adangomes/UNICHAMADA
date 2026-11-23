@@ -12,7 +12,7 @@
    ========================================================================== */
 const CHAMY_CONFIG = {
   // URL de PRODUÇÃO do nó Webhook do n8n (via túnel Cloudflare)
-  webhookUrl: 'https://fred-classifieds-book-cheese.trycloudflare.com/webhook/06595a6a-3aed-4a85-b409-31b92fd8f217',
+  webhookUrl: 'https://fruit-processor-mate-environmental.trycloudflare.com/webhook/06595a6a-3aed-4a85-b409-31b92fd8f217',
   token: 'chamy-7Hk29xQpLw83mZ4vTb',
   icone: 'js/professor/chamy/chamy.png',
   timeoutMs: 60000,

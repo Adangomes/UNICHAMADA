@@ -120,11 +120,10 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
   const controle = new AbortController();
   const temporizador = setTimeout(() => controle.abort(), CHAMY_CONFIG.timeoutMs);
 
-  try {
+   try {
     const prof = estadoChamy.professor || {};
     const professorId = prof.id || window.UNICHAMADA_CACHE?.get('professor_id') || '';
     const turmasCache = window.UNICHAMADA_CACHE?.get(`turmas_prof_${professorId}`) || [];
-
 
     const resposta = await fetch(CHAMY_CONFIG.webhookUrl, {
       method: 'POST',
@@ -133,16 +132,16 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
       body: JSON.stringify({
         token: CHAMY_CONFIG.token,
         pergunta: texto,
-        professor_id: prof.id,
-        professor_nome: prof.nome,
+        professor_id: professorId,
+        professor_nome: prof.nome || '',
         sessao_id: estadoChamy.sessaoId,
-        // Contexto inteligente puxado diretamente do estado atual da tela/cache
         contexto_atual: {
           turmas_visiveis: turmasCache,
           aba_ativa: typeof abaAtivaProfessor !== 'undefined' ? abaAtivaProfessor : 'geral'
         }
       })
     });
+
 
     if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
     const dados = await resposta.json();

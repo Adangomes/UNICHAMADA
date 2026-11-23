@@ -122,9 +122,9 @@ async function chamyEnviar(pergunta, lista, campo, botaoEnviar) {
 
   try {
     const prof = estadoChamy.professor || {};
+    const professorId = prof.id || window.UNICHAMADA_CACHE?.get('professor_id') || '';
+    const turmasCache = window.UNICHAMADA_CACHE?.get(`turmas_prof_${professorId}`) || [];
 
-    // Recupera dados do cache do professor para enviar no contexto (se houver)
-    const turmasCache = window.UNICHAMADA_CACHE?.get(`turmas_prof_${prof.id}`) || [];
 
     const resposta = await fetch(CHAMY_CONFIG.webhookUrl, {
       method: 'POST',
